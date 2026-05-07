@@ -10,11 +10,7 @@
 package es.gob.afirma.signers.xades;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -27,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.xml.crypto.URIDereferencer;
@@ -52,12 +47,7 @@ import es.gob.afirma.core.ErrorCode;
 import es.gob.afirma.core.misc.AOFileUtils;
 import es.gob.afirma.core.misc.AOUtil;
 import es.gob.afirma.core.misc.Base64;
-import es.gob.afirma.core.misc.LoggerUtil;
 import es.gob.afirma.core.misc.MimeHelper;
-import es.gob.afirma.core.misc.http.SSLErrorProcessor;
-import es.gob.afirma.core.misc.http.UrlHttpManager;
-import es.gob.afirma.core.misc.http.UrlHttpManagerFactory;
-import es.gob.afirma.core.misc.http.UrlHttpMethod;
 import es.gob.afirma.core.signers.AOSignConstants;
 import es.gob.afirma.signers.xml.InvalidXMLException;
 import es.gob.afirma.signers.xml.Utils;
@@ -178,7 +168,6 @@ public final class XAdESSigner {
 
 	private static final Logger LOGGER = Logger.getLogger("es.gob.afirma");	//$NON-NLS-1$
 
-	private static final String FILE_PROTOCOL_PREFIX = "file://"; //$NON-NLS-1$
     private static final String HTTP_PROTOCOL_PREFIX = "http://"; //$NON-NLS-1$
     private static final String HTTPS_PROTOCOL_PREFIX = "https://"; //$NON-NLS-1$
 
@@ -821,7 +810,7 @@ public final class XAdESSigner {
 					throw new AOException("No se ha proporcionado la huella asociada a la referencia", XAdESErrorCode.Request.REFERENCE_HASH_NOT_FOUND); //$NON-NLS-1$
 				}
 
-				refDataList = loadManifestReferencesData(
+				refDataList = XAdESReferenceResolver.loadManifestReferencesData(
 						data,
 						referenceId,
 						extraParams);
@@ -855,7 +844,7 @@ public final class XAdESSigner {
 				// Cargamos la informacion de la referencia externa
 				ExternalReferenceData refData;
 				try {
-					refData = loadExternalReferenceData(uriString, data, dataIsMessageDigest, digestAlgorithm);
+					refData = XAdESReferenceResolver.loadExternalReferenceData(uriString, data, dataIsMessageDigest, digestAlgorithm);
 				} catch (final NoSuchAlgorithmException e) {
 					throw new AOException(
 							"Error al cargar la referencia externa de la firma Externally Detached", //$NON-NLS-1$
@@ -884,7 +873,7 @@ public final class XAdESSigner {
 				}
 				// Si no se tiene la huella, habra que crear la referencia a partir de la URI
 				else {
-					ref = createExternalReferenceFromUri(refData.getUri(), fac, digestMethod, referenceId, extraParams);
+					ref = XAdESReferenceResolver.createExternalReferenceFromUri(refData.getUri(), fac, digestMethod, referenceId, extraParams);
 				}
 				referenceList.add(ref);
 			}
@@ -1272,257 +1261,6 @@ public final class XAdESSigner {
 			doc = null;
 		}
 		return doc;
-	}
-
-	/**
-	 * Se carga la informacion de una referencia compuesta de una URI y una huella
-	 * digital que puede haberse proporcionado, no haberse proporcionado pero si los
-	 * datos a partir de los cuales calcularla o no poderse calcular sin acceder a la URI.
-	 * @param uri URI a la que se hace referencia.
-	 * @param data La huella de los datos, los propios datos a firmar o {@code null} si
-	 * hay que calcular la huella a partir de la referencia.
-	 * @param isMd Indica si el dato anterior es la huella o los datos.
-	 * @param mdAlgorithm Algoritmo de huella que se va a utilizar para las referencias a los datos.
-	 * @return Referencia externa con la URI y la huella si se ha podido calcular sin utilizar la URI.
-	 * @throws NoSuchAlgorithmException Cuando el algoritmo de huella indicado no es v&aacute;lido
-	 * e intenta usarse para calcular la huella de los datos.
-	 */
-	private static ExternalReferenceData loadExternalReferenceData(
-			final String uri,
-			final byte[] data,
-			final boolean isMd,
-			final String mdAlgorithm) throws NoSuchAlgorithmException {
-
-		// Si se proporcionan los datos, estos pueden ser la huella digital a utilizar o
-		// los propios datos. Si no es la huella, se calcula la huella a partir de los datos.
-		ExternalReferenceData ref;
-		if (data != null) {
-			if (isMd) {
-				ref = new ExternalReferenceData(uri, data);
-			}
-			else {
-				ref = new ExternalReferenceData(
-					uri,
-					MessageDigest.getInstance(mdAlgorithm).digest(data)
-				);
-			}
-		}
-		// Si no se tiene ni la huella ni los datos, no tenemos huella
-		else {
-			ref = new ExternalReferenceData(uri, null);
-		}
-
-		return ref;
-	}
-
-	/**
-	 * Carga el listado de referencias a los datos que se van a firmar. De cada referencia
-	 * se intenta cargar la huella digital asociada, calcul&aacute;ndola a partir de los datos
-	 * proporcionados si es posible. Durante este proceso no se accede a URI externas para
-	 * calcular las huellas. Eso s&oacute;lo se har&aacute;a cuando no se use manifest.
-	 * @param digest La huella de los datos referenciados o {@code null} desde los extraParams
-	 *               se pueden obtener m&uacute;ltiples referncias con la
-	 * @param referenceId Indica si el dato anterior es la huella o los datos.
-	 * @param extraParams Configuraci&oacute;n de firma.
-	 * @return Listado de referencias externas.
-	 * @throws AOException Cuando se encuentra un defecto en los par&aacute;metros proporcionados.
-	 */
-	private static List<ExternalReferenceData> loadManifestReferencesData(
-			final byte[] digest,
-			final String referenceId,
-			final Properties extraParams) throws AOException {
-
-		final List<ExternalReferenceData> refsList = new ArrayList<>();
-
-		// Si se proporciona el parametro URI entenderemos que es una
-		// operacion retrocompatible en la que se proporcionaban los datos
-		// o su huella a trav&eacute;s del par&aacute;metro {@code data}.
-		if (extraParams.containsKey(XAdESExtraParams.URI)) {
-			if (digest == null) {
-				throw new AOException(
-					"No se ha proporcionado en el parametro de datos la huella correspondiente a los datos referenciados por la URI", //$NON-NLS-1$
-					XAdESErrorCode.Request.REFERENCE_HASH_NOT_FOUND
-				);
-			}
-			final String uri = extraParams.getProperty(XAdESExtraParams.URI);
-			final String mimeType = extraParams.getProperty(XAdESExtraParams.CONTENT_MIME_TYPE);
-			final String oid = extraParams.getProperty(XAdESExtraParams.CONTENT_TYPE_OID);
-			final String encoding = extraParams.getProperty(XAdESExtraParams.CONTENT_ENCODING);
-
-			final ExternalReferenceData refData = new ExternalReferenceData(uri, digest);
-			refData.setId(referenceId);
-			refData.setMimeType(mimeType);
-			refData.setOid(oid);
-			refData.setEncoding(encoding);
-			refsList.add(refData);
-		}
-		else {
-			int i = 1;
-			while (extraParams.containsKey(XAdESExtraParams.URI_PREFIX + i)) {
-				if (!extraParams.containsKey(XAdESExtraParams.MD_PREFIX + i)) {
-					throw new AOException(
-						String.format("No se ha indicado la huella de la referencia %d del manifest", Integer.valueOf(i)), //$NON-NLS-1$
-						XAdESErrorCode.Request.REFERENCE_HASH_NOT_FOUND
-					);
-				}
-				final byte[] md;
-				try {
-					md = Base64.decode(extraParams.getProperty(XAdESExtraParams.MD_PREFIX + i));
-				}
-				catch (final Exception e) {
-					LOGGER.log(Level.WARNING, "Se ha indicado un base 64 no valido como huella de la referencia " + i, e); //$NON-NLS-1$
-					throw new AOException(
-						String.format("Se ha indicado un base 64 no valido como huella de la referencia %d del manifest", Integer.valueOf(i)), //$NON-NLS-1$
-						e, XAdESErrorCode.Request.INVALID_REFERENCE_HASH
-					);
-				}
-				final ExternalReferenceData refData = new ExternalReferenceData(
-					extraParams.getProperty(XAdESExtraParams.URI_PREFIX + i),
-					md
-				);
-
-				refData.setId("Reference-" + generateUUID()); //$NON-NLS-1$
-				refData.setMimeType(extraParams.getProperty(XAdESExtraParams.CONTENT_MIME_TYPE_PREFIX + i));
-				refData.setOid(extraParams.getProperty(XAdESExtraParams.CONTENT_TYPE_OID_PREFIX + i));
-				refData.setEncoding(extraParams.getProperty(XAdESExtraParams.CONTENT_ENCODING_PREFIX + i));
-
-				refsList.add(refData);
-				i++;
-			}
-
-			if (refsList.size() == 0) {
-				throw new AOException("No se han proporcionado las referencias y huellas de los datos a firmar", XAdESErrorCode.Request.MANIFEST_REFERENCES_NOT_FOUND); //$NON-NLS-1$
-			}
-		}
-
-		return refsList;
-	}
-
-	/**
-	 * Crea una referencia a datos externos.
-	 * @param uri URI a los datos externos.
-	 * @param fac Factor&iacute;a de firmas XML.
-	 * @param digestMethod Identificador del algoritmo de huella digital.
-	 * @param referenceId Identificador que se asignara a la nueva referencia.
-	 * @param extraParams Configuraci&oacute;n de la operaci&oacute;n de firma.
-	 * @return Referencia a datos.
-	 * @throws AOException Cuando falla la creaci&oacute;n de la referencia.
-	 */
-	private static Reference createExternalReferenceFromUri(
-			final String uri,
-			final XMLSignatureFactory fac,
-			final DigestMethod digestMethod,
-			final String referenceId,
-			final Properties extraParams) throws AOException {
-
-		final Reference ref;
-
-		// Si es una referencia de tipo file:// obtenemos el fichero y
-		// creamos una referencia solo con el message digest
-		if (FILE_PROTOCOL_PREFIX.equalsIgnoreCase(uri.substring(0, FILE_PROTOCOL_PREFIX.length()))) {
-			try (
-				final InputStream lfis = AOUtil.loadFile(AOUtil.createURI(uri))
-			) {
-				ref = fac.newReference(
-					uri,
-					digestMethod,
-					null,
-					null, // Las referencias externas no tienen tipo
-					referenceId,
-					MessageDigest.getInstance(
-						AOSignConstants.getDigestAlgorithmName(
-							digestMethod.getAlgorithm()
-						)
-					).digest(AOUtil.getDataFromInputStream(lfis))
-				);
-			}
-			catch (final IOException e) {
-				throw new AOException(
-					"Error al leer el documento local al que referencia la firma: " + uri, //$NON-NLS-1$
-					e, ErrorCode.Internal.LOADING_LOCAL_FILE_ERROR
-				);
-			}
-			catch (final NoSuchAlgorithmException e) {
-				throw new AOException(
-					"Error al leer el documento local al que referencia la firma: " + uri, //$NON-NLS-1$
-					e, XMLErrorCode.Request.INVALID_REFERENCES_HASH_ALGORITHM_URI
-				);
-			}
-			catch (final URISyntaxException e) {
-				throw new AOException(
-					"El formato de la URI a los datos de firma no es valido: " + uri, //$NON-NLS-1$
-					e, XAdESErrorCode.Request.INVALID_DATA_REFERENCE_URI
-				);
-			}
-			catch (final Exception e) {
-				throw new AOException(
-					"No se ha podido crear la referencia XML a partir de la URI local " + uri, //$NON-NLS-1$
-					e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR
-				);
-			}
-		}
-
-		// Dereferenciamos las URL de tipo HTTP/HTTPS
-		else if (HTTP_PROTOCOL_PREFIX.equalsIgnoreCase(uri.substring(0, HTTP_PROTOCOL_PREFIX.length())) ||
-				HTTPS_PROTOCOL_PREFIX.equalsIgnoreCase(uri.substring(0, HTTPS_PROTOCOL_PREFIX.length()))) {
-
-			final UrlHttpManager httpManager = UrlHttpManagerFactory.getInstalledManager();
-
-			byte[] data;
-			final SSLErrorProcessor errorProcessor = new SSLErrorProcessor(extraParams);
-			try {
-				data = httpManager.readUrl(uri, UrlHttpMethod.GET, errorProcessor);
-			} catch (final IOException e) {
-				if (errorProcessor.isCancelled()) {
-					LOGGER.info(
-							"El usuario no permite la importacion del certificado SSL de confianza de un recurso externo en: " //$NON-NLS-1$
-							+ LoggerUtil.getTrimStr(uri));
-				}
-				throw new AOException("Error en la recuperacion de un recurso externo: " + e, e, XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR); //$NON-NLS-1$
-			}
-
-			final String digestMethodAlgorithm = AOSignConstants.getDigestAlgorithmName(digestMethod.getAlgorithm());
-			try {
-				final byte[] md = MessageDigest.getInstance(digestMethodAlgorithm)
-						.digest(data);
-
-				ref = fac.newReference(
-					uri,
-					digestMethod,
-					null,
-					null, // Las referencias externas no tienen tipo
-					referenceId,
-					md
-				);
-			}
-			catch (final NoSuchAlgorithmException e) {
-				throw new AOException(
-						"No se ha podido obtener un generador de huellas digitales para el algoritmo " + digestMethodAlgorithm, e, //$NON-NLS-1$
-					XMLErrorCode.Request.INVALID_REFERENCES_HASH_ALGORITHM_URI
-				);
-			}
-			catch (final Exception e) {
-				throw new AOException(
-					"No se ha podido crear la referencia XML a partir de la URI local " + uri, e, //$NON-NLS-1$
-					XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR
-				);
-			}
-		}
-
-		// Si es una referencia distinta de file:// suponemos que es dereferenciable de forma universal
-		// por lo que dejamos que Java lo haga todo
-		else {
-			try {
-				ref = fac.newReference(uri, digestMethod, null, null, referenceId);
-			}
-			catch (final Exception e) {
-				throw new AOException(
-					"No se ha podido crear la referencia Externally Detached, probablemente por no obtenerse el metodo de digest: " + e, e, //$NON-NLS-1$
-					XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR
-				);
-			}
-		}
-		return ref;
 	}
 
 	/**
