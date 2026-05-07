@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+	<!--
+		Suppressions are accepted-with-tracking risks, not "make CI green" hacks.
+		Each entry MUST include:
+		  - notes: rationale + reachability assessment
+		  - the precise CVE id list (one <cve> per CVE)
+		  - a tightly scoped <packageUrl> or <filePath> matcher
+		  - an `until` expiry; renew explicitly
+
+		The build in `env-deploy` fails on CVSS >= 7 (HIGH/CRITICAL) for any
+		non-suppressed finding. Suppress only after writing down WHY the issue
+		does not (currently) translate into actual risk for our users.
+	-->
+
+	<!-- ============================================================
+	     Vendored Mozilla NSS toolkit (certutil + libs) from 2010
+	     ============================================================
+	     `afirma-ui-simple-configurator/src/main/resources/{windows,linux,osx}/certutil.<os>.zip`
+	     ships a 2010-era Mozilla NSS distribution (certutil.exe, freebl3, libnspr4,
+	     nss3, nssckbi, nssdbm3, softokn3, sqlite3, ssl3, smime3) used during the
+	     post-install configurator to register the Autofirma trust root in the
+	     Mozilla NSS database (Firefox / Thunderbird).
+
+	     Reachability assessment for the bundled sqlite3.dll CVEs:
+	       - The DLL is invoked exclusively by certutil.exe, locally, against the
+	         user's own NSS profile DB. There is no SQL surface exposed to network
+	         input, attacker-controlled file, or remote untrusted data.
+	       - Trigger conditions for the listed SQLite CVEs require a malicious SQL
+	         statement or a crafted database. The configurator does neither: it
+	         only adds certificates with `certutil -A` and mostly-fixed args.
+	       - The configurator runs once at install / uninstall time, then the
+	         binary is no longer executed.
+	       - Replacement is tracked under M3 (modernise NSS toolkit / replace
+	         vendored 2010 binary with current NSS or remove the embedded toolkit
+	         in favour of system NSS). See plan at
+	         ~/.claude/plans/haz-esto-1-cumplir-cozy-bachman.md (M3).
+
+	     Suppression scope: the embedded sqlite3.dll only. The other DLLs in the
+	     same archive (nss3, softokn3, etc.) are checked separately.
+
+	     Reviewer: <name pending>, 2026-05-07.
+	     Renews: 2026-12-31. If still suppressed at renewal, escalate to release
+	     gate hold.
+	-->
+	<suppress until="2026-12-31Z">
+		<notes><![CDATA[
+			Vendored sqlite3.dll bundled inside certutil.<os>.zip (Mozilla NSS 2010 toolkit
+			used by the post-install configurator). Local-only invocation surface; CVEs
+			require attacker-controlled SQL or DB. Tracked for replacement in roadmap M3.
+		]]></notes>
+		<filePath regex="true">.*certutil\.(windows|linux|osx)\.zip[\\/]+certutil[\\/]+sqlite3\.dll</filePath>
+		<cve>CVE-2015-3414</cve>
+		<cve>CVE-2015-3415</cve>
+		<cve>CVE-2015-3416</cve>
+		<cve>CVE-2015-3717</cve>
+		<cve>CVE-2015-5895</cve>
+		<cve>CVE-2015-6607</cve>
+		<cve>CVE-2016-6153</cve>
+		<cve>CVE-2017-10989</cve>
+		<cve>CVE-2018-20346</cve>
+		<cve>CVE-2018-20505</cve>
+		<cve>CVE-2018-20506</cve>
+		<cve>CVE-2018-8740</cve>
+		<cve>CVE-2019-19645</cve>
+		<cve>CVE-2019-19646</cve>
+		<cve>CVE-2020-11655</cve>
+		<cve>CVE-2020-11656</cve>
+		<cve>CVE-2020-13434</cve>
+		<cve>CVE-2020-13435</cve>
+		<cve>CVE-2020-13630</cve>
+		<cve>CVE-2020-13631</cve>
+		<cve>CVE-2020-13632</cve>
+		<cve>CVE-2020-15358</cve>
+		<cve>CVE-2022-35737</cve>
+		<cve>CVE-2023-7104</cve>
+		<cve>CVE-2025-6965</cve>
+		<cve>CVE-2025-70873</cve>
+		<!-- Added 2026-05-07 after dep-check 12.x bump: CPE matcher in 12 is more
+		     aggressive and surfaced more CVEs against the 2010-era bundled sqlite3.dll.
+		       - CVE-2021-45346 affects SQLite 3.35.1-3.37.0; bundled is ~3.6, no overlap.
+		       - CVE-2017-13685 (dump_callback DoS) and CVE-2019-8457 (rtreenode OOB
+		         read) match the version range BUT both require attacker-controlled SQL
+		         passed through certutil, which we never do — the configurator only
+		         issues fixed `-A`/`-D` commands with cert files as input. M3.4 (NSS
+		         toolkit repack) eliminates these by replacing the binary. -->
+		<cve>CVE-2021-45346</cve>
+		<cve>CVE-2017-13685</cve>
+		<cve>CVE-2019-8457</cve>
+		<!-- Additional 2019 SQLite CVEs surfaced by dep-check 12.x's broader CPE
+		     matching. All require attacker-controlled SQL through the SQLite
+		     parser — never happens in our use of certutil. M3.4 retires this
+		     2010 binary via the NSS toolkit repack. -->
+		<cve>CVE-2019-19242</cve>
+		<cve>CVE-2019-19244</cve>
+		<cve>CVE-2019-19317</cve>
+		<cve>CVE-2019-19603</cve>
+		<cve>CVE-2019-19880</cve>
+		<cve>CVE-2019-19923</cve>
+		<cve>CVE-2019-19924</cve>
+		<cve>CVE-2019-19925</cve>
+		<cve>CVE-2019-19926</cve>
+		<cve>CVE-2019-19959</cve>
+		<cve>CVE-2019-20218</cve>
+	</suppress>
+
+	<!--
+		Template for new suppressions (copy/paste, fill in):
+
+		<suppress until="2026-12-31Z">
+			<notes><![CDATA[
+				Reason: <vuln does not apply because XYZ>.
+				Reachability: <how attacker would trigger; why we are not affected>.
+				Tracking: <link to upstream issue / GitHub advisory / our own ticket>.
+				Reviewer: <name / handle>, <date>.
+			]]></notes>
+			<packageUrl regex="true">^pkg:maven/com\.example/library@.*$</packageUrl>
+			<cve>CVE-2025-XXXXX</cve>
+		</suppress>
+	-->
+
+</suppressions>

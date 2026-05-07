@@ -1,0 +1,126 @@
+name: Build
+
+# PR gate. Compiles the env-install profile, runs tests on Linux,
+# generates CycloneDX SBOMs and OWASP dependency-check reports, and
+# uploads everything as artifacts. The dep-check SARIF feeds the
+# Security tab via codeql-action/upload-sarif.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same PR / branch.
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Compile target is JDK 21 (M3.1, 2026-05-07). The pom.xml uses
+  # <release>21</release>, so toolchain and bytecode are pinned to 21.
+
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Compute weekly NVD cache key
+        id: nvdkey
+        shell: bash
+        run: echo "value=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OWASP dependency-check NVD data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-depcheck-${{ steps.nvdkey.outputs.value }}
+          restore-keys: |
+            ${{ runner.os }}-depcheck-
+
+      - name: Build (compile + SBOM + dep-check, no tests)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          mvn -B -ntp -Denv=install -DskipTests
+          -DnvdApiKey="$NVD_API_KEY"
+          clean verify
+
+      - name: Upload SBOMs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.os }}
+          path: |
+            target/bom.xml
+            target/bom.json
+            **/target/bom.xml
+            **/target/bom.json
+          if-no-files-found: warn
+
+      - name: Upload dependency-check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-${{ matrix.os }}
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
+            target/dependency-check-report.sarif
+          if-no-files-found: warn
+
+      - name: Upload SARIF to Security tab
+        if: matrix.os == 'ubuntu-24.04' && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/dependency-check-report.sarif
+          category: dependency-check
+
+  # Tests run only on Linux: they are JVM-pure and the matrix above already
+  # validates per-OS native paths (configurator, certutil invocations, etc.).
+  tests:
+    name: Tests (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ubuntu-24.04-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ubuntu-24.04-maven-
+
+      - name: Run tests
+        run: mvn -B -ntp -Denv=install -Ddependency-check.skip=true test

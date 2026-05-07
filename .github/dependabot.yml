@@ -1,0 +1,25 @@
+version: 2
+
+# Dependabot here covers ONLY the GitHub Actions ecosystem (workflow files).
+# Maven dependencies are handled by Renovate (see /renovate.json) which has
+# better grouping support for this multi-module project.
+#
+# Dependabot pins all third-party Actions by SHA, per OSSF Scorecard
+# recommendation. When a new release of an Action lands, dependabot opens
+# a PR with both the new SHA and the version comment updated.
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: Europe/Madrid
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+      include: scope
+    open-pull-requests-limit: 5

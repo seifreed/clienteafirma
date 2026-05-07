@@ -1,0 +1,70 @@
+name: CodeQL
+
+# Static analysis (SAST) for Java. Runs on every PR and push to master, plus
+# a weekly scheduled scan to catch new query rules without a code change.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 6 * * 1'  # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (java)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['java']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: codeql-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            codeql-maven-
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+          build-mode: manual
+
+      # Only compile; tests and dep-check are validated by build.yml.
+      - name: Compile (manual build)
+        run: >
+          mvn -B -ntp -Denv=install
+          -DskipTests
+          -Ddependency-check.skip=true
+          -Dcyclonedx.skip=true
+          clean compile
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
