@@ -27,10 +27,18 @@ import org.bouncycastle.asn1.DERSequence;
 
 /**
  * Adaptador que envuelve los patrones m&aacute;s comunes de la API
- * {@code org.bouncycastle.asn1.*} para facilitar la migraci&oacute;n desde el
- * fork Oracle {@link es.gob.afirma.core.signers.der.DerValue}.
+ * {@code org.bouncycastle.asn1.*}.
  *
- * <h2>Mapping {@code DerValue} → BouncyCastle</h2>
+ * <p>Origen hist&oacute;rico: este helper naci&oacute; para puentear la
+ * migraci&oacute;n desde el fork Oracle {@code DerValue} (paquete
+ * {@code es.gob.afirma.core.signers.der}, eliminado en Fase F.3 del plan
+ * Clean Code) hacia BouncyCastle ASN.1. Una vez completada la migraci&oacute;n
+ * el helper se conserva por su valor pedag&oacute;gico (la tabla de mapping
+ * sigue documentando c&oacute;mo se traducen los patrones legacy) y por la
+ * concisi&oacute;n que aporta a los call sites — una sola llamada en lugar
+ * de cuatro l&iacute;neas de {@code ASN1InputStream}/{@code ASN1OutputStream}.</p>
+ *
+ * <h2>Mapping legacy {@code DerValue} → BouncyCastle (referencia)</h2>
  *
  * <table border="1">
  *   <caption>Equivalencias funcionales (paquete legacy &rarr; BouncyCastle)</caption>

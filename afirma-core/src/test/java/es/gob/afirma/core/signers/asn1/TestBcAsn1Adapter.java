@@ -23,58 +23,43 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import es.gob.afirma.core.signers.der.DerInputStream;
-import es.gob.afirma.core.signers.der.DerOutputStream;
-import es.gob.afirma.core.signers.der.DerValue;
-
 /**
  * Tests del puente {@link BcAsn1Adapter}.
  *
- * <p>Cada test ejercita el adaptador contra un input fijo y verifica adem&aacute;s
- * que la codificaci&oacute;n resultante coincide byte a byte con la del fork
- * Oracle {@code DerValue}. As&iacute; documentamos formalmente la equivalencia
- * funcional que se requiere para Fase F.2 (migraci&oacute;n de consumidores)
- * y F.3 (eliminaci&oacute;n del fork).</p>
+ * <p>Verifica round-trip BC↔BC, validaci&oacute;n de inputs y patrones DER
+ * conocidos byte a byte. Antes de la Fase F.3 esta clase tambi&eacute;n
+ * cruzaba contra el fork Oracle {@code DerValue} para demostrar
+ * equivalencia funcional; ese paquete se elimin&oacute; en F.3 una vez
+ * verificada la migraci&oacute;n.</p>
  */
 class TestBcAsn1Adapter {
 
 	@Test
-	@DisplayName("encodeSequenceOfIntegers produce el mismo DER que DerValue")
-	void encodeSequenceMatchesDerValue() throws Exception {
-		final BigInteger r = new BigInteger("123456789012345678901234567890"); //$NON-NLS-1$
-		final BigInteger s = new BigInteger("987654321098765432109876543210"); //$NON-NLS-1$
+	@DisplayName("encodeSequenceOfIntegers produce un SEQUENCE DER bien formado")
+	void encodeSequenceOfTwoIntegers() throws Exception {
+		final BigInteger r = BigInteger.valueOf(5);
+		final BigInteger s = BigInteger.valueOf(9);
 
-		final byte[] bcEncoded = BcAsn1Adapter.encodeSequenceOfIntegers(r, s);
+		final byte[] der = BcAsn1Adapter.encodeSequenceOfIntegers(r, s);
 
-		// Encoding equivalente con la API legacy
-		final DerOutputStream legacy = new DerOutputStream();
-		legacy.putInteger(r);
-		legacy.putInteger(s);
-		final DerValue wrapped = new DerValue(DerValue.tag_Sequence, legacy.toByteArray());
-		final byte[] legacyEncoded = wrapped.toByteArray();
-
-		assertArrayEquals(legacyEncoded, bcEncoded,
-				"BC y DerValue deben producir el mismo DER para SEQUENCE OF INTEGER"); //$NON-NLS-1$
+		// SEQUENCE (0x30) length 6 { INTEGER 5, INTEGER 9 }
+		assertArrayEquals(
+				new byte[] {0x30, 0x06, 0x02, 0x01, 0x05, 0x02, 0x01, 0x09},
+				der);
 	}
 
 	@Test
-	@DisplayName("decodeSequenceOfIntegers devuelve los mismos enteros que DerValue")
-	void decodeSequenceMatchesDerValue() throws Exception {
-		final BigInteger r = new BigInteger("12345678"); //$NON-NLS-1$
-		final BigInteger s = new BigInteger("87654321"); //$NON-NLS-1$
+	@DisplayName("encodeSequenceOfIntegers + decodeSequenceOfIntegers preservan los enteros")
+	void roundtripLargeIntegers() throws Exception {
+		final BigInteger r = new BigInteger("123456789012345678901234567890"); //$NON-NLS-1$
+		final BigInteger s = new BigInteger("987654321098765432109876543210"); //$NON-NLS-1$
+
 		final byte[] der = BcAsn1Adapter.encodeSequenceOfIntegers(r, s);
-
-		final BigInteger[] bcResult = BcAsn1Adapter.decodeSequenceOfIntegers(der, 2);
-
-		// Decodificación equivalente con la API legacy
-		final DerInputStream legacyIn = new DerInputStream(der, 0, der.length, false);
-		final DerValue[] legacyValues = legacyIn.getSequence(2);
+		final BigInteger[] decoded = BcAsn1Adapter.decodeSequenceOfIntegers(der, 2);
 
 		assertAll(
-				() -> assertEquals(r, bcResult[0]),
-				() -> assertEquals(s, bcResult[1]),
-				() -> assertEquals(legacyValues[0].getBigInteger(), bcResult[0]),
-				() -> assertEquals(legacyValues[1].getBigInteger(), bcResult[1]));
+				() -> assertEquals(r, decoded[0]),
+				() -> assertEquals(s, decoded[1]));
 	}
 
 	@Test
@@ -92,26 +77,24 @@ class TestBcAsn1Adapter {
 	}
 
 	@Test
-	@DisplayName("encodeOctetString produce el mismo DER que DerValue")
-	void encodeOctetStringMatchesDerValue() throws Exception {
+	@DisplayName("encodeOctetString produce TLV { tag=0x04, length, octets }")
+	void encodeOctetStringFormat() throws Exception {
 		final byte[] payload = {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE};
-		final byte[] bcEncoded = BcAsn1Adapter.encodeOctetString(payload);
+		final byte[] der = BcAsn1Adapter.encodeOctetString(payload);
 
-		final DerOutputStream legacy = new DerOutputStream();
-		legacy.putOctetString(payload);
-		final byte[] legacyEncoded = legacy.toByteArray();
-
-		assertArrayEquals(legacyEncoded, bcEncoded);
+		// OCTET STRING tag 0x04, length 0x04, then payload
+		assertArrayEquals(
+				new byte[] {0x04, 0x04, (byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE},
+				der);
 	}
 
 	@Test
-	@DisplayName("getOctetStringContent extrae los mismos bytes que DerValue.getOctetString()")
+	@DisplayName("getOctetStringContent extrae los bytes del OCTET STRING")
 	void octetStringRoundtrip() throws Exception {
 		final byte[] payload = {0x11, 0x22, 0x33, 0x44, 0x55};
 		final byte[] der = BcAsn1Adapter.encodeOctetString(payload);
 
 		assertArrayEquals(payload, BcAsn1Adapter.getOctetStringContent(der));
-		assertArrayEquals(payload, new DerValue(der).getOctetString());
 	}
 
 	@Test
@@ -121,21 +104,18 @@ class TestBcAsn1Adapter {
 		final byte[] der = BcAsn1Adapter.encodeOid(oid);
 
 		assertEquals(oid, BcAsn1Adapter.decodeOid(der));
-		// Equivalencia con DerValue.getOID()
-		assertEquals(oid, new DerValue(der).getOID().toString());
 	}
 
 	@Test
-	@DisplayName("encodeOid produce el mismo DER que DerValue.putOID")
-	void encodeOidMatchesDerValue() throws Exception {
-		final String oid = "1.3.6.1.4.1.311.10.1"; //$NON-NLS-1$
-		final byte[] bcEncoded = BcAsn1Adapter.encodeOid(oid);
-
-		final DerOutputStream legacy = new DerOutputStream();
-		legacy.putOID(new es.gob.afirma.core.signers.der.ObjectIdentifier(oid));
-		final byte[] legacyEncoded = legacy.toByteArray();
-
-		assertArrayEquals(legacyEncoded, bcEncoded);
+	@DisplayName("encodeOid produce TLV { tag=0x06, length, contenido } estándar")
+	void encodeOidStandardForm() throws Exception {
+		// OID 1.2.840.113549.1.1.1 (rsaEncryption)
+		final byte[] der = BcAsn1Adapter.encodeOid("1.2.840.113549.1.1.1"); //$NON-NLS-1$
+		assertArrayEquals(
+				new byte[] {0x06, 0x09,
+						0x2A, (byte) 0x86, 0x48, (byte) 0x86, (byte) 0xF7,
+						0x0D, 0x01, 0x01, 0x01},
+				der);
 	}
 
 	@Test
@@ -145,7 +125,6 @@ class TestBcAsn1Adapter {
 		final byte[] der = BcAsn1Adapter.encodeInteger(value);
 
 		assertEquals(value, BcAsn1Adapter.decodeInteger(der));
-		assertEquals(value, new DerValue(der).getBigInteger());
 	}
 
 	@Test
