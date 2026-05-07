@@ -46,7 +46,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ✅ Completado (Tomcat 10.1+ / Jetty 12+; triphase service 3.0.0) |
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
-| **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | ⏳ Pendiente |
+| **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
 | **M3.6** | Hardening (Jazzer, PIT) y JUnit 5 | ⏳ Pendiente |
 | **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
 
@@ -70,6 +70,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 ### Trabajo pendiente
 
 - **M3.4-windows — repack del bundle NSS para Windows.** Ejecutar `scripts/repack-nss-windows.ps1` en un host Windows con Firefox instalado. Eliminará la última supresión activa de `sqlite3.dll` (CVE-2021-36690). Es trabajo de release flow / CI con runner Windows, no se puede hacer desde un host macOS/Linux porque Mozilla no publica binarios standalone de NSS para Windows.
+- **M3.5 — fork iText → OpenPDF (bloqueado).** El fork interno `afirma-lib-itext:1.7` (namespace `com.aowagie.*`, ~2009) tiene parches de PAdES específicos de la AEAD que OpenPDF 1.3/2/3 no incorpora: `PdfPKCS7.getPkcs1()` para firma triphase, `InvalidPageNumberException`, sobrecargas de `createSignature(..., char, null, boolean, Calendar)`, `PdfStamper.preClose(HashMap, Calendar, ...)`, constructor extra de `PdfSignature`, etc. Sustituir requiere o portar los parches a OpenPDF (PR aguas arriba) o mantener un fork propio del fork. Estimación 2-3 semanas dedicadas. La sesión 2026-05-07 dejó la coordenada OpenPDF probada en `dependencyManagement` como referencia (revertida ahora a `afirma-lib-itext` para mantener verde).
 
 ---
 

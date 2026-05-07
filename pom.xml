@@ -51,6 +51,13 @@
 		<triphase.service.version>3.0.0</triphase.service.version>
 		<jmulticard.version>2.1</jmulticard.version>
 		
+		<!-- M3.5 BLOCKED: afirma-lib-itext is a hard fork (com.aowagie.*) with
+		     Spanish-specific PAdES patches (PdfPKCS7.getPkcs1(), InvalidPageNumberException,
+		     custom createSignature(... char, null, boolean, Calendar) signature,
+		     PdfStamper.preClose with Calendar argument, PdfSignature constructor
+		     overloads, etc.) that vanilla OpenPDF 1.3.43 / 2.x / 3.x does not have.
+		     A drop-in replacement is not possible; M3.5 needs to either upstream
+		     the patches to OpenPDF or maintain a forked module. Tracked separately. -->
 		<afirma.lib.itext.version>1.7</afirma.lib.itext.version>
 		<afirma.lib.others.version>0.0.10</afirma.lib.others.version>
 		<!-- BouncyCastle (replaces SpongyCastle 1.58.0.0 from 2018, M3.3 2026-05-07).
