@@ -545,9 +545,54 @@
 				  <value>install</value>
 				</property>
 			</activation>
-			
+
+			<!-- env-install activa env-dev como dependencia: cuando se pasa
+			     -Denv=install, env-dev queda desactivado por la regla
+			     "<activeByDefault> se desactiva al activar otro perfil",
+			     así que aquí replicamos sus modulos para que -Denv=install
+			     construya un reactor completo (cores + apps). Sin esto, los
+			     módulos installer resuelven sus dependencias contra la cache
+			     local de Maven, que en CI puede contener POMs obsoletos. -->
+
 			<modules>
-				<!-- Modulos core -->
+				<!-- Mismo conjunto que env-dev (cores y librerias cripto) -->
+				<module>afirma-core</module>
+				<module>afirma-core-keystores</module>
+				<module>afirma-core-prefs</module>
+				<module>afirma-crypto-batch-client</module>
+				<module>afirma-crypto-cadestri-client</module>
+				<module>afirma-crypto-core-pkcs7</module>
+				<module>afirma-crypto-cms</module>
+				<module>afirma-crypto-cades</module>
+				<module>afirma-crypto-cades-multi</module>
+				<module>afirma-crypto-cipher2</module>
+				<module>afirma-crypto-core-pkcs7-tsp</module>
+				<module>afirma-crypto-core-xml</module>
+				<module>afirma-crypto-odf</module>
+				<module>afirma-crypto-padestri-client</module>
+				<module>afirma-crypto-pdf-common</module>
+				<module>afirma-crypto-pdf</module>
+				<module>afirma-crypto-validation</module>
+				<module>afirma-crypto-xades</module>
+				<module>afirma-crypto-xadestri-client</module>
+				<!-- M4: eIDAS 2 / EUDI Wallet (esqueleto, fase 1) -->
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
+				<module>afirma-crypto-xmlsignature</module>
+				<module>afirma-crypto-ooxml</module>
+				<module>afirma-keystores-filters</module>
+				<module>afirma-keystores-mozilla</module>
+				<module>afirma-keystores-jmulticard-ui</module>
+				<module>afirma-ui-utils</module>
+				<module>afirma-core-massive</module>
+				<module>afirma-server-triphase-signer-cache</module>
+				<module>afirma-server-triphase-signer-core</module>
+				<module>afirma-server-triphase-signer-document</module>
+				<module>afirma-simple-plugins</module>
+				<module>afirma-simple-plugins-manager</module>
+
+				<!-- Modulos UI -->
 				<module>afirma-ui-simple-configurator-common</module>
 				<module>afirma-ui-core-jse</module>
 				<module>afirma-ui-core-jse-keystores</module>
@@ -555,16 +600,16 @@
 				<!-- Aplicaciones -->
 				<module>afirma-simple</module>
 				<module>afirma-ui-simple-configurator</module>
-				
+
 				<!-- Plugins -->
 				<module>afirma-simple-plugin-hash</module>
 				<module>afirma-simple-plugin-validatecerts</module>
-				
+
 				<!-- Servicios -->
 				<module>afirma-server-triphase-signer</module>
 				<module>afirma-signature-retriever</module>
 				<module>afirma-signature-storage</module>
-				
+
 			</modules>
 			
 			<!-- Las instrucciones de construccion particulares estan dentro de cada modulo.

@@ -116,44 +116,56 @@ final class OOXMLOfficeObjectHelper {
     	applicationVersionElement.setTextContent("16.0"); //$NON-NLS-1$
     	signatureInfoV1Element.appendChild(applicationVersionElement);
 
-        final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        // Microsoft Office incluye Monitors/Resolution/ColorDepth en
+        // SignatureInfoV1; valores razonables son suficientes para validar
+        // el manifest. En entornos headless (CI Linux sin X11, contenedores)
+        // GraphicsEnvironment.getScreenDevices() lanza HeadlessException, así
+        // que detectamos y usamos defaults que no rompen el schema.
+        int monitors;
+        int hRes;
+        int vRes;
+        int colorDepth;
+        if (GraphicsEnvironment.isHeadless()) {
+            monitors = 1;
+            hRes = 1920;
+            vRes = 1080;
+            colorDepth = 32;
+        }
+        else {
+            final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            monitors = ge.getScreenDevices().length;
+            final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            hRes = screenSize.width;
+            vRes = screenSize.height;
+            colorDepth = ge.getScreenDevices()[0].getDisplayMode().getBitDepth();
+        }
 
         final Element monitorsElement = document.createElementNS(
     		MS_DIGITAL_SIGNATURE_SCHEMA,
     		"Monitors" //$NON-NLS-1$
 		);
-        monitorsElement.setTextContent(
-    		Integer.toString(
-				ge.getScreenDevices().length
-			)
-		);
+        monitorsElement.setTextContent(Integer.toString(monitors));
         signatureInfoV1Element.appendChild(monitorsElement);
-
-        final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
         final Element horizontalResolutionElement = document.createElementNS(
     		MS_DIGITAL_SIGNATURE_SCHEMA,
     		"HorizontalResolutionElement" //$NON-NLS-1$
 		);
-        horizontalResolutionElement.setTextContent(Integer.toString(screenSize.width));
+        horizontalResolutionElement.setTextContent(Integer.toString(hRes));
         signatureInfoV1Element.appendChild(horizontalResolutionElement);
 
         final Element verticalResolutionElement = document.createElementNS(
     		MS_DIGITAL_SIGNATURE_SCHEMA,
     		"VerticalResolutionElement" //$NON-NLS-1$
 		);
-        verticalResolutionElement.setTextContent(Integer.toString(screenSize.height));
+        verticalResolutionElement.setTextContent(Integer.toString(vRes));
         signatureInfoV1Element.appendChild(verticalResolutionElement);
 
         final Element colorDepthElement = document.createElementNS(
     		MS_DIGITAL_SIGNATURE_SCHEMA,
         	"ColorDepth" //$NON-NLS-1$
 		);
-        colorDepthElement.setTextContent(
-    		Integer.toString(
-				ge.getScreenDevices()[0].getDisplayMode().getBitDepth()
-			)
-		);
+        colorDepthElement.setTextContent(Integer.toString(colorDepth));
         signatureInfoV1Element.appendChild(colorDepthElement);
 
         // Proveedor de firma por defecto
