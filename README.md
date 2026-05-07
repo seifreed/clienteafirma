@@ -67,6 +67,10 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Workflows GitHub Actions | — | `build.yml` (matrix Linux/Win/macOS), `codeql.yml`, `renovate.json`, `dependabot.yml` |
 | Windows x86 (32-bit) | Soportado | **Eliminado en 1.10.0** (Adoptium Temurin 21 no se distribuye para x86) |
 
+### Trabajo pendiente
+
+- **M3.4-windows — repack del bundle NSS para Windows.** Ejecutar `scripts/repack-nss-windows.ps1` en un host Windows con Firefox instalado. Eliminará la última supresión activa de `sqlite3.dll` (CVE-2021-36690). Es trabajo de release flow / CI con runner Windows, no se puede hacer desde un host macOS/Linux porque Mozilla no publica binarios standalone de NSS para Windows.
+
 ---
 
 ## Soporte de plataformas
