@@ -1751,17 +1751,25 @@ public final class AOXMLDSigSigner implements AOSigner {
                 root = this.doc.getDocumentElement();
             }
 
-            if (targetType == CounterSignTarget.TREE) {
-                countersignTree(root, key, certChain, onlySignningCert, digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
-            }
-            else if (targetType == CounterSignTarget.LEAFS) {
-                countersignLeafs(root, key, certChain, onlySignningCert, digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
-            }
-            else if (targetType == CounterSignTarget.NODES) {
-                countersignNodes(root, targets, key, certChain, onlySignningCert, digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
-            }
-            else if (targetType == CounterSignTarget.SIGNERS) {
-                countersignSigners(root, targets, key, certChain, onlySignningCert, digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
+            // Selección de nodos vía Strategy (Fase D.1 plan Clean Code).
+            // Cada CounterSignTarget tiene su propio CountersignNodeSelector
+            // que filtra el conjunto de firmas a contrafirmar; la creación
+            // del nodo de contrafirma (cs) es la misma para los 4 destinos.
+            final List<Element> nodesToCountersign =
+                    CountersignNodeSelector.forTarget(targetType).selectNodes(root, targets);
+            for (final Element node : nodesToCountersign) {
+                try {
+                    cs(node, key, certChain, onlySignningCert,
+                            digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
+                }
+                catch (final AOException e) {
+                    throw e;
+                }
+                catch (final Exception e) {
+                    throw new AOException("No se ha podido realizar la contrafirma del nodo '" //$NON-NLS-1$
+                            + (node != null ? node.getNodeName() : "nulo") + "': " + e, e, //$NON-NLS-1$ //$NON-NLS-2$
+                            XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR);
+                }
             }
 
         }
@@ -1774,249 +1782,6 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         // convierte el xml resultante para devolverlo como byte[]
         return Utils.writeXML(this.doc.getDocumentElement(), originalXMLProperties, null, null);
-    }
-
-    /** Realiza la contrafirma de todos los nodos del &aacute;rbol.
-     * @param root Elemento ra&iacute;z del documento xml que contiene las firmas.
-     * @param key Clave para la firma.
-     * @param certChain Cadena de certificados del firmante.
-     * @param onlySignningCert Si se establece a <code>true</code> incluye solo el certificado del firmante,
-     *                         si se establece a <code>false</code> incluye la cadena completa.
-     * @param refsDigestMethod Algoritmo a usar en la huella digital de las referencias internas.
-     * @param canonicalizationAlgorithm Algoritmo de <i>canonicalizaci&oacute;n</i> a usar.
-     * @param xmlSignaturePrefix Prefijo del espacio de nombres de XMLDSig.
-     * @throws AOException Cuando ocurre cualquier problema durante el proceso */
-    private void countersignTree(final Element root,
-                                 final PrivateKey key,
-                                 final Certificate[] certChain,
-                                 final boolean onlySignningCert,
-                                 final String refsDigestMethod,
-                                 final String canonicalizationAlgorithm,
-                                 final String xmlSignaturePrefix) throws AOException {
-
-        // obtiene todas las firmas
-        final NodeList signatures = root.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_SIGNATURE);
-
-        final Element[] nodes = new Element[signatures.getLength()];
-        for (int i = 0; i < signatures.getLength(); i++) {
-            nodes[i] = (Element) signatures.item(i);
-        }
-
-        // y crea sus contrafirmas
-        for (final Element node : nodes) {
-	        try {
-	        	cs(node, key, certChain, onlySignningCert, refsDigestMethod, canonicalizationAlgorithm, xmlSignaturePrefix);
-	        }
-	        catch (final AOException e) {
-	            throw e;
-	        }
-	        catch (final Exception e) {
-	            throw new AOException("No se ha podido realizar la contrafirma del nodo '" + (node != null ? node.getNodeName() : "nulo") + "': " + e, e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        }
-        }
-    }
-
-    /** Realiza la contrafirma de todos los nodos hoja del &aacute;rbol.
-     * @param root Elemento ra&iacute;z del documento xml que contiene las firmas
-     * @param key Clave para la firma.
-     * @param certChain Cadena de certificados del firmante.
-     * @param onlySignningCert Si se establece a <code>true</code> incluye solo el certificado del firmante,
-     *                         si se establece a <code>false</code> incluye la cadena completa.
-     * @param refsDigestMethod Algoritmo a usar en la huella digital de las referencias internas.
-     * @param canonicalizationAlgorithm Algoritmo de <i>canonicalizaci&oacute;n</i> a usar.
-     * @param xmlSignaturePrefix Prefijo del espacio de nombres de XMLDSig.
-     * @throws AOException Cuando ocurre cualquier problema durante el proceso */
-    private void countersignLeafs(final Element root,
-                                  final PrivateKey key,
-                                  final Certificate[] certChain,
-                                  final boolean onlySignningCert,
-                                  final String refsDigestMethod,
-                                  final String canonicalizationAlgorithm,
-                                  final String xmlSignaturePrefix) throws AOException {
-
-        // obtiene todas las firmas y las referencias
-        final NodeList signatures = root.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_SIGNATURE);
-        final NodeList references = root.getElementsByTagNameNS(XMLConstants.DSIGNNS, REFERENCE_STR);
-
-        // obtenemos el ID de los SignatureValue de cada una de las firmas recuperadas
-        final String signatureValueID[] = new String[signatures.getLength()];
-        for (int i = 0; i < signatures.getLength(); i++) {
-        	signatureValueID[i] = ((Element) signatures.item(i)).
-        		getElementsByTagNameNS(XMLConstants.DSIGNNS, SIGNATURE_VALUE).item(0).
-        		getAttributes().getNamedItem(ID_IDENTIFIER).getNodeValue();
-        }
-
-        // hojas seran aquellas firmas cuyo SignatureValue no haya sido referenciado
-        try {
-            for (int i = 0; i < signatureValueID.length; i++) {
-                final String refURI = "#" + signatureValueID[i]; //$NON-NLS-1$
-
-                boolean isLeaf = true;
-                for (int j = 0; j < references.getLength(); j++) {
-                    if (((Element) references.item(j)).getAttribute(URI_STR).equals(refURI)) {
-                        isLeaf = false;
-                    }
-                }
-
-                // y crea sus contrafirmas
-                if (isLeaf) {
-                    cs(
-                		(Element) signatures.item(i),
-                		key,
-                		certChain,
-                		onlySignningCert,
-                		refsDigestMethod,
-                		canonicalizationAlgorithm,
-                		xmlSignaturePrefix
-            		);
-                }
-            }
-        }
-        catch (final Exception e) {
-            throw new AOException("No se ha podido realizar la contrafirma: " + e, e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-        }
-    }
-
-    /** Realiza la contrafirma de los nodos indicados en el par&aacute;metro
-     * targets.
-     * @param root Elemento raiz del documento xml que contiene las firmas.
-     * @param key Clave para la firma.
-     * @param certChain Cadena de certificados del firmante.
-     * @param onlySignningCert Si se establece a <code>true</code> incluye solo el certificado del firmante,
-     *                         si se establece a <code>false</code> incluye la cadena completa.
-     * @param refsDigestMethod Algoritmo a usar en la huella digital de las referencias internas.
-     * @param canonicalizationAlgorithm Algoritmo de <i>canonicalizaci&oacute;n</i> a usar.
-     * @param xmlSignaturePrefix Prefijo del espacio de nombres de XMLDSig.
-     * @param tgts Array con las posiciones de los nodos a contrafirmar.
-     * @throws AOException Cuando ocurre cualquier problema durante el proceso */
-    private void countersignNodes(final Element root,
-    		final Object[] tgts,
-    		final PrivateKey key,
-    		final Certificate[] certChain,
-    		final boolean onlySignningCert,
-            final String refsDigestMethod,
-    		final String canonicalizationAlgorithm,
-    		final String xmlSignaturePrefix) throws AOException {
-
-    	if (tgts == null) {
-    		throw new IllegalArgumentException("La lista de nodos a contrafirmar no puede ser nula"); //$NON-NLS-1$
-    	}
-
-        // obtiene todas las firmas y las referencias
-        final NodeList signatures = root.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_SIGNATURE);
-
-        // obtenemos el ID de los SignatureValue de cada una de las firmas recuperadas
-        final String signatureValuesID[] = new String[signatures.getLength()];
-        for (int i = 0; i < signatures.getLength(); i++) {
-        	signatureValuesID[i] = ((Element) signatures.item(i)).
-        		getElementsByTagNameNS(XMLConstants.DSIGNNS, SIGNATURE_VALUE).item(0).
-        		getAttributes().getNamedItem(ID_IDENTIFIER).getNodeValue();
-        }
-
-        // ordenamos los nodos de firma en preorden segun el arbol de firmas
-        final List<Element> sortedSignatures = new ArrayList<>(signatures.getLength());
-        for (int i = 0; i < signatures.getLength(); i++) {
-
-        	boolean isMainSignature = true;
-        	final NodeList references = ((Element) signatures.item(i)).
-        		getElementsByTagNameNS(XMLConstants.DSIGNNS, REFERENCE_STR);
-        	for (int j = 0; j < references.getLength(); j++) {
-        		if (AOXMLDSigSigner.CSURI.equals(((Element)references.item(j)).getAttribute("Type"))) { //$NON-NLS-1$
-        			isMainSignature = false;
-        			break;
-        		}
-        	}
-
-        	if (isMainSignature) {
-        		sortedSignatures.add((Element) signatures.item(i));
-        		addSubNodes(signatureValuesID[i], signatures, signatureValuesID, sortedSignatures);
-        	}
-        }
-
-        // Recorremos todos los nodos comprobando si su posicion esta entre las seleccionadas
-        // como nodo objetivo y, dado el caso, se contrafirma
-        final List<Object> targetsList = Arrays.asList(tgts);
-    	for (int i = 0; i < sortedSignatures.size(); i++) {
-    		if (targetsList.contains(Integer.valueOf(i))) {
-    			cs(sortedSignatures.get(i), key, certChain, onlySignningCert, refsDigestMethod, canonicalizationAlgorithm, xmlSignaturePrefix);
-    		}
-    	}
-    }
-
-    /**
-     * Funci&oacute;n que busca los nodos de firma que referencian a uno indicado
-     * y, recursivamente, a cada uno de estos. Seg&uacute;n los encuentra los inserta en un
-     * listado de nodos.
-     * @param signatureValueID Identificador del valor de firma para el que se deben buscar las
-     * firmas que lo referencian.
-     * @param signatures Listado de firmas.
-     * @param signatureValuesID Listado de indetificadores de valor de firma ordenados
-     * seg&uacute;n el listado de firmas.
-     * @param sortedSignatures Listado donde se monta la sucesi&oacute;n ordenada de firmas.
-     */
-    private void addSubNodes(final String signatureValueID, final NodeList signatures,
-			final String[] signatureValuesID, final List<Element> sortedSignatures) {
-
-    	for (int i = 0; i < signatures.getLength(); i++) {
-    		final NodeList references = ((Element) signatures.item(i)).getElementsByTagNameNS(
-    				XMLConstants.DSIGNNS, REFERENCE_STR);
-
-    		for (int j = 0; j < references.getLength(); j++) {
-    			if (("#" + signatureValueID).equals(((Element)references.item(j)).getAttribute(URI_STR))) { //$NON-NLS-1$
-    				// Si una firma contiene una referencia a si misma,
-    				// rompemos el ciclo para evitar un bucle infinito
-    				if (signatureValuesID[i].equals(signatureValueID)) {
-    					break;
-    				}
-    				sortedSignatures.add((Element) signatures.item(i));
-    				addSubNodes(signatureValuesID[i], signatures, signatureValuesID, sortedSignatures);
-    				break;
-    			}
-    		}
-    	}
-	}
-
-	/** Realiza la contrafirma de los firmantes indicados en el par&aacute;metro
-     * targets.
-     * @param root Elemento ra&iacute;z del documento xml que contiene las firmas.
-     * @param targets Array con el nombre de los firmantes de los nodos a contrafirmar.
-     * @param key Clave para la firma.
-     * @param certChain Cadena de certificados del firmante.
-     * @param onlySignningCert Si se establece a <code>true</code> incluye solo el certificado del firmante,
-     *                         si se establece a <code>false</code> incluye la cadena completa.
-     * @param refsDigestMethod Algoritmo a usar en la huella digital de las referencias internas.
-     * @param canonicalizationAlgorithm Algoritmo de <i>canonicalizaci&oacute;n</i> a usar.
-     * @param xmlSignaturePrefix Prefijo del espacio de nombres de XMLDSig.
-     * @throws AOException Cuando ocurre cualquier problema durante el proceso */
-    private void countersignSigners(final Element root,
-                                    final Object[] targets,
-                                    final PrivateKey key,
-                                    final Certificate[] certChain,
-                                    final boolean onlySignningCert,
-                                    final String refsDigestMethod,
-                                    final String canonicalizationAlgorithm,
-                                    final String xmlSignaturePrefix) throws AOException {
-
-        // obtiene todas las firmas
-        final NodeList signatures = root.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_SIGNATURE);
-        final int numSignatures = signatures.getLength();
-
-        final List<Object> signers = Arrays.asList(targets);
-        final List<Element> nodes = new ArrayList<>();
-
-        // obtiene los nodos de los firmantes indicados en targets
-        for (int i = 0; i < numSignatures; i++) {
-            final Element node = (Element) signatures.item(i);
-            if (signers.contains(AOUtil.getCN(Utils.getCertificate(node.getElementsByTagNameNS(XMLConstants.DSIGNNS, "X509Certificate").item(0))))) { //$NON-NLS-1$
-                nodes.add(node);
-            }
-        }
-
-        // y crea sus contrafirmas
-        final Iterator<Element> i = nodes.iterator();
-        while (i.hasNext()) {
-            cs(i.next(), key, certChain, onlySignningCert, refsDigestMethod, canonicalizationAlgorithm, xmlSignaturePrefix);
-        }
     }
 
     /** Realiza la contrafirma de la firma pasada por par&aacute;metro.
