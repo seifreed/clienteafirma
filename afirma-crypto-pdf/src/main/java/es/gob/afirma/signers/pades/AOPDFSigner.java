@@ -118,7 +118,8 @@ public final class AOPDFSigner implements AOSigner, AOConfigurableContext {
 	// iText tiene ciertos problemas reconociendo ECDSA y a veces usa su OID, por lo que declaramos alias de los
 	// algoritmos de firma en los proveedores mas comunes
 	static {
-		final String[] providers = new String[] { "SunEC", "BC", "SC" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		// "SC" eliminado en M3.3 (2026-05-07): SpongyCastle reemplazado por BouncyCastle.
+		final String[] providers = new String[] { "SunEC", "BC" }; //$NON-NLS-1$ //$NON-NLS-2$
 		for (final String providerName : providers) {
 		    final Provider p = Security.getProvider(providerName);
 		    if (p != null) {

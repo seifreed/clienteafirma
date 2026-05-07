@@ -53,7 +53,10 @@
 		
 		<afirma.lib.itext.version>1.7</afirma.lib.itext.version>
 		<afirma.lib.others.version>0.0.10</afirma.lib.others.version>
-		<spongycastle.version>1.58.0.0</spongycastle.version>
+		<!-- BouncyCastle (replaces SpongyCastle 1.58.0.0 from 2018, M3.3 2026-05-07).
+		     Provider name changes from "SC" to "BC". The bcutil-jdk18on artifact
+		     is required since BC 1.71+ which split utility classes out of bcprov. -->
+		<bouncycastle.version>1.84</bouncycastle.version>
 		
 		<!-- Plugins refreshed 2026-05-07 against Maven Central latest stable. -->
 		<maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
@@ -120,22 +123,24 @@
 				<version>${afirma.lib.others.version}</version>
 			</dependency>
 
+			<!-- BouncyCastle 1.84+ replaces SpongyCastle 1.58 (M3.3, 2026-05-07).
+			     Provider registers as "BC" not "SC". -->
 			<dependency>
-				<groupId>com.madgag.spongycastle</groupId>
-				<artifactId>core</artifactId>
-				<version>${spongycastle.version}</version>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>com.madgag.spongycastle</groupId>
-				<artifactId>prov</artifactId>
-				<version>${spongycastle.version}</version>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcpkix-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
 			</dependency>
-			
+
 			<dependency>
-				<groupId>com.madgag.spongycastle</groupId>
-				<artifactId>bcpkix-jdk15on</artifactId>
-				<version>${spongycastle.version}</version>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcutil-jdk18on</artifactId>
+				<version>${bouncycastle.version}</version>
 			</dependency>
 			
 			<dependency>

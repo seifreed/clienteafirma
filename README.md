@@ -44,7 +44,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M2** | Cadena de suministro CI — GitHub Actions, CodeQL, Renovate, Dependabot | 🟡 Parcial (PR-gate + SAST + Renovate listos; Sigstore/SLSA pendiente) |
 | **M3.1** | JDK 8 → JDK 21 LTS sin cambios funcionales | ✅ Completado |
 | **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ✅ Completado (Tomcat 10.1+ / Jetty 12+; triphase service 3.0.0) |
-| **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ⏳ Pendiente |
+| **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | ⏳ Pendiente |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | ⏳ Pendiente |
 | **M3.6** | Hardening (Jazzer, PIT) y JUnit 5 | ⏳ Pendiente |
@@ -55,7 +55,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Área | Upstream (1.9.1) | Este fork (1.10-dev) |
 | --- | --- | --- |
 | Compile target | Java&nbsp;1.8 | **Java&nbsp;21 LTS** (`<release>21</release>`) |
-| Cripto provider transitivo | SpongyCastle 1.58.0.0 (2018) | Igual *por ahora*; M3.3 migra a BouncyCastle |
+| Cripto provider | SpongyCastle 1.58.0.0 (2018, sin mantenimiento) | **BouncyCastle 1.84** (`bcprov-jdk18on` + `bcpkix-jdk18on` + `bcutil-jdk18on`); 72 archivos `.java` migrados |
 | `xmlsec` (Apache Santuario) | 3.0.5 | **3.0.6** (4.0.x bloqueado por API removal en `XMLSignatureInput(Node)`) |
 | `dependency-check-maven` | — | **12.2.2** con `failBuildOnCVSS=7` en `env-deploy` |
 | `cyclonedx-maven-plugin` | — | **2.9.1** generando SBOM CycloneDX&nbsp;1.5 por módulo |

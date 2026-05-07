@@ -18,5 +18,12 @@
 			<artifactId>afirma-core</artifactId>
 			<version>${clienteafirma.version}</version>
 		</dependency>
+	
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 </project>

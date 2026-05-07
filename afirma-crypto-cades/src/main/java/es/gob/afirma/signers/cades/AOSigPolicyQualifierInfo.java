@@ -9,13 +9,13 @@
 
 package es.gob.afirma.signers.cades;
 
-import org.spongycastle.asn1.ASN1Encodable;
-import org.spongycastle.asn1.ASN1EncodableVector;
-import org.spongycastle.asn1.ASN1ObjectIdentifier;
-import org.spongycastle.asn1.ASN1Primitive;
-import org.spongycastle.asn1.DERIA5String;
-import org.spongycastle.asn1.DERSequence;
-import org.spongycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 
 /** Tipo <i>AOSigPolicyQualifierInfo</i> de ASN.1 para CADES-EPES.
  *

@@ -246,7 +246,14 @@
                         <artifactId>proguard-base</artifactId>
                         <version>4.9</version>
                     </dependency>
-                </dependencies>
+                
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
 			</plugin>
 
  			<plugin>

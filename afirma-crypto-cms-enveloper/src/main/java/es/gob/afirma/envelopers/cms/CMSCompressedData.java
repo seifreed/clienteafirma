@@ -12,16 +12,16 @@ package es.gob.afirma.envelopers.cms;
 import java.io.IOException;
 import java.util.zip.DataFormatException;
 
-import org.spongycastle.asn1.ASN1Encoding;
-import org.spongycastle.asn1.ASN1ObjectIdentifier;
-import org.spongycastle.asn1.ASN1OctetString;
-import org.spongycastle.asn1.ASN1Sequence;
-import org.spongycastle.asn1.BEROctetString;
-import org.spongycastle.asn1.DEROctetString;
-import org.spongycastle.asn1.cms.CMSObjectIdentifiers;
-import org.spongycastle.asn1.cms.CompressedData;
-import org.spongycastle.asn1.cms.ContentInfo;
-import org.spongycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.BEROctetString;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
+import org.bouncycastle.asn1.cms.CompressedData;
+import org.bouncycastle.asn1.cms.ContentInfo;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
 /** Clase que crea un tipo Compressed Data seg&uacute;n el RFC 3274 - CMS
  * Compressed Data.

@@ -22,7 +22,7 @@ public final class SCChecker {
 	@SuppressWarnings("static-method")
 	public void checkSpongyCastle() {
 		try {
-			Class.forName("org.spongycastle.asn1.ASN1Primitive"); //$NON-NLS-1$
+			Class.forName("org.bouncycastle.asn1.ASN1Primitive"); //$NON-NLS-1$
 		}
 		catch(final ClassNotFoundException e) {
 			throw new InvalidSpongyCastleException(SC_VERSION, "1.46 o anterior", e); //$NON-NLS-1$

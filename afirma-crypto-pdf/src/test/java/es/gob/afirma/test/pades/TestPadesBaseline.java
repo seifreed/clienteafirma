@@ -80,9 +80,12 @@ public class TestPadesBaseline {
 		this.commitmentTypeIndicationsParams = new Properties();
 		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATIONS, "2"); //$NON-NLS-1$
 		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "0" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_IDENTIFIER, "1"); //$NON-NLS-1$ //$NON-NLS-2$
-		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "0" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_QUALIFIERS, "1.2.3.4|1.56.23.1"); //$NON-NLS-1$ //$NON-NLS-2$
+		// BC 1.84 strictly validates OIDs per ITU X.660 (second arc <= 39 when first arc is 0/1).
+		// "1.56.23.1" was an invalid OID accepted only by SpongyCastle's lax validator;
+		// replaced with a valid test OID under the iso/identified-organization arc.
+		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "0" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_QUALIFIERS, "1.2.3.4|1.3.6.1.4.1.99999.23.1"); //$NON-NLS-1$ //$NON-NLS-2$
 		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "1" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_IDENTIFIER, "6"); //$NON-NLS-1$ //$NON-NLS-2$
-		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "1" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_QUALIFIERS, "1.56.23.2"); //$NON-NLS-1$ //$NON-NLS-2$
+		this.commitmentTypeIndicationsParams.setProperty(PdfExtraParams.COMMITMENT_TYPE_INDICATION_PREFIX + "1" + PdfExtraParams.COMMITMENT_TYPE_INDICATION_QUALIFIERS, "1.3.6.1.4.1.99999.23.2"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		// Tipos erroneos que no deberian declararse
 		this.contentHintParams = new Properties();
