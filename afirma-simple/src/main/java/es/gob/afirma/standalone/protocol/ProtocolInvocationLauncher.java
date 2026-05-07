@@ -112,6 +112,16 @@ public final class ProtocolInvocationLauncher {
 
     private static LoadKeystoreTask loadKeyStoreTask = null;
 
+    /**
+     * Registro de handlers Strategy para verbos del protocolo {@code afirma://}.
+     * Introducido en la Fase A del plan Clean Code (2026-05-07): los verbos
+     * nuevos se enchufan aquí en lugar de añadir un {@code else if} más al
+     * dispatch legacy de {@link #launch(String, ProtocolVersion, boolean)}.
+     * Los 7 verbos legacy migrarán a este registry en la Fase A.1.
+     */
+    private static final ProtocolOperationRegistry OPERATION_REGISTRY = new ProtocolOperationRegistry()
+    		.register(new EudiwProtocolHandler());
+
 	/**
 	 * Recupera la entrada con la clave y certificado prefijados para las
 	 * operaciones con certificados.
@@ -258,6 +268,35 @@ public final class ProtocolInvocationLauncher {
         //   javadoc de los metodos y la excepcion.
         // - Los errores en el proceso siempre deberian lanzar una excepcion y no devolver
         //   una cadena con el mensaje del error.
+
+        // M4 / Plan Clean Code Fase A: dispatch de verbos a través de
+        // ProtocolOperationRegistry. Si ningún handler reconoce la URL,
+        // cae al legacy if-chain. Cada nuevo verbo se enchufa en el registry
+        // — no aquí.
+        final var registeredHandler = OPERATION_REGISTRY.resolve(urlString);
+        if (registeredHandler.isPresent()) {
+        	final LaunchContext ctx = new LaunchContext(
+        			requestedProtocolVersion, bySocket, urlParams, jvc);
+        	try {
+        		return registeredHandler.get().process(urlString, ctx);
+        	}
+        	catch (final IllegalArgumentException e) {
+        		LOGGER.log(Level.SEVERE, "Parámetros inválidos en URL " + LoggerUtil.getCleanUserHomePath(urlString) + ": " + e.getMessage(), e); //$NON-NLS-1$ //$NON-NLS-2$
+        		final ErrorCode errorCode = SimpleErrorCode.Request.UNSUPPORTED_OPERATION;
+        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        	}
+        	catch (final Exception e) {
+        		LOGGER.log(Level.SEVERE, "Error procesando handler de protocolo: " + e, e); //$NON-NLS-1$
+        		// Reutilizamos UNSUPPORTED_OPERATION para no introducir un nuevo
+        		// ErrorCode externo sin coordinación con CTT. Ver Fase A.1 del plan
+        		// Clean Code: cuando los 7 verbos legacy migren al registry,
+        		// se añadirá un código genérico UNKNOWN_OPERATION_ERROR.
+        		final ErrorCode errorCode = SimpleErrorCode.Request.UNSUPPORTED_OPERATION;
+        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        	}
+        }
 
         // Se invoca la aplicacion para iniciar la comunicacion por socket
         if (urlString.startsWith("afirma://websocket?") || urlString.startsWith("afirma://websocket/?")) { //$NON-NLS-1$ //$NON-NLS-2$

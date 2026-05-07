@@ -1,26 +1,30 @@
-/* Copyright (C) 2026 [Gobierno de España] / Agencia Estatal de Administración Digital */
+/* Copyright (C) 2026 [Gobierno de España] / Agencia Estatal de Administración Digital
+ * This file is part of "Cliente @Firma".
+ */
 
 package es.gob.afirma.standalone.protocol;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
+
+import es.gob.afirma.eudiw.oid4vp.AuthorizationRequest;
+import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
 
 /**
  * Handler para el verbo {@code afirma://eudiw-present?...}, equivalente al
  * resto de operaciones expuestas por {@link ProtocolInvocationLauncher} pero
  * orientado a la EU Digital Identity Wallet (M4).
  *
- * <p>Este esqueleto solo cubre el <strong>parseo</strong> de la URI de
- * invocación. El cableado dentro del dispatcher principal —
- * {@code ProtocolInvocationLauncher.launch(url, ...)} — y la delegación a
- * {@code afirma-eudiw-bridge} para construir la {@code AuthorizationRequest}
- * correspondiente está marcado como TODO M4.x: requiere coordinación con CTT
- * y el endpoint de la wallet española de referencia.</p>
+ * <p>Implementa {@link ProtocolOperationHandler} desde la Fase A del plan
+ * Clean Code (2026-05-07) — primer verbo cableado a través del
+ * {@link ProtocolOperationRegistry}.</p>
  *
  * <p>Forma esperada de la URI:</p>
  *
@@ -29,18 +33,71 @@ import java.util.Objects;
  *     responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse&
  *     presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1&
  *     state=optional-state}</pre>
+ *
+ * <p>El método {@link #process(String, LaunchContext)} construye una
+ * {@link AuthorizationRequest} OID4VP y devuelve la URI {@code openid4vp://}
+ * canónica para su consumo por la wallet (móvil). La <em>entrega</em> a la
+ * wallet (deep-link, mostrar QR, etc.) está marcada como TODO M4.x: depende
+ * de coordinación con CTT y del endpoint de la wallet española de referencia.</p>
  */
-public final class EudiwProtocolHandler {
+public final class EudiwProtocolHandler implements ProtocolOperationHandler {
+
+	private static final Logger LOGGER = Logger.getLogger(EudiwProtocolHandler.class.getName());
 
 	/** El verbo (host de la URI {@code afirma://}) que activa este handler. */
 	public static final String OPERATION = "eudiw-present"; //$NON-NLS-1$
 
-	private EudiwProtocolHandler() {
-		// no-op
+	private static final String SCHEME_PREFIX = "afirma://" + OPERATION; //$NON-NLS-1$
+
+	@Override
+	public boolean handles(final String url) {
+		if (url == null) {
+			return false;
+		}
+		return url.startsWith(SCHEME_PREFIX + "?") //$NON-NLS-1$
+				|| url.startsWith(SCHEME_PREFIX + "/?") //$NON-NLS-1$
+				|| url.equals(SCHEME_PREFIX)
+				|| url.equals(SCHEME_PREFIX + "/"); //$NON-NLS-1$
+	}
+
+	@Override
+	public String process(final String url, final LaunchContext ctx) {
+		Objects.requireNonNull(url, "url"); //$NON-NLS-1$
+		Objects.requireNonNull(ctx, "ctx"); //$NON-NLS-1$
+
+		final URI uri;
+		try {
+			uri = new URI(url);
+		}
+		catch (final URISyntaxException e) {
+			throw new IllegalArgumentException("URL eudiw-present malformada: " + e.getMessage(), e); //$NON-NLS-1$
+		}
+		final Map<String, String> params = parseParameters(uri);
+
+		final String verifier = require(params, "verifier"); //$NON-NLS-1$
+		final URI responseUri = URI.create(require(params, "responseUri")); //$NON-NLS-1$
+		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
+
+		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
+				.clientId(verifier)
+				.responseUri(responseUri)
+				.withFreshNonce()
+				.withFreshState();
+		if (pdUri != null && !pdUri.isBlank()) {
+			builder.presentationDefinitionUri(URI.create(pdUri));
+		}
+		final AuthorizationRequest request = builder.build();
+		final String openid4vpUri = request.toUri().toString();
+		LOGGER.fine(() -> "OID4VP request construido para verifier=" + verifier); //$NON-NLS-1$
+		// TODO M4.x: entregar la URI a la wallet (deep-link móvil, QR para
+		// flujo cross-device, o POST al endpoint de la wallet de escritorio
+		// cuando exista). De momento, devolvemos la URI canónica.
+		return openid4vpUri;
 	}
 
 	/**
 	 * Verifica si una URI {@code afirma://} apunta a este handler.
+	 * Mantenido como API estática para compatibilidad con tests previos.
 	 */
 	public static boolean handles(final URI uri) {
 		return uri != null
@@ -54,15 +111,13 @@ public final class EudiwProtocolHandler {
 	 *
 	 * <p>Como esta entrada es un <em>system boundary</em> (URLs externas), las
 	 * claves duplicadas se rechazan explícitamente con {@link IllegalArgumentException}
-	 * en lugar de sobreescribir silenciosamente — un atacante podría usar
-	 * <code>?nonce=XX&amp;nonce=YY</code> para divergir el nonce que el handler
-	 * valida del que la wallet ve.</p>
+	 * en lugar de sobreescribir silenciosamente.</p>
 	 *
 	 * @throws IllegalArgumentException si la URI no es {@code afirma://eudiw-present}
 	 *     o si la query contiene la misma clave más de una vez.
 	 */
 	public static Map<String, String> parseParameters(final URI uri) {
-		Objects.requireNonNull(uri, "uri");
+		Objects.requireNonNull(uri, "uri"); //$NON-NLS-1$
 		if (!handles(uri)) {
 			throw new IllegalArgumentException(
 					"URI no corresponde al verbo eudiw-present: " + uri); //$NON-NLS-1$
@@ -93,5 +148,14 @@ public final class EudiwProtocolHandler {
 			params.put(key, value);
 		}
 		return Collections.unmodifiableMap(params);
+	}
+
+	private static String require(final Map<String, String> params, final String key) {
+		final String v = params.get(key);
+		if (v == null || v.isBlank()) {
+			throw new IllegalArgumentException(
+					"Parámetro requerido ausente en eudiw-present: " + key); //$NON-NLS-1$
+		}
+		return v;
 	}
 }

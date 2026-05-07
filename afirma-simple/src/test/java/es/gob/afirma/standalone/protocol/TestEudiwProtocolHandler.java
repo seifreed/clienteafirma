@@ -21,7 +21,7 @@ final class TestEudiwProtocolHandler {
 		assertTrue(EudiwProtocolHandler.handles(URI.create("afirma://eudiw-present?x=1")));
 		assertFalse(EudiwProtocolHandler.handles(URI.create("afirma://sign?x=1")));
 		assertFalse(EudiwProtocolHandler.handles(URI.create("https://eudiw-present?x=1")));
-		assertFalse(EudiwProtocolHandler.handles(null));
+		assertFalse(EudiwProtocolHandler.handles((URI) null));
 	}
 
 	@Test

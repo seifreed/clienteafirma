@@ -55,6 +55,13 @@
 			<version>${clienteafirma.version}</version>
 		</dependency>
 
+		<!-- M4: cableado del verbo afirma://eudiw-present a través del registry. -->
+		<dependency>
+			<groupId>es.gob.afirma</groupId>
+			<artifactId>afirma-eudiw-bridge</artifactId>
+			<version>${clienteafirma.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>es.gob.afirma</groupId>
 			<artifactId>afirma-core-prefs</artifactId>
