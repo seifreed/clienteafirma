@@ -96,21 +96,22 @@ public final class ProtocolInvocationLauncher {
 	 */
 	private static final int DEFAULT_WEBSOCKET_PORT = 63117;
 
-    /** Clave privada fijada para reutilizarse en operaciones sucesivas. */
-	private static PrivateKeyEntry stickyKeyEntry = null;
-
-	/**
-	 * Hilo para solicitar activamente a traves del servidor intermedio que se
-	 * espere a que termine de ejecutarse la aplicaci&oacute;n.
-	 */
-    private static Thread activeWaitingThread = null;
-
     /**
      * Versi&oacute;n del protocolo de comunicaci&oacute;n solicitada.
+     * Es <em>launch-scoped</em> (se redefine en cada invocaci&oacute;n);
+     * migrar&aacute; a {@link LaunchContext} en Fase A.2 del plan Clean Code.
      */
     private static ProtocolVersion requestedProtocolVersion = null;
 
-    private static LoadKeystoreTask loadKeyStoreTask = null;
+    /**
+     * Estado session-level (sticky key, hilo de espera, tarea de carga del keystore).
+     * Extra&iacute;do a {@link ProtocolSessionState} en la Fase A.1 del plan
+     * Clean Code (2026-05-07): los tres campos eran static mutables en esta
+     * clase; ahora viven en un singleton thread-safe con accesores expl&iacute;citos.
+     * Los m&eacute;todos est&aacute;ticos p&uacute;blicos de abajo conservan la
+     * fachada por compatibilidad con los ~25 call sites externos.
+     */
+    private static final ProtocolSessionState SESSION = ProtocolSessionState.INSTANCE;
 
     /**
      * Registro de handlers Strategy para verbos del protocolo {@code afirma://}.
@@ -129,7 +130,7 @@ public final class ProtocolInvocationLauncher {
 	 * @return Entrada con el certificado y la clave prefijados.
 	 */
 	public static PrivateKeyEntry getStickyKeyEntry() {
-		return stickyKeyEntry;
+		return SESSION.stickyKeyEntry();
 	}
 
 	/**
@@ -139,7 +140,7 @@ public final class ProtocolInvocationLauncher {
 	 * @param stickyKeyEntry Entrada con el certificado y la clave prefijados.
 	 */
 	public static void setStickyKeyEntry(final PrivateKeyEntry stickyKeyEntry) {
-		ProtocolInvocationLauncher.stickyKeyEntry = stickyKeyEntry;
+		SESSION.stickyKeyEntry(stickyKeyEntry);
 	}
 
     @SuppressWarnings({ "unused", "static-method" })
@@ -977,8 +978,9 @@ public final class ProtocolInvocationLauncher {
      */
     private static void requestWait(final URL storageServletUrl, final String id) {
     	try {
-	    	activeWaitingThread = new ActiveWaitingThread(storageServletUrl.toString(), id);
-	    	activeWaitingThread.start();
+	    	final Thread thread = new ActiveWaitingThread(storageServletUrl.toString(), id);
+	    	SESSION.activeWaitingThread(thread);
+	    	thread.start();
 		} catch (final Exception e) {
 			LOGGER.warning("Se ha interrumpido la espera activa para la conexion con servidor intermedio: " + e); //$NON-NLS-1$
 		}
@@ -1028,7 +1030,7 @@ public final class ProtocolInvocationLauncher {
 	 *         inici&oacute; la espera activa.
 	 */
 	public static Thread getActiveWaitingThread() {
-		return activeWaitingThread;
+		return SESSION.activeWaitingThread();
 	}
 
 	/**
@@ -1191,10 +1193,7 @@ public final class ProtocolInvocationLauncher {
 	 * no sea un almac&eacute;n en fichero o tarjeta.
 	 */
 	public static void initLoadKeyStoreTask() {
-		if (loadKeyStoreTask == null) {
-			loadKeyStoreTask = new LoadKeystoreTask();
-			loadKeyStoreTask.start();
-		}
+		SESSION.initLoadKeyStoreTask();
 	}
 
 	/**
@@ -1202,6 +1201,6 @@ public final class ProtocolInvocationLauncher {
 	 * @return Tarea de carga del almac&eacute;n o {@code null} si no se defini&oacute;.
 	 */
 	public static LoadKeystoreTask getLoadKeyStoreTask() {
-		return loadKeyStoreTask;
+		return SESSION.loadKeyStoreTask();
 	}
 }
