@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SignatureException;
 
-import es.gob.afirma.core.signers.der.DerInputStream;
-import es.gob.afirma.core.signers.der.DerOutputStream;
-import es.gob.afirma.core.signers.der.DerValue;
+import es.gob.afirma.core.signers.asn1.BcAsn1Adapter;
 
 /**
  * Utilidades para la codificaci&oacute;n del PKCS#1 de las firmas.
@@ -38,7 +36,6 @@ public final class Pkcs1Utils {
     public static byte[] encodeSignature(final byte[] signature) throws SignatureException {
 
         try {
-
             final int n = signature.length >> 1;
             final byte[] bytes = new byte[n];
             System.arraycopy(signature, 0, bytes, 0, n);
@@ -46,15 +43,9 @@ public final class Pkcs1Utils {
             System.arraycopy(signature, n, bytes, 0, n);
             final BigInteger s = new BigInteger(1, bytes);
 
-            final DerOutputStream out = new DerOutputStream(signature.length + 10);
-            out.putInteger(r);
-            out.putInteger(s);
-            final DerValue result =
-                new DerValue(DerValue.tag_Sequence, out.toByteArray());
-
-            return result.toByteArray();
-
-        } catch (final Exception e) {
+            return BcAsn1Adapter.encodeSequenceOfIntegers(r, s);
+        }
+        catch (final IOException e) {
             throw new SignatureException("Could not encode signature", e); //$NON-NLS-1$
         }
     }
@@ -71,18 +62,9 @@ public final class Pkcs1Utils {
     public static byte[] decodeSignature(final byte[] signature) throws SignatureException {
 
         try {
-            // Enforce strict DER checking for signatures
-            final DerInputStream in = new DerInputStream(signature, 0, signature.length, false);
-            final DerValue[] values = in.getSequence(2);
-
-            // check number of components in the read sequence
-            // and trailing data
-            if (values.length != 2 || in.available() != 0) {
-                throw new IOException("Invalid encoding for signature"); //$NON-NLS-1$
-            }
-
-            final BigInteger r = values[0].getPositiveBigInteger();
-            final BigInteger s = values[1].getPositiveBigInteger();
+            final BigInteger[] rs = BcAsn1Adapter.decodeSequenceOfIntegers(signature, 2);
+            final BigInteger r = rs[0];
+            final BigInteger s = rs[1];
 
             // trim leading zeroes
             final byte[] rBytes = trimZeroes(r.toByteArray());
@@ -96,7 +78,8 @@ public final class Pkcs1Utils {
                 sBytes.length);
             return result;
 
-        } catch (final Exception e) {
+        }
+        catch (final IOException e) {
             throw new SignatureException("Invalid encoding for signature", e); //$NON-NLS-1$
         }
     }
