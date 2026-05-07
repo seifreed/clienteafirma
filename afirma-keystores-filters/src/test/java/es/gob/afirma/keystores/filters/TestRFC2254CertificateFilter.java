@@ -4,6 +4,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.Platform;
@@ -63,6 +64,16 @@ public final class TestRFC2254CertificateFilter {
 	@Test
 	@SuppressWarnings("static-method")
 	public void TestRFC2254CertificateRecursiveFilter() throws Exception {
+
+		// Test de integración: necesita un keystore nativo del SO (CAPI en
+		// Windows, Apple Keychain en macOS o Mozilla NSS en Linux).
+		// En CI Linux headless no hay perfil Firefox ni cert9.db, así que
+		// AOKeyStoreManagerFactory falla al cargar MozillaUnifiedKeyStoreManager
+		// (ClassNotFoundException porque afirma-keystores-mozilla no está en
+		// el classpath de este módulo).
+		Assume.assumeTrue("Test requiere keystore nativo del SO (CAPI/Apple/NSS)", //$NON-NLS-1$
+				canLoadOsKeystore());
+
 		final RFC2254CertificateFilter filter = new RFC2254CertificateFilter(null, "cn=ANF Global Root CA", true);  //$NON-NLS-1$
 
 		AOKeyStoreManager ksm;
@@ -83,6 +94,29 @@ public final class TestRFC2254CertificateFilter {
 		System.out.println("Aceptados:"); //$NON-NLS-1$
 		for (final String a : aceptados) {
 			System.out.println(a);
+		}
+	}
+
+	private static boolean canLoadOsKeystore() {
+		final String managerClass;
+		if (Platform.getOS() == Platform.OS.WINDOWS) {
+			managerClass = "es.gob.afirma.keystores.capi.CAPIKeyStoreManager"; //$NON-NLS-1$
+		}
+		else if (Platform.getOS() == Platform.OS.MACOSX) {
+			managerClass = "es.gob.afirma.keystores.apple.AppleKeyStoreManager"; //$NON-NLS-1$
+		}
+		else if (Platform.getOS() == Platform.OS.LINUX) {
+			managerClass = "es.gob.afirma.keystores.mozilla.MozillaUnifiedKeyStoreManager"; //$NON-NLS-1$
+		}
+		else {
+			return false;
+		}
+		try {
+			Class.forName(managerClass);
+			return true;
+		}
+		catch (final ClassNotFoundException e) {
+			return false;
 		}
 	}
 
