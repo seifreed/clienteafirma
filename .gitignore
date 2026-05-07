@@ -75,3 +75,57 @@ hs_err_pid*
 
 # macOS
 .DS_Store
+
+
+### IDEs ###
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+
+### Build, supply-chain, and quality tooling ###
+
+# OWASP dependency-check reports + local NVD cache fragments
+dependency-check-report.*
+.dependency-check/
+
+# CycloneDX SBOM generated under target/ already covered by target/
+# (kept here as a hint when running outside of `target/`)
+bom.xml
+bom.json
+
+# JaCoCo coverage
+jacoco.exec
+jacoco-it.exec
+
+
+### Local secrets / signing material (CRA) ###
+# Signing keystores must NEVER live in the repo. Provision via CI secrets.
+*.pfx
+*.p12
+*.jks
+*.keystore
+afirma.keystore
+
+
+### Claude Code / agent tooling ###
+# Per-project Claude memory and config
+.claude/
+# All CLAUDE.md files (root and stubs from claude-mem in any subdirectory)
+CLAUDE.md
+**/CLAUDE.md
