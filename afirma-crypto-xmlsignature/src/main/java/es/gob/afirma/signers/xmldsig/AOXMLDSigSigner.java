@@ -116,9 +116,6 @@ public final class AOXMLDSigSigner implements AOSigner {
 
     private static final String URI_STR = "URI"; //$NON-NLS-1$
 
-    private String algo;
-    private Document doc;
-
     // Instalamos el proveedor de Apache. Esto es necesario para evitar problemas con los saltos de linea
     // de los Base 64
     static {
@@ -1709,18 +1706,17 @@ public final class AOXMLDSigSigner implements AOSigner {
         final boolean onlySignningCert = Boolean.parseBoolean(
         		extraParams.getProperty(AOXMLDSigExtraParams.INCLUDE_ONLY_SIGNNING_CERTIFICATE, Boolean.FALSE.toString()));
 
-        this.algo = algorithm;
-
         // se carga el documento XML y su raiz
         final Map<String, String> originalXMLProperties = new Hashtable<>();
+        final Document doc;
         Element root;
         try {
         	final DocumentBuilder docBuilder = Utils.getNewDocumentBuilder();
-            this.doc = docBuilder.parse(new ByteArrayInputStream(sign));
+            Document parsedDoc = docBuilder.parse(new ByteArrayInputStream(sign));
 
             // Tomamos la configuracion del XML que contrafirmamos
             if (encoding == null) {
-                encoding = this.doc.getXmlEncoding();
+                encoding = parsedDoc.getXmlEncoding();
             }
 
             // Ademas del encoding, sacamos otros datos del doc XML original
@@ -1729,11 +1725,11 @@ public final class AOXMLDSigSigner implements AOSigner {
             if (encoding != null && !XMLConstants.BASE64_ENCODING.equalsIgnoreCase(encoding)) {
                 originalXMLProperties.put(OutputKeys.ENCODING, encoding);
             }
-            String tmpXmlProp = this.doc.getXmlVersion();
+            String tmpXmlProp = parsedDoc.getXmlVersion();
             if (tmpXmlProp != null) {
                 originalXMLProperties.put(OutputKeys.VERSION, tmpXmlProp);
             }
-            final DocumentType dt = this.doc.getDoctype();
+            final DocumentType dt = parsedDoc.getDoctype();
             if (dt != null) {
                 tmpXmlProp = dt.getSystemId();
                 if (tmpXmlProp != null) {
@@ -1741,15 +1737,16 @@ public final class AOXMLDSigSigner implements AOSigner {
                 }
             }
 
-            root = this.doc.getDocumentElement();
+            root = parsedDoc.getDocumentElement();
 
             // si el nodo raiz del documento es una firma simple, se inserta como raiz el
             // nodo AFIRMA
 
             if (XMLConstants.TAG_SIGNATURE.equals(root.getLocalName()) && XMLConstants.DSIGNNS.equals(root.getNamespaceURI())) {
-                this.doc = insertarNodoAfirma(this.doc, docBuilder);
-                root = this.doc.getDocumentElement();
+                parsedDoc = insertarNodoAfirma(parsedDoc, docBuilder);
+                root = parsedDoc.getDocumentElement();
             }
+            doc = parsedDoc;
 
             // Selección de nodos vía Strategy (Fase D.1) + creación de la
             // contrafirma vía XmlSignatureCountersigner (Fase D.2). Cada
@@ -1761,7 +1758,7 @@ public final class AOXMLDSigSigner implements AOSigner {
             final XmlSignatureCountersigner countersigner = new XmlSignatureCountersigner();
             for (final Element node : nodesToCountersign) {
                 try {
-                    countersigner.countersignNode(node, this.algo, key, certChain,
+                    countersigner.countersignNode(node, algorithm, key, certChain,
                             onlySignningCert, digestMethodAlgorithm,
                             canonicalizationAlgorithm, xmlSignaturePrefix);
                 }
@@ -1784,7 +1781,7 @@ public final class AOXMLDSigSigner implements AOSigner {
         }
 
         // convierte el xml resultante para devolverlo como byte[]
-        return Utils.writeXML(this.doc.getDocumentElement(), originalXMLProperties, null, null);
+        return Utils.writeXML(doc.getDocumentElement(), originalXMLProperties, null, null);
     }
 
     /** {@inheritDoc} */
@@ -1802,8 +1799,8 @@ public final class AOXMLDSigSigner implements AOSigner {
         final String completePrefix;
         try {
         	final DocumentBuilder docBuilder = Utils.getNewDocumentBuilder();
-            this.doc = docBuilder.parse(new ByteArrayInputStream(sign));
-            root = this.doc.getDocumentElement();
+            Document doc = docBuilder.parse(new ByteArrayInputStream(sign));
+            root = doc.getDocumentElement();
 
             // Identificamos el prefijo que se utiliza en los nodos de firma
             final String xmlDSigNSPrefix = XmlDSigUtil.guessXmlDSigNamespacePrefix(root);
@@ -1814,8 +1811,8 @@ public final class AOXMLDSigSigner implements AOSigner {
             // documento
             // se haga correctamente
             if (root.getNodeName().equals(completePrefix + XMLConstants.TAG_SIGNATURE)) {
-                this.doc = insertarNodoAfirma(this.doc, docBuilder);
-                root = this.doc.getDocumentElement();
+                doc = insertarNodoAfirma(doc, docBuilder);
+                root = doc.getDocumentElement();
             }
         }
         catch (final Exception e) {
