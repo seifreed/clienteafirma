@@ -49,12 +49,11 @@ public class DirectorySignatureHelper {
 
     private static final String URI_STR = "uri"; //$NON-NLS-1$
 
-    private static final String CADES_SIGNER = "es.gob.afirma.signers.cades.AOCAdESSigner"; //$NON-NLS-1$
-    private static final String XADES_SIGNER = "es.gob.afirma.signers.xades.AOXAdESSigner"; //$NON-NLS-1$
-    private static final String XMLDSIG_SIGNER = "es.gob.afirma.signers.xmldsig.AOXMLDSigSigner"; //$NON-NLS-1$
-    private static final String PDF_SIGNER = "es.gob.afirma.signers.pades.AOPDFSigner"; //$NON-NLS-1$
-    private static final String ODF_SIGNER = "es.gob.afirma.signers.odf.AOODFSSigner"; //$NON-NLS-1$
-    private static final String OOXML_SIGNER = "es.gob.afirma.signers.ooxml.AOOOXMLSigner"; //$NON-NLS-1$
+    // Las 6 constantes FQCN (CADES_SIGNER, XADES_SIGNER, XMLDSIG_SIGNER,
+    // PDF_SIGNER, ODF_SIGNER, OOXML_SIGNER) se trasladaron a SignerFamilies
+    // en la Fase B del plan Clean Code (2026-05-07). Las comparaciones
+    // contra signer.getClass().getName() ahora usan métodos semánticos
+    // (isXmlBased, supportsMultiSignature, isDocumentBased).
 
     private static final String REG_FIELD_SEPARATOR = " - "; //$NON-NLS-1$
 
@@ -68,8 +67,11 @@ public class DirectorySignatureHelper {
      * la generaci&oacute;n de las firmas expl&iacute;citas XAdES. */
 	private static final String DEFAULT_MESSAGE_DIGEST_ALGORITHM = "SHA-512"; //$NON-NLS-1$
 
-	/** Generador de huellas digitales utilizado internamente. */
-    private static MessageDigest md = null;
+    // El campo `private static MessageDigest md` fue eliminado en la Fase B
+    // del plan Clean Code (2026-05-07): MessageDigest no es thread-safe y el
+    // patrón lazy-init sin sincronización es un bug latente. La instancia
+    // se crea localmente en cada llamada a digest() — MessageDigest.getInstance
+    // es muy barato (es una lookup en provider, no factor crítico).
 
     /** Algoritmo de firma. */
     private String algorithm = null;
@@ -488,7 +490,7 @@ public class DirectorySignatureHelper {
         signConfig.setProperty("precalculatedHashAlgorithm", AOSignConstants.getDigestAlgorithmName(this.algorithm)); //$NON-NLS-1$
 
         // Introduccion MIMEType "hash/algo", solo para XAdES y XMLDSig
-        if (signer.getClass().getName().equals(XADES_SIGNER) || signer.getClass().getName().equals(XMLDSIG_SIGNER)) {
+        if (SignerFamilies.isXmlBased(signer)) {
         	final String mimeType = "hash/" + AOSignConstants.getDigestAlgorithmName(this.algorithm).toLowerCase(); //$NON-NLS-1$
         	signConfig.setProperty("mimeType", mimeType); //$NON-NLS-1$
         }
@@ -601,15 +603,12 @@ public class DirectorySignatureHelper {
             }
 
             // Deteccion del MIMEType y Oid de los datos, solo para CAdES, XAdES y XMLDSig
-            final String signerClassName = signer.getClass().getName();
-            if (CADES_SIGNER.equals(signerClassName) ||
-            		XADES_SIGNER.equals(signerClassName) ||
-            		XMLDSIG_SIGNER.equals(signerClassName)) {
+            if (SignerFamilies.supportsMultiSignature(signer)) {
 
                 // Forzamos que las firmas XAdES Explicitas se realicen sobre el hash de los datos
             	// y que el mimetype sea el definido para hashes
             	String mimeType;
-                if ((XADES_SIGNER.equals(signerClassName) || XMLDSIG_SIGNER.equals(signerClassName))
+                if (SignerFamilies.isXmlBased(signer)
                 		&& AOSignConstants.SIGN_MODE_EXPLICIT.equalsIgnoreCase(this.mode)) {
                 	dataToSign = digest(dataToSign);
                 	mimeType = ("hash/" + DEFAULT_MESSAGE_DIGEST_ALGORITHM).toLowerCase(); //$NON-NLS-1$
@@ -668,10 +667,7 @@ public class DirectorySignatureHelper {
         	// una cofirma, se agrega la particula "cosign" en lugar de "signed" si los datos estaban
             // firmados
             String textAux = ".signed"; //$NON-NLS-1$
-        	if ((PDF_SIGNER.equals(signerClassName) ||
-        			ODF_SIGNER.equals(signerClassName) ||
-        			OOXML_SIGNER.equals(signerClassName)) &&
-        			signer.isSign(dataToSign)) {
+        	if (SignerFamilies.isDocumentBased(signer) && signer.isSign(dataToSign)) {
         		textAux = ".cosign"; //$NON-NLS-1$
         	}
 
@@ -861,13 +857,10 @@ public class DirectorySignatureHelper {
     	byte[] dataToSign = data;
 
     	// Deteccion del MIMEType y Oid de los datos, solo para CAdES, XAdES y XMLDSig
-        final String signerClassName = signer.getClass().getName();
-        if (CADES_SIGNER.equals(signerClassName) ||
-        		XADES_SIGNER.equals(signerClassName) ||
-        		XMLDSIG_SIGNER.equals(signerClassName)) {
+        if (SignerFamilies.supportsMultiSignature(signer)) {
 
         	String mimeType;
-        	if ((XADES_SIGNER.equals(signerClassName) || XMLDSIG_SIGNER.equals(signerClassName)) &&
+        	if (SignerFamilies.isXmlBased(signer) &&
         			AOSignConstants.SIGN_MODE_EXPLICIT.equalsIgnoreCase(signConfig.getProperty("mode"))) { //$NON-NLS-1$
         		dataToSign = digest(dataToSign);
         		mimeType = ("hash/" + DEFAULT_MESSAGE_DIGEST_ALGORITHM).toLowerCase(); //$NON-NLS-1$
@@ -1386,19 +1379,20 @@ public class DirectorySignatureHelper {
     }
 
     /** Genera la huella digital de los datos con el algoritmo indicado por
-     * {@code DEFAULT_MESSAGE_DIGEST_ALGORITHM}.
+     * {@code DEFAULT_MESSAGE_DIGEST_ALGORITHM}. La instancia de
+     * {@link MessageDigest} se crea localmente en cada llamada porque
+     * {@code MessageDigest} no es thread-safe — antes de la Fase B del plan
+     * Clean Code (2026-05-07) vivía como campo {@code static} mutable
+     * lazy-init, lo que causaba un bug latente bajo concurrencia.
      * @param data Datos de la que generar la huella.
      * @return Huella digital. */
     private static byte[] digest(final byte[] data) {
-    	if (md == null) {
-    		try {
-				md = MessageDigest.getInstance(DEFAULT_MESSAGE_DIGEST_ALGORITHM);
-			}
-    		catch (final NoSuchAlgorithmException e) {
-				LOGGER.severe("Se ha utilizado internamente un algoritmo de huella digital no soportado: " + e); //$NON-NLS-1$
-				throw new IllegalArgumentException("Algoritmo no soportado", e); //$NON-NLS-1$
-			}
+    	try {
+    		return MessageDigest.getInstance(DEFAULT_MESSAGE_DIGEST_ALGORITHM).digest(data);
     	}
-    	return md.digest(data);
+    	catch (final NoSuchAlgorithmException e) {
+			LOGGER.severe("Se ha utilizado internamente un algoritmo de huella digital no soportado: " + e); //$NON-NLS-1$
+			throw new IllegalArgumentException("Algoritmo no soportado", e); //$NON-NLS-1$
+		}
     }
 }
