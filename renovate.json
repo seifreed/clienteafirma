@@ -1,0 +1,105 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard"
+  ],
+  "schedule": ["before 8am on monday"],
+  "timezone": "Europe/Madrid",
+  "labels": ["dependencies", "renovate"],
+  "prHourlyLimit": 4,
+  "prConcurrentLimit": 8,
+  "rebaseWhen": "behind-base-branch",
+  "vulnerabilityAlerts": {
+    "labels": ["security", "dependencies"],
+    "schedule": []
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "/^org\\.bouncycastle/",
+        "/^com\\.madgag\\.spongycastle/"
+      ],
+      "groupName": "BouncyCastle / SpongyCastle (M3 migration)",
+      "description": "SpongyCastle 1.58 is unmaintained; the M3 milestone migrates to BouncyCastle 1.78+. Group both so PRs can be reviewed jointly.",
+      "schedule": ["before 8am on monday"]
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "/^es\\.gob\\.afirma\\.jmulticard/"
+      ],
+      "groupName": "jmulticard (DNIe stack)"
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "/^es\\.gob\\.afirma\\.lib/"
+      ],
+      "groupName": "es.gob.afirma.lib forks (iText, jmimemagic, oro, juniversalchardet)",
+      "description": "These are internal forks. Renovate will only flag, not auto-merge."
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "/^org\\.apache\\.maven\\.plugins/",
+        "/^org\\.cyclonedx/",
+        "/^org\\.owasp/",
+        "/^org\\.sonatype\\.central/",
+        "/^org\\.codehaus\\.mojo/",
+        "/^org\\.jacoco/",
+        "/^org\\.pitest/"
+      ],
+      "groupName": "Maven plugins"
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "org.mozilla:rhino-runtime",
+        "org.mozilla:rhino"
+      ],
+      "groupName": "Mozilla Rhino",
+      "description": "Pinned to 1.7.15.1 in dependencyManagement to patch CVE-2025-66453. When proxy-vole upgrades past 1.0.18 with a transitive Rhino >= 1.7.15.1, remove the override in pom.xml. See TestProxyUtilStrategies.",
+      "automerge": false,
+      "labels": ["security", "manual-review"]
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "org.bidib.com.github.markusbernhardt:proxy-vole"
+      ],
+      "groupName": "proxy-vole",
+      "description": "If this upgrades to a version with rhino-runtime >= 1.7.15.1 transitively, remove the rhino override.",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "org.apache.pdfbox:pdfbox"
+      ],
+      "groupName": "Apache PDFBox 2.x",
+      "description": "Major upgrade to 3.x is M3 work; only pick up 2.x patch releases automatically.",
+      "matchUpdateTypes": ["patch"]
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": false,
+      "description": "Manual review for now. Enable automerge after CI is stable (see plan)."
+    },
+    {
+      "matchManagers": ["maven"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependencies", "major-upgrade", "manual-review"],
+      "description": "Major upgrades are never auto-merged."
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "pinDigests": true,
+      "description": "Pinned by SHA per OSSF best practice; renovate updates the SHA when a new version tag points elsewhere."
+    }
+  ]
+}

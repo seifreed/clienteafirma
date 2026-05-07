@@ -359,6 +359,12 @@
 										<manifestEntries>
 											<Main-Class>es.gob.afirma.standalone.SimpleAfirma</Main-Class>
 											<Permissions>all-permissions</Permissions>
+											<!-- JDK 21 strong encapsulation: open the JDK-internal packages
+											     that Autofirma reflects into for keystore providers (Windows
+											     CAPI and PKCS#11). Recognised when launching via `java -jar`
+											     since JDK 9 (JEP 261). Mirror these flags in any wrapper
+											     (launch4J, .bat, .sh) that bypasses the manifest. -->
+											<Add-Opens>java.base/sun.security.mscapi java.base/sun.security.pkcs11 java.base/sun.security.x509 java.base/sun.security.util</Add-Opens>
 										</manifestEntries>
 									</transformer>
 								</transformers>

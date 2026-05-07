@@ -169,6 +169,12 @@
 										<transformer
 											implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 											<mainClass>es.gob.afirma.standalone.configurator.AutofirmaConfigurator</mainClass>
+											<manifestEntries>
+												<!-- JDK 21 strong encapsulation. Mirrors afirma-simple's manifest;
+												     the configurator reflects into Mozilla NSS / Windows Cert Store
+												     during install/restore flows. See M3.1 in the roadmap. -->
+												<Add-Opens>java.base/sun.security.mscapi java.base/sun.security.pkcs11 java.base/sun.security.x509 java.base/sun.security.util</Add-Opens>
+											</manifestEntries>
 										</transformer>
 									</transformers>
 								</configuration>

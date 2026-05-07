@@ -40,7 +40,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
-		<jdk.version>1.8</jdk.version>
+		<!-- Java 21 LTS. Migrated from 1.8 on 2026-05-07 (M3.1).
+		     <release> semantics enforce that source and bootclasspath both target the
+		     declared JDK, so we cannot accidentally use APIs missing from the runtime. -->
+		<jdk.version>21</jdk.version>
 		<clienteafirma.version>1.9.1</clienteafirma.version>
 		<afirma.legible.version>1_9_1</afirma.legible.version>
 		<triphase.service.version>2.9.1</triphase.service.version>
@@ -50,14 +53,24 @@
 		<afirma.lib.others.version>0.0.10</afirma.lib.others.version>
 		<spongycastle.version>1.58.0.0</spongycastle.version>
 		
-		<maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-		<maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-		<maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+		<!-- Plugins refreshed 2026-05-07 against Maven Central latest stable. -->
+		<maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+		<maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+		<maven-source-plugin.version>3.4.0</maven-source-plugin.version>
+		<maven-release-plugin.version>3.3.1</maven-release-plugin.version>
 		<maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-		<central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+		<central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
 
-		<!-- test-dependencies -->		
+		<!-- supply-chain / CRA tooling -->
+		<cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
+		<!-- dependency-check 12.x: drop Java 8 baseline, NVD model upgrades.
+		     Compatible with our JDK 21 + suppressions schema 1.3. -->
+		<dependency-check-maven.version>12.2.2</dependency-check-maven.version>
+
+		<!-- Reproducible build timestamp (CRA art. 13). Bump on each release. -->
+		<project.build.outputTimestamp>2026-05-07T00:00:00Z</project.build.outputTimestamp>
+
+		<!-- test-dependencies -->
 		<junit.version>4.13.2</junit.version>
 	</properties>
 
@@ -130,9 +143,15 @@
 			</dependency>
 			
 			<dependency>
+				<!-- Apache Santuario pinned to the latest 3.0.x patch (3.0.6, 2026-05-07).
+				     4.0 removed the public XMLSignatureInput(Node) constructor that
+				     CustomUriDereferencer.java:192 invokes by reflection, breaking 6
+				     XAdES regression tests. Migration to 4.x requires refactoring the
+				     dereferencer dual-path (JDK-internal vs Apache) and is tracked as
+				     its own item in the roadmap (post-M3.5). -->
 				<groupId>org.apache.santuario</groupId>
 				<artifactId>xmlsec</artifactId>
-				<version>3.0.5</version>
+				<version>3.0.6</version>
 			</dependency>
 
 			<dependency>
@@ -140,6 +159,22 @@
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
 				<scope>test</scope>
+			</dependency>
+
+			<!-- Force patched Rhino. proxy-vole 1.0.18 brings rhino-runtime 1.7.13
+			     transitively via delight-rhino-sandbox 0.0.15 (PAC/JS evaluation backend).
+			     The current code in ProxyUtil only registers Strategy.OS_DEFAULT and
+			     Strategy.BROWSER, never Strategy.JAVA, so Rhino sits unused in the
+			     classpath at runtime. The override patches CVE-2025-66453 defensively
+			     for the case anyone adds Strategy.JAVA in the future — see the
+			     companion regression test TestProxyUtilStrategies in afirma-simple
+			     which fails the build if a new strategy is added without re-evaluating
+			     this override. Remove this entry when proxy-vole upgrades past 1.0.18
+			     and brings rhino-runtime >= 1.7.15.1 transitively. -->
+			<dependency>
+				<groupId>org.mozilla</groupId>
+				<artifactId>rhino-runtime</artifactId>
+				<version>1.7.15.1</version>
 			</dependency>
 
 		</dependencies>
@@ -157,6 +192,51 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
 					<version>3.3.0</version>
+				</plugin>
+				<!-- CycloneDX SBOM (CRA art. 13). Activated under env-install / env-deploy. -->
+				<plugin>
+					<groupId>org.cyclonedx</groupId>
+					<artifactId>cyclonedx-maven-plugin</artifactId>
+					<version>${cyclonedx-maven-plugin.version}</version>
+					<configuration>
+						<projectType>library</projectType>
+						<schemaVersion>1.5</schemaVersion>
+						<includeBomSerialNumber>true</includeBomSerialNumber>
+						<includeCompileScope>true</includeCompileScope>
+						<includeProvidedScope>true</includeProvidedScope>
+						<includeRuntimeScope>true</includeRuntimeScope>
+						<includeSystemScope>true</includeSystemScope>
+						<includeTestScope>false</includeTestScope>
+						<includeLicenseText>false</includeLicenseText>
+						<outputFormat>all</outputFormat>
+						<outputName>bom</outputName>
+					</configuration>
+				</plugin>
+				<!-- OWASP dependency-check. Report-only initially; failBuildOnCVSS lifted in M2.
+				     Requires an NVD API key for usable update times. Get a free key at
+				     https://nvd.nist.gov/developers/request-an-api-key and pass it as
+				     `-DnvdApiKey=<key>` or set <nvdApiKey> in ~/.m2/settings.xml. -->
+				<plugin>
+					<groupId>org.owasp</groupId>
+					<artifactId>dependency-check-maven</artifactId>
+					<version>${dependency-check-maven.version}</version>
+					<configuration>
+						<failOnError>false</failOnError>
+						<failBuildOnCVSS>11</failBuildOnCVSS>
+						<formats>
+							<format>HTML</format>
+							<format>JSON</format>
+							<format>SARIF</format>
+						</formats>
+						<suppressionFiles>
+							<suppressionFile>${maven.multiModuleProjectDirectory}/.dependency-check-suppressions.xml</suppressionFile>
+						</suppressionFiles>
+						<skipProvidedScope>false</skipProvidedScope>
+						<skipRuntimeScope>false</skipRuntimeScope>
+						<skipTestScope>true</skipTestScope>
+						<!-- 1-week NVD cache; CI runs daily incremental updates. -->
+						<nvdValidForHours>168</nvdValidForHours>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -211,14 +291,8 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>${jdk.version}</source>
-							<target>${jdk.version}</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
-<!--
-							<compilerArgs>
-								<arg>-Xbootclasspath:${java.home}/lib/jsse.jar${path.separator}${java.home}/lib/rt.jar${path.separator}${java.home}/lib/jce.jar</arg>
-							</compilerArgs>
--->
 							<debug>false</debug>
 						</configuration>
 					</plugin>
@@ -249,17 +323,16 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>1.8</source>
-							<target>1.8</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
 							<debug>false</debug>
 						</configuration>
 					</plugin>
 				</plugins>
 			</build>
-			
+
 		</profile>
-		
+
 		<!-- ===== Construccion para la generacion de aplicaciones finales y servicios ===== -->
 		<profile>
 			<id>env-install</id>
@@ -299,17 +372,46 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>${jdk.version}</source>
-							<target>${jdk.version}</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
 							<debug>false</debug>
 						</configuration>
 					</plugin>
+
+					<!-- SBOM CycloneDX attached to every package phase under env-install -->
+					<plugin>
+						<groupId>org.cyclonedx</groupId>
+						<artifactId>cyclonedx-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>build-sbom</id>
+								<phase>package</phase>
+								<goals>
+									<goal>makeAggregateBom</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- OWASP dependency-check report on `verify` (non-blocking) -->
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<executions>
+							<execution>
+								<id>check-vulnerabilities</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 				</plugins>
 			</build>
-			
+
 		</profile>
-		
+
 		<!-- ===== Construccion para informe sonar ===== -->
 		<profile>
 			<id>sonar</id>
@@ -371,14 +473,8 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>${jdk.version}</source>
-							<target>${jdk.version}</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
-<!--
-							<compilerArgs>
-								<arg>-Xbootclasspath:${java.home}/lib/jsse.jar${path.separator}${java.home}/lib/rt.jar${path.separator}${java.home}/lib/jce.jar</arg>
-							</compilerArgs>
--->
 							<debug>false</debug>
 						</configuration>
 					</plugin>
@@ -449,12 +545,8 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>${jdk.version}</source>
-							<target>${jdk.version}</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
-							<compilerArgs>
-								<arg>-Xbootclasspath:${java.home}/lib/jsse.jar${path.separator}${java.home}/lib/rt.jar${path.separator}${java.home}/lib/jce.jar</arg>
-							</compilerArgs>
 							<debug>false</debug>
 						</configuration>
 					</plugin>
@@ -557,12 +649,8 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-compiler-plugin</artifactId>
 						<configuration>
-							<source>${jdk.version}</source>
-							<target>${jdk.version}</target>
+							<release>${jdk.version}</release>
 							<fork>true</fork>
-							<compilerArgs>
-								<arg>-Xbootclasspath:${java.home}/lib/jsse.jar${path.separator}${java.home}/lib/rt.jar${path.separator}${java.home}/lib/jce.jar</arg>
-							</compilerArgs>
 							<debug>false</debug>
 						</configuration>
 					</plugin>
@@ -600,7 +688,53 @@
 						<publishingServerId>central</publishingServerId>
 					  </configuration>
 					</plugin>
-					
+
+					<!-- SBOM CycloneDX attached to the deploy phase, so it lands in Maven Central -->
+					<plugin>
+						<groupId>org.cyclonedx</groupId>
+						<artifactId>cyclonedx-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>build-sbom</id>
+								<phase>package</phase>
+								<goals>
+									<goal>makeAggregateBom</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- OWASP dependency-check, blocking releases at CVSS >= 7 (HIGH).
+					     Tightened from 9 to 7 after first triage on 2026-05-07.
+					     Known accepted findings live in .dependency-check-suppressions.xml
+					     with explicit reachability rationale and expiry. -->
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<configuration>
+							<failOnError>true</failOnError>
+							<failBuildOnCVSS>7</failBuildOnCVSS>
+							<formats>
+								<format>HTML</format>
+								<format>JSON</format>
+								<format>SARIF</format>
+							</formats>
+							<suppressionFiles>
+								<suppressionFile>${maven.multiModuleProjectDirectory}/.dependency-check-suppressions.xml</suppressionFile>
+							</suppressionFiles>
+							<skipTestScope>true</skipTestScope>
+						</configuration>
+						<executions>
+							<execution>
+								<id>check-vulnerabilities</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
 				</plugins>
 			</build>
 		</profile>

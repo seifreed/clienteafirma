@@ -1,2 +1,10 @@
 #!/bin/bash
-java -Djdk.tls.maxHandshakeMessageSize=65536 -jar /usr/lib/Autofirma/autofirma.jar "$@"
+# JDK 21 strong encapsulation: open JDK-internal packages used by Autofirma's
+# keystore providers. Mirrors the Add-Opens manifest entry in the fat JAR.
+exec java \
+    --add-opens java.base/sun.security.mscapi=ALL-UNNAMED \
+    --add-opens java.base/sun.security.pkcs11=ALL-UNNAMED \
+    --add-opens java.base/sun.security.x509=ALL-UNNAMED \
+    --add-opens java.base/sun.security.util=ALL-UNNAMED \
+    -Djdk.tls.maxHandshakeMessageSize=65536 \
+    -jar /usr/lib/Autofirma/autofirma.jar "$@"

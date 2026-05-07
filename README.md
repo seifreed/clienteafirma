@@ -1,122 +1,253 @@
-# ![Logo de la Suite @firma](logo_autofirma.png)
+<p align="center">
+  <img src="logo_autofirma.png" alt="Logo de la Suite @firma" width="240">
+</p>
 
-Autofirma es uno de los productos de la **Suite @firma** de soluciones de identificación y firma electrónica. Se proporciona a las Administraciones Públicas para que dispongan de los instrumentos necesarios para implementar la autenticación y firma electrónica avanzada de una forma rápida y efectiva.
+<h1 align="center">Autofirma — fork de modernización 2026</h1>
 
-Autofirma es una herramienta de firma electrónica en entornos de escritorio y dispositivos móviles, que funciona en forma de Applet de Java integrado en una página Web mediante JavaScript, como aplicación de escritorio, o como aplicación móvil, dependiendo del entorno del usuario.
+<p align="center">
+  <strong>Cliente de firma electrónica del Gobierno de España, modernizado para JDK&nbsp;21&nbsp;LTS y conforme al EU Cyber Resilience Act</strong>
+</p>
 
-Es **software libre** con licencia **GPL 2+** y **EUPL 1.1**. Puede consultar más información y el código del producto en la forja del [Centro de Transferencia de Tecnología (CTT)](https://github.com/ctt-gob-es/).
+<p align="center">
+  <img src="https://img.shields.io/badge/licencia-GPL%202.0%20%2F%20EUPL%201.1-blue?style=flat-square" alt="Licencia GPL/EUPL">
+  <img src="https://img.shields.io/badge/JDK-21%20LTS-orange?style=flat-square&logo=openjdk&logoColor=white" alt="JDK 21 LTS">
+  <img src="https://img.shields.io/badge/build-Apache%20Maven-c71a36?style=flat-square&logo=apachemaven&logoColor=white" alt="Maven">
+  <img src="https://img.shields.io/badge/SBOM-CycloneDX%201.5-darkgreen?style=flat-square" alt="CycloneDX 1.5 SBOM">
+  <img src="https://img.shields.io/badge/CRA-trabajo%20en%20curso-yellow?style=flat-square" alt="CRA work in progress">
+  <img src="https://img.shields.io/badge/upstream-ctt--gob--es%2Fclienteafirma-blue?style=flat-square&logo=github" alt="Upstream CTT">
+</p>
 
 ---
 
-## Construcción de Autofirma
+## Resumen
 
-Los módulos de Autofirma se encuentran preparados para su compilación y empaquetado mediante **Apache Maven**. Los módulos básicos del Cliente son compatibles con Java 1.7. Sin embargo, las bibliotecas JUnit que se importan ya requieren el uso de Java 1.8 o superior, por lo que deberemos tener configurada una JDK 1.8 o superior para compilar el proyecto. La aplicación Autofirma se compila directamente para Java 1.8.
+**Autofirma** (parte de la Suite **@firma**) es la herramienta oficial de firma electrónica del Gobierno de España, distribuida por la Agencia Estatal de Administración Digital. Funciona como aplicación de escritorio en Windows, Linux y macOS, e integra firma desde navegador mediante el protocolo `afirma://`. Es **software libre** bajo licencia dual **GPL&nbsp;2.0+** y **EUPL&nbsp;1.1**.
 
-A continuación se indican los distintos parámetros a utilizar para construir sus artefactos según el uso que se desee dar. A cualquiera de los comandos que se indican se le puede agregar el parámetro `-DskipTests` para omitir los tests JUnit.
+Este repositorio es un **fork de modernización** del proyecto oficial:
 
-### Módulos básicos
+> Upstream: <https://github.com/ctt-gob-es/clienteafirma>
 
-Los módulos de Autofirma incluidos en este repositorio se pueden construir mediante el siguiente comando de Maven.
+El upstream se mantiene como referencia de producto. Este fork añade un programa de modernización 2026 estructurado en cuatro hitos secuenciales (M1–M4) cuyo objetivo es:
+
+1. **Cumplir el EU Cyber Resilience Act (CRA)** — obligación efectiva diciembre&nbsp;2027.
+2. **Salir de Java&nbsp;8** y adoptar **JDK&nbsp;21&nbsp;LTS** (soporte hasta sept&nbsp;2031).
+3. **Interoperar con la EU Digital Identity Wallet** (eIDAS&nbsp;2) cuando los estándares se estabilicen.
+4. **Automatizar la cadena de suministro** con CI, SBOM y firmas reproducibles.
+
+El plan completo vive en `~/.claude/plans/` y se referencia desde el código mediante comentarios `M3.x` etc.
+
+### Estado del programa de modernización
+
+| Hito | Tema | Estado |
+| --- | --- | --- |
+| **M1** | CRA Wave 1 — `SECURITY.md`, SBOM CycloneDX, dependency-check, builds reproducibles | ✅ Completado |
+| **M2** | Cadena de suministro CI — GitHub Actions, CodeQL, Renovate, Dependabot | 🟡 Parcial (PR-gate + SAST + Renovate listos; Sigstore/SLSA pendiente) |
+| **M3.1** | JDK 8 → JDK 21 LTS sin cambios funcionales | ✅ Completado |
+| **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ⏳ Pendiente |
+| **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ⏳ Pendiente |
+| **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | ⏳ Pendiente |
+| **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | ⏳ Pendiente |
+| **M3.6** | Hardening (Jazzer, PIT) y JUnit 5 | ⏳ Pendiente |
+| **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
+
+### Diferencias principales frente al upstream
+
+| Área | Upstream (1.9.1) | Este fork (1.10-dev) |
+| --- | --- | --- |
+| Compile target | Java&nbsp;1.8 | **Java&nbsp;21 LTS** (`<release>21</release>`) |
+| Cripto provider transitivo | SpongyCastle 1.58.0.0 (2018) | Igual *por ahora*; M3.3 migra a BouncyCastle |
+| `xmlsec` (Apache Santuario) | 3.0.5 | **3.0.6** (4.0.x bloqueado por API removal en `XMLSignatureInput(Node)`) |
+| `dependency-check-maven` | — | **12.2.2** con `failBuildOnCVSS=7` en `env-deploy` |
+| `cyclonedx-maven-plugin` | — | **2.9.1** generando SBOM CycloneDX&nbsp;1.5 por módulo |
+| `maven-release-plugin` | 2.5.3 (2015) | **3.3.1** |
+| `org.mozilla:rhino-runtime` (transitivo) | 1.7.13 (CVE-2025-66453) | **1.7.15.1** (forzado en `dependencyManagement`) |
+| `SECURITY.md`, `CONTRIBUTING.md` | — | Presentes con SLA y matriz de soporte |
+| Workflows GitHub Actions | — | `build.yml` (matrix Linux/Win/macOS), `codeql.yml`, `renovate.json`, `dependabot.yml` |
+| Windows x86 (32-bit) | Soportado | **Eliminado en 1.10.0** (Adoptium Temurin 21 no se distribuye para x86) |
+
+---
+
+## Soporte de plataformas
+
+| SO | Arquitectura | Estado |
+| --- | --- | --- |
+| Windows | x64 | ✅ Instalador NSIS + JRE empaquetado |
+| Windows | ARM64 | 🟡 Vía emulación Windows-on-ARM x64; instalador nativo pendiente (jpackage) |
+| Windows | x86 (32-bit) | ❌ Drop oficial 1.10.0 |
+| Linux | x64 | ✅ DEB / RPM, requiere JDK&nbsp;21+ del sistema |
+| Linux | ARM64 (aarch64) | ✅ DEB / RPM `noarch`, JDK&nbsp;21 ARM64 + `nss-tools` system |
+| macOS | x64 (Intel) | ✅ Pkgproj `Autofirma_Packages_x64` |
+| macOS | ARM64 (Apple Silicon) | 🟡 Pkgproj `Autofirma_Packages_aarch64` (`certutil` empaquetado x86_64 → Rosetta 2; nativo en M3.4) |
+
+---
+
+## Construcción
+
+### Requisitos
+
+- **JDK 21 LTS** (Adoptium Temurin recomendado) en `PATH` / `JAVA_HOME`.
+- **Apache Maven 3.9+**.
+- Para `dependency-check`: clave gratuita de la **NVD** en <https://nvd.nist.gov/developers/request-an-api-key>, exportada como `NVD_API_KEY`.
+
+### Comandos comunes
 
 ```bash
+# Perfil por defecto (env-dev): librerías core, ~32 módulos
 mvn clean install
+
+# Aplicaciones, plugins y servicios (Autofirma.jar, configurador, 3 WARs)
+mvn -Denv=install clean install
+
+# Saltar tests
+mvn clean install -DskipTests
+
+# Despliegue en Maven Central (firma GPG + sources + javadoc + cosign)
+mvn -Denv=deploy clean deploy
+
+# Sólo el SBOM de un módulo
+mvn -pl afirma-simple org.cyclonedx:cyclonedx-maven-plugin:makeBom
+
+# Sólo el escaneo de vulnerabilidades
+mvn -DnvdApiKey="$NVD_API_KEY" org.owasp:dependency-check-maven:aggregate
 ```
 
-Este comando generará todos los módulos básicos del proyecto.
-
-### Artefactos desplegables y aplicaciones
-
-Para la construcción de Autofirma (JAR) y los servicios que utiliza será necesario usar el perfil `env-install`. Este se puede activar mediante el comando:
+### Trabajar en un solo módulo
 
 ```bash
-mvn clean install -Denv=install
+mvn -pl afirma-crypto-cades -am clean install
+mvn -pl afirma-crypto-cades test -Dtest=TestCAdESCoSigner
+mvn -pl afirma-crypto-cades test -Dtest=TestCAdESCoSigner#testCoSignSimple
 ```
 
-Con esto, se podrán construir los artefactos:
+`mvn -pl <módulo>` solo resuelve módulos listados bajo el perfil activo. El default (`env-dev`) excluye apps/servicios; añade `-Denv=install` para llegar a ellos.
 
-* `afirma-server-triphase-signer`: WAR con el servicio para la generación de firmas trifásicas.
-* `afirma-signature-retriever`: WAR con el servicio de recuperación de datos del servidor intermedio.
-* `afirma-signature-storage`: WAR con el servicio de guardado de datos en el servidor intermedio.
-* `afirma-simple`: JAR autoejecutable de Autofirma (`Autofirma.jar`).
-* `afirma-ui-simple-configurator`: JAR autoejecutable del configurador necesario para la instalación de Autofirma (`AutofirmaConfigurador.jar`).
+### Perfiles Maven
 
-### Despliegue en repositorio de artefactos
+| Perfil | Activación | Para qué |
+| --- | --- | --- |
+| `env-dev` (default) | Activo por defecto | Librerías core, crypto, keystores |
+| `env-install` | `-Denv=install` | Lo anterior **+** `afirma-simple`, configurador, plugins, 3 WARs |
+| `autofirma` | `-Pautofirma` | Sólo la app desktop + UI |
+| `sonar` | `-Psonar` | Análisis SonarQube |
+| `minhap` | `-Pminhap` | Despliegue al repo interno SCAE / redsara |
+| `env-deploy` | `-Denv=deploy` | Maven Central: source jar, javadoc, GPG + cosign, dep-check con `failBuildOnCVSS=7` |
 
-Para el despliegue de los distintos módulos en un repositorio de artefactos, además de la construcción de los propios artefactos, es necesario aportar el código fuente de la aplicación, su JavaDoc y firmar los distintos artefactos. Para evitar generar estos recursos y realizar la firma de los artefactos para la operativa ordinaria de compilación y empaquetado se ha creado un perfil `env-deploy` para que se utilice sólo cuando se va a proceder al despliegue de los artefactos en un repositorio. Se puede hacer eso mediante el comando:
+---
+
+## Calidad y supply chain (M1 + M2)
+
+### Gates locales
 
 ```bash
-mvn clean deploy -Denv=deploy
+# Build estricto + tests
+mvn -Denv=install clean verify
+
+# SBOM CycloneDX 1.5 (raíz + cada módulo)
+ls **/target/bom.{xml,json}
+
+# CVEs (con clave NVD)
+mvn -DnvdApiKey="$NVD_API_KEY" -Denv=install org.owasp:dependency-check-maven:aggregate
+
+# Build reproducible (timestamp determinista)
+mvn -Denv=install package -DoutputTimestamp=2026-05-07T00:00:00Z
+```
+
+### Gates en CI (GitHub Actions)
+
+| Workflow | Trigger | Qué hace |
+| --- | --- | --- |
+| `.github/workflows/build.yml` | PR + push a `master` | Matrix Linux/Win/macOS · JDK&nbsp;21 · `mvn -Denv=install verify` · sube SBOMs y `dependency-check-report.{html,json,sarif}` como artifacts · empuja SARIF a la pestaña Security |
+| `.github/workflows/codeql.yml` | PR + push + lunes 06:00&nbsp;UTC | SAST con `security-extended` |
+| `renovate.json` | Lunes 8:00 Madrid | PRs agrupados por familia (BC, jmulticard, plugins, Rhino con gating manual) |
+| `.github/dependabot.yml` | Semanal | Sólo `github-actions` con pin por SHA |
+
+### Política de severidades CVE
+
+| CVSS 3.1 | Acción |
+| --- | --- |
+| 9.0–10.0 (Critical) | Parche fuera de ciclo; advisory en 7&nbsp;días |
+| 7.0–8.9 (High) | Bloquea `env-deploy` (`failBuildOnCVSS=7`); parche en próximo minor |
+| 4.0–6.9 (Medium) | Issue automática, SLA 30&nbsp;días |
+| 0.1–3.9 (Low) | Documentado en notas de release |
+
+Las supresiones aceptadas con justificación viven en `.dependency-check-suppressions.xml`. Cada entrada incluye razonamiento de reachability, tracking y caducidad.
+
+---
+
+## Arquitectura — visión general
+
+El proyecto es una pila de tres capas:
+
+1. **Librerías core / criptográficas** (`afirma-core`, `afirma-crypto-*`, `afirma-keystores-*`)
+   - Tipos cross-cutting: `AOSigner`, `AOSignerFactory`, `AOSignConstants`, `TriphaseData`.
+   - Una librería por formato: CAdES, CMS, XAdES, XMLdSig, PAdES, ODF, OOXML, FacturaE.
+   - Clientes triphase (`*-tri-client`) para invocar firma trifásica en servidor.
+2. **Servicios server / triphase** (`afirma-server-triphase-signer*`, `afirma-signature-retriever`, `afirma-signature-storage`)
+   - Procesadores específicos por formato bajo `es.gob.afirma.triphase.signer`.
+   - SPI para cache (`-cache`) y persistencia de documentos (`-document`).
+   - WARs Servlet para Tomcat / Jetty.
+3. **Aplicación desktop + plugins** (`afirma-simple`, `afirma-ui-*`, `afirma-simple-plugin-*`, `afirma-simple-installer`)
+   - Swing app + protocolo `afirma://` / `afirma-batch://`.
+   - Plugins instalables (hash, validatecerts).
+   - Instaladores NSIS/MSI (Windows), DEB/RPM (Linux), pkg (macOS).
+
+### Firma trifásica
+
+1. **Pre-firma**: el servidor lee el documento, prepara la estructura y devuelve los bytes a firmar + un `TriphaseData`.
+2. **Firma PKCS#1**: el cliente realiza la operación con la clave privada localmente (la clave nunca sale del dispositivo).
+3. **Post-firma**: el servidor combina el PKCS#1 en el documento final.
+
+Cualquier cambio en `TriphaseData`, los `*-tri-client` o `afirma-server-triphase-signer-core` debe respetar el contrato bilateral.
+
+---
+
+## Familias de firma soportadas
+
+```
+Sobres CAdES        CAdES, ASiC-CAdES, cofirmas, contrafirmas
+Sobres XAdES        XAdES, ASiC-XAdES, FacturaE
+Sobres XMLDSig      XMLdSig (sin atributos AdES)
+PDF                 PAdES (firma visible / invisible / campos)
+Office              ODF, OOXML
+PKCS#7              CMS, sobres digitales
 ```
 
 ---
 
-## Módulos del proyecto
+## Reportar vulnerabilidades
 
-El proyecto está formado por múltiples módulos, algunos de los cuales se utilizan en varias de las aplicaciones de Autofirma. Otros son los módulos de las propias aplicaciones o con recursos necesarios para su construcción o su uso.
+No abras issues públicas para reportes de seguridad. Sigue el proceso descrito en [`SECURITY.md`](SECURITY.md): canal preferente <soporte.afirma@correo.gob.es> (cifrado PGP recomendado), o el reporte privado de GitHub en el upstream.
 
-### Módulos vigentes
+SLA de triaje: 5 días hábiles. Embargo coordinado por defecto: 90 días.
 
-A continuación, se muestra un listado de los distintos módulos actualmente en uso en el proyecto:
+---
 
-* `afirma-core`: Módulo con los componentes principales del proyecto.
-* `afirma-core-keystores`: Módulo con las clases de gestión de almacenes de claves de usuario.
-* `afirma-core-massive`: Módulo con funcionalidades para la ejecución de operaciones masivas de firma.
-* `afirma-crypto-batch-client`: Módulo con el componente cliente para la invocación de las operaciones de firma de lote en servidor.
-* `afirma-crypto-cades`: Módulo con la lógica de generación de las firmas CAdES (excluidas cofirmas y contrafirmas) y ASiC-CAdES.
-* `afirma-crypto-cades-multi`: Módulo con la lógica de generación de las cofirmas y contrafirmas CAdES.
-* `afirma-crypto-cadestri-client`: Módulo con lógica de invocación para la generación de firmas trifásicas CAdES en servidor.
-* `afirma-crypto-cms`: Módulo con la lógica de generación de las firmas CMS.
-* `afirma-crypto-core-pkcs7`: Módulo con la lógica básica de estructuras PKCS#7, necesarias para la generación de firmas ASN.1 (CAdES, PAdES, etc.).
-* `afirma-crypto-core-xml`: Módulo con la lógica básica de estructuras XML, necesarias para la generación de firmas XML (XAdES, ODF, OOXML, etc.).
-* `afirma-crypto-odf`: Módulo con la lógica de generación de las firmas ODF.
-* `afirma-crypto-ooxml`: Módulo con la lógica de generación de las firmas OOXML.
-* `afirma-crypto-padestri-client`: Módulo con lógica de invocación para la generación de firmas trifásicas PAdES en servidor.
-* `afirma-crypto-pdf`: Módulo con la lógica de generación de las firmas PAdES.
-* `afirma-crypto-pdf-common`: Módulo con recursos comunes utilizados en los módulos que operan sobre firmas PDF.
-* `afirma-crypto-validation`: Módulo con la lógica de verificación de la integridad de las firmas CAdES, PAdES y XAdES (no incluye la comprobación de la validez de los certificados).
-* `afirma-crypto-xades`: Módulo con la lógica de generación de las firmas XAdES, ASiC-XAdES y FacturaE.
-* `afirma-crypto-xadestri-client`: Módulo con lógica de invocación para la generación de firmas trifásicas XAdES y de FacturaE en servidor.
-* `afirma-crypto-xmlsignature`: Módulo con la lógica de generación de las firmas XMLdSig.
-* `afirma-keystores-filters`: Módulo con los filtros de certificados utilizados por Autofirma.
-* `afirma-keystores-mozilla`: Módulo para la gestión del almacén de claves de Mozilla Firefox.
-* `afirma-server-triphase-signer`: Módulo principal del servicio de firma trifásica y de lotes.
-* `afirma-server-triphase-signer-cache`: Módulo con la interfaz que define las operaciones de guardado y recuperación de datos de caché del servidor trifásico.
-* `afirma-server-triphase-signer-core`: Módulo con la funcionalidad básica de firma trifásica CAdES, PAdES, XAdES y de FacturaE.
-* `afirma-server-triphase-signer-document`: Módulo con la interfaz que define las operaciones de guardado y recuperación de documentos para firmar del servidor trifásico.
-* `afirma-signature-retriever`: Módulo principal del servicio de recuperación del servidor intermedio.
-* `afirma-signature-storage`: Módulo principal del servicio de guardado del servidor intermedio.
-* `afirma-simple`: Módulo principal de la aplicación Autofirma.
-* `afirma-simple-installer`: Módulo con los componentes para la generación de los instaladores de Autofirma.
-* `afirma-simple-plugin-hash`: Módulo con el plugin de Autofirma para generación y validación de hashes.
-* `afirma-simple-plugin-hash-exe`: Módulo de la aplicación EXE para el registro de las entradas de generación y validación de hashes en el menú contextual de Windows.
-* `afirma-simple-plugin-validatecerts`: Módulo con el plugin de Autofirma para validación de firmas.
-* `afirma-simple-plugins`: Módulo con los recursos base para la implementación de plugins de Autofirma.
-* `afirma-ui-core-jse`: Módulo con las interfaces gráficas genéricas usadas por las distintas aplicaciones de Autofirma.
-* `afirma-ui-core-jse-keystores`: Módulo con la interfaz gráfica del diálogo de selección de certificados.
-* `afirma-ui-miniapplet-deploy`: Módulo principal para el desarrollo de AutoScript.
-* `afirma-ui-simple-configurator`: Módulo principal de la aplicación de configuración ejecutada durante la instalación de Autofirma.
+## Contribuir
 
-### Módulos sin mantenimiento
+- Lee [`CONTRIBUTING.md`](CONTRIBUTING.md) antes de abrir un PR.
+- Estilo: tabulaciones, JavaDoc en español, prefijo `es.gob.afirma.*`.
+- Contratos de regresión sobre APIs públicas (`AOSigner`, `TriphaseData`, `*-tri-client`, plugin SPI, protocolo `afirma://`) — toda modificación requiere actualizar tests y describir el impacto downstream.
+- Compatible con Java&nbsp;21 (records, `var`, virtual threads, etc. son aceptables, pero respeta el estilo del archivo que tocas).
 
-La lista de módulos obsoletos y/o sin soporte que se conservan en el repositorio son los siguientes:
+Para proponer cambios al producto oficial, abre PR contra <https://github.com/ctt-gob-es/clienteafirma>. Este fork existe para experimentar con la modernización; lo que demuestre valor se propone aguas arriba.
 
-* `afirma-crypto-cipher`: __Obsoleto.__ Módulo con las clases para el cifrado síncrono y asíncrono de datos usado en el antiguo Applet de @firma y StandAlone.
-* `afirma-crypto-cms-enveloper`: __Obsoleto.__ Módulo con la lógica para la generación de sobres digitales CMS utilizada en los antiguos Applet de @firma y StandAlone.
-* `afirma-crypto-core-pkcs7-tsp`: __Sin soporte.__ Módulo con la lógica para agregar sellos de tiempo a firmas PKCS#7.
-* `afirma-crypto-jarverifier`: __Obsoleto.__ Módulo para la comprobación de la integridad de un JAR utilizada en el antiguo Applet de @firma.
-* `afirma-crypto-pdf-enhancer`: __Obsoleto.__ Módulo con un cliente SOAP para el envío de peticiones a @firma para la actualización de PDF a formatos longevos.
-* `afirma-keystores-capiaddressbook`: __Obsoleto.__ Módulo con la lógica de acceso a la libreta de direcciones de Windows.
-* `afirma-keystores-single`: __Obsoleto.__ Módulo con un proveedor criptográfico para la gestión de certificados sueltos como si fuesen almacenes.
-* `afirma-miniapplet-report`: __Obsoleto.__ Módulo para la generación de informes de las pruebas del antiguo MiniApplet.
-* `afirma-miniapplet-store-testdata`: __Obsoleto.__ Módulo para el guardado de los datos de los informes de las pruebas del antiguo MiniApplet.
-* `afirma-report-fail-tests`: __Obsoleto.__ Módulo para la notificación de errores de las pruebas del antiguo MiniApplet.
-* `afirma-server-simple-webstart`: __Obsoleto.__ Módulo principal del servicio para la generación del JNLP para la ejecución de Autofirma WebStart.
-* `afirma-standalone`: __Obsoleto.__ Módulo principal de la antigua herramienta de escritorio StandAlone.
-* `afirma-standalone-installer`: __Obsoleto.__ Módulo con los componentes para la generación del instalador de la antigua herramienta de escritorio StandAlone.
-* `afirma-ui-applet`: __Obsoleto.__ Módulo principal del antiguo Applet de @firma.
-* `afirma-ui-applet-deploy`: __Obsoleto.__ Módulo con el JavaScript de despliegue del antiguo Applet de @firma.
-* `afirma-ui-miniapplet`: __Obsoleto.__ Módulo principal del antiguo MiniApplet.
-* `afirma-ui-simple-webstart`: __Obsoleto.__ Módulo principal del antiguo empaquetado de Autofirma como aplicación WebStart.
-* `afirma-windows-store`: __Obsoleto.__ Módulo principal del antiguo cliente de firma para Windows 8.
+---
 
-**No se ofrece ningún tipo de mantenimiento ni soporte sobre estos módulos.**
+## Licencia
+
+Distribuido bajo doble licencia:
+
+- **GPL-2.0-or-later** — <http://www.gnu.org/licenses/gpl-2.0.txt>
+- **EUPL-1.1** — <http://joinup.ec.europa.eu/system/files/ES/EUPL%20v.1.1%20-%20Licencia.pdf>
+
+Las dependencias de terceros y sus licencias están trazadas en `license/`.
+
+---
+
+## Créditos
+
+- **Producto original**: Agencia Estatal de Administración Digital (AEAD) / Centro de Transferencia de Tecnología (CTT) del Gobierno de España.
+- **Repositorio oficial**: <https://github.com/ctt-gob-es/clienteafirma>.
+- **Documentación**: <https://administracionelectronica.gob.es/ctt/clienteafirma>.
+
+Más información sobre la Suite @firma en la [forja del CTT](https://github.com/ctt-gob-es/).
