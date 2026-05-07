@@ -130,6 +130,23 @@ public final class ProtocolInvocationLauncher {
     				url -> url.startsWith("afirma://service?") || url.startsWith("afirma://service/?"), //$NON-NLS-1$ //$NON-NLS-2$
     				ProtocolInvocationLauncher::handleService))
     		.register(verbHandler(
+    				url -> url.startsWith("afirma://batch?") || url.startsWith("afirma://batch/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleBatch))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://selectcert?") || url.startsWith("afirma://selectcert/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleSelectCert))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://save?") || url.startsWith("afirma://save/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleSave))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://signandsave?") || url.startsWith("afirma://signandsave/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleSignAndSave))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://sign?") || url.startsWith("afirma://sign/?") //$NON-NLS-1$ //$NON-NLS-2$
+    						|| url.startsWith("afirma://cosign?") || url.startsWith("afirma://cosign/?") //$NON-NLS-1$ //$NON-NLS-2$
+    						|| url.startsWith("afirma://countersign?") || url.startsWith("afirma://countersign/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleSign))
+    		.register(verbHandler(
     				url -> url.startsWith("afirma://load?") || url.startsWith("afirma://load/?"), //$NON-NLS-1$ //$NON-NLS-2$
     				ProtocolInvocationLauncher::handleLoad));
 
@@ -328,488 +345,11 @@ public final class ProtocolInvocationLauncher {
         	}
         }
 
-        // Verbos websocket y service migrados al registry en Fase A.3
-        // (handleWebSocket / handleService).
-
-		if (urlString.startsWith("afirma://batch?") || urlString.startsWith("afirma://batch/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-        	LOGGER.info("Se invoca a la aplicacion para el procesado de un lote de firma"); //$NON-NLS-1$
-
-        	try {
-                UrlParametersForBatch params =
-                		ProtocolInvocationUriParserUtil.getParametersToBatch(urlParams, !bySocket);
-
-				// Si se indica un identificador de fichero, es que el JSON o XML de definicion de lote
-				// se tiene que
-                // descargar desde el servidor intermedio
-                if (params.getFileId() != null) {
-                	try {
-                		final byte[] batchDefinition;
-                		try {
-                			batchDefinition = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-                		} catch (final DecryptionException e) {
-                			throw new IntermediateServerErrorSendedException("Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-                		} catch (final SocketTimeoutException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma de lote", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_BATCH_TIMEOUT);
-                		} catch (final IOException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_BATCH_OPERATION);
-                		}
-
-                		final Map <String, String> paramsMap;
-
-                		if (params.isJsonBatch()) {
-                			paramsMap = TriphaseDataParser.parseParamsListJson(batchDefinition);
-                		} else {
-                			paramsMap = ProtocolInvocationUriParserUtil.parseXml(batchDefinition);
-                		}
-                		params = ProtocolInvocationUriParserUtil.getParametersToBatch(paramsMap, !bySocket);
-                	} catch (final IntermediateServerErrorSendedException e) {
-                		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-                		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-                		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                	}
-                }
-
-                // Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-                if (requestedProtocolVersion == null) {
-               		requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-                	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-                }
-
-                // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-                // que se espere activamente hasta el fin de la tarea
-                if (!bySocket && params.isActiveWaiting()) {
-                	requestWait(params.getStorageServletUrl(), params.getId());
-                }
-
-				LOGGER.info(
-						"Se inicia la operacion de firma de lote. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
-
-				String msg;
-                try {
-                    msg = ProtocolInvocationLauncherBatch.processBatch(params, requestedProtocolVersion);
-				}
-                catch(final AOCancelledOperationException e) {
-                	LOGGER.severe("Operacion de firma por lotes cancelada por el usuario"); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-				// solo entra en la excepcion en el caso de que haya que devolver errores a
-				// traves del servidor intermedio
-                catch (final SocketOperationException e) {
-                    LOGGER.log(Level.SEVERE, "Error durante la operacion de firma por lotes", e); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-
-                // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
-                // espera activa si se encontraba vigente
-                if (!bySocket) {
-                	LOGGER.info("Enviamos el resultado de la operacion de firma por lotes al servidor intermedio"); //$NON-NLS-1$
-                	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-                }
-
-                return msg;
-        	} catch (final ParameterException e) {
-                LOGGER.log(Level.SEVERE, "Error en los parametros de firma por lotes: " + e, e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final Exception e) {
-                LOGGER.log(Level.SEVERE, "Error en la operacion de firma por lotes: " + e, e); //$NON-NLS-1$
-				final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_BATCH_ERROR;
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-            }
-        }
-		if (urlString.startsWith("afirma://selectcert?") || urlString.startsWith("afirma://selectcert/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-        	LOGGER.info("Se invoca a la aplicacion para la seleccion de un certificado"); //$NON-NLS-1$
-
-        	try {
-        		UrlParametersToSelectCert params =
-        				ProtocolInvocationUriParserUtil.getParametersToSelectCert(urlParams, !bySocket);
-
-        		// Si se indica un identificador de fichero, es que la configuracion de la
-        		// operacion
-        		// se tiene que descargar desde el servidor intermedio
-        		if (params.getFileId() != null) {
-        			try {
-        				final byte[] xmlData;
-        				try {
-        					xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-        				} catch (final DecryptionException e) {
-        					throw new IntermediateServerErrorSendedException(
-        							"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-        				} catch (final SocketTimeoutException e) {
-        					throw new IntermediateServerErrorSendedException(
-        							"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la seleccion de certificado", e, //$NON-NLS-1$
-        							SimpleErrorCode.Communication.RECIVING_DATA_OF_CERT_TIMEOUT);
-        				} catch (final IOException e) {
-        					throw new IntermediateServerErrorSendedException(
-        							"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-        							SimpleErrorCode.Communication.RECIVING_DATA_OF_CERT_OPERATION);
-        				}
-
-        				params = ProtocolInvocationUriParser.getParametersToSelectCert(xmlData, true);
-        			} catch (final IntermediateServerErrorSendedException e) {
-        				LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-        				processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-        				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-        			}
-        		}
-
-        		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-        		if (requestedProtocolVersion == null) {
-        			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-        			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-        		}
-
-        		// En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-        		// que se espere activamente hasta el fin de la tarea
-        		if (!bySocket && params.isActiveWaiting()) {
-        			requestWait(params.getStorageServletUrl(), params.getId());
-        		}
-
-        		LOGGER.info("Se inicia la operacion de seleccion de certificado. Version de protocolo: " //$NON-NLS-1$
-        				+ requestedProtocolVersion);
-
-        		String msg;
-        		boolean errorConnectingServer = false;
-        		try {
-        			msg = ProtocolInvocationLauncherSelectCert.processSelectCert(params, requestedProtocolVersion);
-        		}
-        		catch (final SSLHandshakeException e) {
-					LOGGER.log(Level.SEVERE, "Error al realizar una conexion segura con el servidor", e); //$NON-NLS-1$
-					final ErrorCode errorCode = SimpleErrorCode.Communication.SENDING_RESULT_OPERATION;
-					ProtocolInvocationLauncherErrorManager.showError(protocolVersion, errorCode);
-					msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(protocolVersion, errorCode);
-					errorConnectingServer = true;
-				}
-        		catch(final AOCancelledOperationException e) {
-        			LOGGER.severe("Operacion de seleccion de certificado cancelada por el usuario"); //$NON-NLS-1$
-        			msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-        		}
-        		// solo entra en la excepcion en el caso de que haya que devolver errores a
-        		// traves del servidor intermedio
-        		catch (final SocketOperationException e) {
-        			LOGGER.log(Level.SEVERE, "Error durante la operacion de seleccion de certificado", e); //$NON-NLS-1$
-        			msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-        		}
-
-        		// Si no es por sockets, y si no hay errores de conexion con el servidor,
-        		// se devuelve el resultado al servidor y detenemos la
-        		// espera activa si se encontraba vigente
-        		if (!bySocket && !errorConnectingServer) {
-        			LOGGER.info("Enviamos el resultado de la operacion de seleccion de certificado al servidor intermedio"); //$NON-NLS-1$
-        			sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-        		}
-
-        		return msg;
-        	} catch (final ParameterException e) {
-        		LOGGER.log(Level.SEVERE, "Error en los parametros de seleccion de certificados: " + e, e); //$NON-NLS-1$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-        	} catch (final Exception e) {
-        		LOGGER.log(Level.SEVERE, "Error en los parametros de seleccion de certificados: " + e, e); //$NON-NLS-1$
-        		final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_SELECTING_CERT_ERROR;
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-        	}
-        }
-		if (urlString.startsWith("afirma://save?") || urlString.startsWith("afirma://save/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-            LOGGER.info("Se invoca a la aplicacion para el guardado de datos"); //$NON-NLS-1$
-
-            try {
-                UrlParametersToSave params =
-                		ProtocolInvocationUriParserUtil.getParametersToSave(urlParams, !bySocket);
-
-                LOGGER.info("Cantidad de datos a guardar: " + (params.getData() == null ? 0 : params.getData().length)); //$NON-NLS-1$
-
-				// Si se indica un identificador de fichero, es que la configuracion de la
-				// operacion
-                // se tiene que descargar desde el servidor intermedio
-                if (params.getFileId() != null) {
-                	try {
-                		final byte[] xmlData;
-                		try {
-                			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-                		} catch (final DecryptionException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-                		} catch (final SocketTimeoutException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para el guardado de datos", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SAVE_TIMEOUT);
-                		} catch (final IOException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SAVE_OPERATION);
-                		}
-
-                		params = ProtocolInvocationUriParser.getParametersToSave(xmlData, true);
-                	} catch (final IntermediateServerErrorSendedException e) {
-                		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-                		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-                		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                	}
-                }
-
-        		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-        		if (requestedProtocolVersion == null) {
-        			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-        			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-        		}
-
-                // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-                // que se espere activamente hasta el fin de la tarea
-                if (!bySocket && params.isActiveWaiting()) {
-                	requestWait(params.getStorageServletUrl(), params.getId());
-                }
-
-                LOGGER.info("Se inicia la operacion de guardado. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
-
-                String msg;
-                try {
-                	msg = ProtocolInvocationLauncherSave.processSave(params, requestedProtocolVersion);
-                }
-                catch(final AOCancelledOperationException e) {
-                    LOGGER.severe("Operacion de guardado de datos cancelada por el usuario"); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-				// solo entra en la excepcion en el caso de que haya que devolver errores a
-				// traves del servidor intermedio
-                catch (final SocketOperationException e) {
-                	LOGGER.log(Level.SEVERE, "Error en la operacion de guardado: " + e, e); //$NON-NLS-1$
-                	msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-
-                // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
-                // espera activa si se encontraba vigente
-                if (!bySocket) {
-                	LOGGER.info("Enviamos el resultado de la operacion de guardado al servidor intermedio"); //$NON-NLS-1$
-                	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-                }
-
-                return msg;
-
-			} catch (final NeedsUpdatedVersionException e) {
-                LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterLocalAccessRequestedException e) {
-                LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterException e) {
-            	LOGGER.log(Level.SEVERE, "Error en los parametros de guardado", e); //$NON-NLS-1$
-            	ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final Exception e) {
-            	LOGGER.log(Level.SEVERE, "Error en los parametros de guardado", e); //$NON-NLS-1$
-				final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_SAVING_DATA_ERROR;
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-            }
-        }
-		if (urlString.startsWith("afirma://signandsave?") || urlString.startsWith("afirma://signandsave/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-            LOGGER.info("Se invoca a la aplicacion para la firma/multifirma y el guardado del resultado"); //$NON-NLS-1$
-
-            try {
-                UrlParametersToSignAndSave params =
-                		ProtocolInvocationUriParserUtil.getParametersToSignAndSave(urlParams, !bySocket);
-
-				LOGGER.info("Cantidad de datos a firmar y guardar: " //$NON-NLS-1$
-						+ (params.getData() == null ? 0 : params.getData().length));
-
-				// Si se indica un identificador de fichero, es que la configuracion de la
-				// operacion
-                // se tiene que descargar desde el servidor intermedio
-                if (params.getFileId() != null) {
-                	try {
-                		final byte[] xmlData;
-                		try {
-                			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-                		} catch (final DecryptionException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-                		} catch (final SocketTimeoutException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma y guardado", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_AND_SAVE_TIMEOUT);
-                		} catch (final IOException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_AND_SAVE_OPERATION);
-                		}
-
-                		params = ProtocolInvocationUriParser.getParametersToSignAndSave(xmlData, true);
-                	} catch (final IntermediateServerErrorSendedException e) {
-                		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-                		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-                		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                	}
-                }
-
-        		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-        		if (requestedProtocolVersion == null) {
-        			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-        			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-        		}
-
-                // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-                // que se espere activamente hasta el fin de la tarea
-                if (!bySocket && params.isActiveWaiting()) {
-                	requestWait(params.getStorageServletUrl(), params.getId());
-                }
-
-				LOGGER.info("Se inicia la operacion de firma y guardado. Version de protocolo: " //$NON-NLS-1$
-						+ requestedProtocolVersion);
-
-				String msg;
-                try {
-                	final StringBuilder dataToSend =  ProtocolInvocationLauncherSignAndSave.processSign(params, requestedProtocolVersion);
-                	msg = dataToSend.toString();
-                }
-                catch(final AOCancelledOperationException e) {
-                    LOGGER.severe("Operacion de firma y guardado cancelada por el usuario"); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-				// solo entra en la excepcion en el caso de que haya que devolver errores a
-				// traves del servidor intermedio
-                catch(final SocketOperationException e) {
-                    LOGGER.severe("Error durante la operacion de firma y guardado: " + e); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-
-                // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
-                // espera activa si se encontraba vigente
-                if (!bySocket) {
-                	LOGGER.info("Enviamos el resultado de la operacion de firma y guardado al servidor intermedio"); //$NON-NLS-1$
-                	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-                }
-
-                return msg;
-			} catch (final NeedsUpdatedVersionException e) {
-                LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterLocalAccessRequestedException e) {
-                LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterException e) {
-                LOGGER.log(Level.SEVERE, "Error en los parametros de firma y guardado: " + e, e); //$NON-NLS-1$
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final Exception e) {
-                LOGGER.log(Level.SEVERE, "Error en los parametros de firma y guardado: " + e, e); //$NON-NLS-1$
-                final ErrorCode errorCode = ErrorCode.Internal.UNKNOWN_SIGNING_ERROR;
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-            }
-        }
-		if (urlString.startsWith("afirma://sign?")        || urlString.startsWith("afirma://sign/?") || //$NON-NLS-1$ //$NON-NLS-2$
-                 urlString.startsWith("afirma://cosign?")      || urlString.startsWith("afirma://cosign/?") || //$NON-NLS-1$ //$NON-NLS-2$
-                 urlString.startsWith("afirma://countersign?") || urlString.startsWith("afirma://countersign/?") //$NON-NLS-1$ //$NON-NLS-2$
-        ) {
-            LOGGER.info("Se invoca a la aplicacion para realizar una operacion de firma/multifirma"); //$NON-NLS-1$
-
-            try {
-                UrlParametersToSign params =
-                		ProtocolInvocationUriParserUtil.getParametersToSign(urlParams, !bySocket);
-
-				// Si se indica un identificador de fichero, es que la configuracion de la
-				// operacion
-                // se tiene que descargar desde el servidor intermedio
-                if (params.getFileId() != null) {
-                	try {
-                		LOGGER.info("Se descargan los datos del servidor intermedio"); //$NON-NLS-1$
-
-                		final byte[] xmlData;
-                		try {
-                			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-                		} catch (final DecryptionException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-                		} catch (final SocketTimeoutException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_TIMEOUT);
-                		} catch (final IOException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_OPERATION);
-                		}
-
-                		LOGGER.info("Fin de la descarga de los datos. Se carga la configuracion de firma de la peticion"); //$NON-NLS-1$
-
-                		params = ProtocolInvocationUriParser.getParametersToSign(xmlData, true);
-                	} catch (final IntermediateServerErrorSendedException e) {
-                		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-                		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-                		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                	}
-                }
-
-        		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-        		if (requestedProtocolVersion == null) {
-        			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-        			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-        		}
-
-                // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-                // que se espere activamente hasta el fin de la tarea
-                if (!bySocket && params.isActiveWaiting()) {
-                	requestWait(params.getStorageServletUrl(), params.getId());
-                }
-
-                LOGGER.info("Se inicia la operacion de firma. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
-
-                String msg;
-                try {
-                	final StringBuilder dataToSend = ProtocolInvocationLauncherSign.processSign(params, requestedProtocolVersion, null);
-                	msg = dataToSend.toString();
-                }
-                catch(final AOCancelledOperationException e) {
-                    LOGGER.severe("Operacion de firma cancelada por el usuario"); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-				// solo entra en la excepcion en el caso de que haya que devolver errores a
-				// traves del servidor intermedio
-                catch(final SocketOperationException e) {
-                    LOGGER.severe("Error durante la operacion de firma: " + e); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-
-                // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
-                // espera activa si se encontraba vigente
-                if (!bySocket) {
-                	LOGGER.info("Enviamos el resultado de la operacion de firma al servidor intermedio"); //$NON-NLS-1$
-                	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-                }
-
-                return msg;
-            } catch (final NeedsUpdatedVersionException e) {
-                LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterLocalAccessRequestedException e) {
-                LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterException e) {
-            	LOGGER.log(Level.SEVERE, "Error en los parametros de firma", e); //$NON-NLS-1$
-            	ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final Exception e) {
-            	LOGGER.log(Level.SEVERE, "Error en los parametros de firma", e); //$NON-NLS-1$
-            	final ErrorCode errorCode = ErrorCode.Internal.UNKNOWN_SIGNING_ERROR;
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-            }
-        }
-        // Verbo load migrado al registry en Fase A.3 (handleLoad).
-
+        // Los 9 verbos del protocolo afirma:// están registrados en
+        // OPERATION_REGISTRY (Fases A + A.3 + A.4 del plan Clean Code,
+        // 2026-05-07): eudiw-present, websocket, service, batch, selectcert,
+        // save, signandsave, sign|cosign|countersign, load. Si llegamos aquí
+        // es que la URL tiene un verbo desconocido.
 		LOGGER.severe("La operacion indicada en la URL no esta soportada: " + //$NON-NLS-1$
     				urlString.substring(0, Math.min(30, urlString.length())) + "..." //$NON-NLS-1$
 		);
@@ -1171,6 +711,503 @@ public final class ProtocolInvocationLauncher {
 		}
 
     	return OK_RESPONSE;
+	}
+
+	/**
+	 * Verbo {@code afirma://batch?...} — procesado de un lote de firma.
+	 * Soporta file_id download para definición remota del batch (XML o JSON).
+	 */
+	private static String handleBatch(final String urlString, final LaunchContext ctx) {
+    	LOGGER.info("Se invoca a la aplicacion para el procesado de un lote de firma"); //$NON-NLS-1$
+
+    	ProtocolVersion requestedProtocolVersion = ctx.version();
+    	try {
+            UrlParametersForBatch params =
+            		ProtocolInvocationUriParserUtil.getParametersToBatch(ctx.urlParams(), !ctx.bySocket());
+
+			// Si se indica un identificador de fichero, es que el JSON o XML de definicion de lote
+			// se tiene que descargar desde el servidor intermedio
+            if (params.getFileId() != null) {
+            	try {
+            		final byte[] batchDefinition;
+            		try {
+            			batchDefinition = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+            		} catch (final DecryptionException e) {
+            			throw new IntermediateServerErrorSendedException("Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+            		} catch (final SocketTimeoutException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma de lote", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_BATCH_TIMEOUT);
+            		} catch (final IOException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_BATCH_OPERATION);
+            		}
+
+            		final Map<String, String> paramsMap;
+            		if (params.isJsonBatch()) {
+            			paramsMap = TriphaseDataParser.parseParamsListJson(batchDefinition);
+            		} else {
+            			paramsMap = ProtocolInvocationUriParserUtil.parseXml(batchDefinition);
+            		}
+            		params = ProtocolInvocationUriParserUtil.getParametersToBatch(paramsMap, !ctx.bySocket());
+            	} catch (final IntermediateServerErrorSendedException e) {
+            		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+            		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+            		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            	}
+            }
+
+            // Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+            if (requestedProtocolVersion == null) {
+           		requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+            	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+            }
+
+            // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+            // que se espere activamente hasta el fin de la tarea
+            if (!ctx.bySocket() && params.isActiveWaiting()) {
+            	requestWait(params.getStorageServletUrl(), params.getId());
+            }
+
+			LOGGER.info(
+					"Se inicia la operacion de firma de lote. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
+
+			String msg;
+            try {
+                msg = ProtocolInvocationLauncherBatch.processBatch(params, requestedProtocolVersion);
+			}
+            catch(final AOCancelledOperationException e) {
+            	LOGGER.severe("Operacion de firma por lotes cancelada por el usuario"); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+			// solo entra en la excepcion en el caso de que haya que devolver errores a
+			// traves del servidor intermedio
+            catch (final SocketOperationException e) {
+                LOGGER.log(Level.SEVERE, "Error durante la operacion de firma por lotes", e); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+
+            // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
+            // espera activa si se encontraba vigente
+            if (!ctx.bySocket()) {
+            	LOGGER.info("Enviamos el resultado de la operacion de firma por lotes al servidor intermedio"); //$NON-NLS-1$
+            	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+            }
+
+            return msg;
+    	} catch (final ParameterException e) {
+            LOGGER.log(Level.SEVERE, "Error en los parametros de firma por lotes: " + e, e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final Exception e) {
+            LOGGER.log(Level.SEVERE, "Error en la operacion de firma por lotes: " + e, e); //$NON-NLS-1$
+			final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_BATCH_ERROR;
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        }
+	}
+
+	/**
+	 * Verbo {@code afirma://selectcert?...} — selección de certificado por el usuario.
+	 * Soporta file_id download y conexión SSL al servidor intermedio.
+	 */
+	private static String handleSelectCert(final String urlString, final LaunchContext ctx) {
+    	LOGGER.info("Se invoca a la aplicacion para la seleccion de un certificado"); //$NON-NLS-1$
+
+    	ProtocolVersion requestedProtocolVersion = ctx.version();
+    	try {
+    		UrlParametersToSelectCert params =
+    				ProtocolInvocationUriParserUtil.getParametersToSelectCert(ctx.urlParams(), !ctx.bySocket());
+
+    		// Si se indica un identificador de fichero, es que la configuracion de la operacion
+    		// se tiene que descargar desde el servidor intermedio
+    		if (params.getFileId() != null) {
+    			try {
+    				final byte[] xmlData;
+    				try {
+    					xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+    				} catch (final DecryptionException e) {
+    					throw new IntermediateServerErrorSendedException(
+    							"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+    				} catch (final SocketTimeoutException e) {
+    					throw new IntermediateServerErrorSendedException(
+    							"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la seleccion de certificado", e, //$NON-NLS-1$
+    							SimpleErrorCode.Communication.RECIVING_DATA_OF_CERT_TIMEOUT);
+    				} catch (final IOException e) {
+    					throw new IntermediateServerErrorSendedException(
+    							"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+    							SimpleErrorCode.Communication.RECIVING_DATA_OF_CERT_OPERATION);
+    				}
+
+    				params = ProtocolInvocationUriParser.getParametersToSelectCert(xmlData, true);
+    			} catch (final IntermediateServerErrorSendedException e) {
+    				LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+    				processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+    				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+    			}
+    		}
+
+    		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+    		if (requestedProtocolVersion == null) {
+    			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+    			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+    		}
+
+    		// En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+    		// que se espere activamente hasta el fin de la tarea
+    		if (!ctx.bySocket() && params.isActiveWaiting()) {
+    			requestWait(params.getStorageServletUrl(), params.getId());
+    		}
+
+    		LOGGER.info("Se inicia la operacion de seleccion de certificado. Version de protocolo: " //$NON-NLS-1$
+    				+ requestedProtocolVersion);
+
+    		String msg;
+    		boolean errorConnectingServer = false;
+    		try {
+    			msg = ProtocolInvocationLauncherSelectCert.processSelectCert(params, requestedProtocolVersion);
+    		}
+    		catch (final SSLHandshakeException e) {
+				LOGGER.log(Level.SEVERE, "Error al realizar una conexion segura con el servidor", e); //$NON-NLS-1$
+				final ErrorCode errorCode = SimpleErrorCode.Communication.SENDING_RESULT_OPERATION;
+				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+				msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+				errorConnectingServer = true;
+			}
+    		catch(final AOCancelledOperationException e) {
+    			LOGGER.severe("Operacion de seleccion de certificado cancelada por el usuario"); //$NON-NLS-1$
+    			msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+    		}
+    		// solo entra en la excepcion en el caso de que haya que devolver errores a
+    		// traves del servidor intermedio
+    		catch (final SocketOperationException e) {
+    			LOGGER.log(Level.SEVERE, "Error durante la operacion de seleccion de certificado", e); //$NON-NLS-1$
+    			msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+    		}
+
+    		// Si no es por sockets, y si no hay errores de conexion con el servidor,
+    		// se devuelve el resultado al servidor y detenemos la espera activa si se encontraba vigente
+    		if (!ctx.bySocket() && !errorConnectingServer) {
+    			LOGGER.info("Enviamos el resultado de la operacion de seleccion de certificado al servidor intermedio"); //$NON-NLS-1$
+    			sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+    		}
+
+    		return msg;
+    	} catch (final ParameterException e) {
+    		LOGGER.log(Level.SEVERE, "Error en los parametros de seleccion de certificados: " + e, e); //$NON-NLS-1$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+    		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+    	} catch (final Exception e) {
+    		LOGGER.log(Level.SEVERE, "Error en los parametros de seleccion de certificados: " + e, e); //$NON-NLS-1$
+    		final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_SELECTING_CERT_ERROR;
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+    		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+    	}
+	}
+
+	/**
+	 * Verbo {@code afirma://save?...} — guardado de datos en el sistema de ficheros del usuario.
+	 */
+	private static String handleSave(final String urlString, final LaunchContext ctx) {
+        LOGGER.info("Se invoca a la aplicacion para el guardado de datos"); //$NON-NLS-1$
+
+        ProtocolVersion requestedProtocolVersion = ctx.version();
+        try {
+            UrlParametersToSave params =
+            		ProtocolInvocationUriParserUtil.getParametersToSave(ctx.urlParams(), !ctx.bySocket());
+
+            LOGGER.info("Cantidad de datos a guardar: " + (params.getData() == null ? 0 : params.getData().length)); //$NON-NLS-1$
+
+			// Si se indica un identificador de fichero, es que la configuracion de la operacion
+            // se tiene que descargar desde el servidor intermedio
+            if (params.getFileId() != null) {
+            	try {
+            		final byte[] xmlData;
+            		try {
+            			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+            		} catch (final DecryptionException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+            		} catch (final SocketTimeoutException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para el guardado de datos", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SAVE_TIMEOUT);
+            		} catch (final IOException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SAVE_OPERATION);
+            		}
+
+            		params = ProtocolInvocationUriParser.getParametersToSave(xmlData, true);
+            	} catch (final IntermediateServerErrorSendedException e) {
+            		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+            		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+            		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            	}
+            }
+
+    		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+    		if (requestedProtocolVersion == null) {
+    			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+    			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+    		}
+
+            // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+            // que se espere activamente hasta el fin de la tarea
+            if (!ctx.bySocket() && params.isActiveWaiting()) {
+            	requestWait(params.getStorageServletUrl(), params.getId());
+            }
+
+            LOGGER.info("Se inicia la operacion de guardado. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
+
+            String msg;
+            try {
+            	msg = ProtocolInvocationLauncherSave.processSave(params, requestedProtocolVersion);
+            }
+            catch(final AOCancelledOperationException e) {
+                LOGGER.severe("Operacion de guardado de datos cancelada por el usuario"); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+			// solo entra en la excepcion en el caso de que haya que devolver errores a
+			// traves del servidor intermedio
+            catch (final SocketOperationException e) {
+            	LOGGER.log(Level.SEVERE, "Error en la operacion de guardado: " + e, e); //$NON-NLS-1$
+            	msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+
+            // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
+            // espera activa si se encontraba vigente
+            if (!ctx.bySocket()) {
+            	LOGGER.info("Enviamos el resultado de la operacion de guardado al servidor intermedio"); //$NON-NLS-1$
+            	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+            }
+
+            return msg;
+
+		} catch (final NeedsUpdatedVersionException e) {
+            LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterLocalAccessRequestedException e) {
+            LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterException e) {
+        	LOGGER.log(Level.SEVERE, "Error en los parametros de guardado", e); //$NON-NLS-1$
+        	ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final Exception e) {
+        	LOGGER.log(Level.SEVERE, "Error en los parametros de guardado", e); //$NON-NLS-1$
+			final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_SAVING_DATA_ERROR;
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        }
+	}
+
+	/**
+	 * Verbo {@code afirma://signandsave?...} — firma/multifirma seguida de guardado en local.
+	 */
+	private static String handleSignAndSave(final String urlString, final LaunchContext ctx) {
+        LOGGER.info("Se invoca a la aplicacion para la firma/multifirma y el guardado del resultado"); //$NON-NLS-1$
+
+        ProtocolVersion requestedProtocolVersion = ctx.version();
+        try {
+            UrlParametersToSignAndSave params =
+            		ProtocolInvocationUriParserUtil.getParametersToSignAndSave(ctx.urlParams(), !ctx.bySocket());
+
+			LOGGER.info("Cantidad de datos a firmar y guardar: " //$NON-NLS-1$
+					+ (params.getData() == null ? 0 : params.getData().length));
+
+			// Si se indica un identificador de fichero, es que la configuracion de la operacion
+            // se tiene que descargar desde el servidor intermedio
+            if (params.getFileId() != null) {
+            	try {
+            		final byte[] xmlData;
+            		try {
+            			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+            		} catch (final DecryptionException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+            		} catch (final SocketTimeoutException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma y guardado", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_AND_SAVE_TIMEOUT);
+            		} catch (final IOException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_AND_SAVE_OPERATION);
+            		}
+
+            		params = ProtocolInvocationUriParser.getParametersToSignAndSave(xmlData, true);
+            	} catch (final IntermediateServerErrorSendedException e) {
+            		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+            		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+            		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            	}
+            }
+
+    		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+    		if (requestedProtocolVersion == null) {
+    			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+    			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+    		}
+
+            // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+            // que se espere activamente hasta el fin de la tarea
+            if (!ctx.bySocket() && params.isActiveWaiting()) {
+            	requestWait(params.getStorageServletUrl(), params.getId());
+            }
+
+			LOGGER.info("Se inicia la operacion de firma y guardado. Version de protocolo: " //$NON-NLS-1$
+					+ requestedProtocolVersion);
+
+			String msg;
+            try {
+            	final StringBuilder dataToSend =  ProtocolInvocationLauncherSignAndSave.processSign(params, requestedProtocolVersion);
+            	msg = dataToSend.toString();
+            }
+            catch(final AOCancelledOperationException e) {
+                LOGGER.severe("Operacion de firma y guardado cancelada por el usuario"); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+			// solo entra en la excepcion en el caso de que haya que devolver errores a
+			// traves del servidor intermedio
+            catch(final SocketOperationException e) {
+                LOGGER.severe("Error durante la operacion de firma y guardado: " + e); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+
+            // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
+            // espera activa si se encontraba vigente
+            if (!ctx.bySocket()) {
+            	LOGGER.info("Enviamos el resultado de la operacion de firma y guardado al servidor intermedio"); //$NON-NLS-1$
+            	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+            }
+
+            return msg;
+		} catch (final NeedsUpdatedVersionException e) {
+            LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterLocalAccessRequestedException e) {
+            LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterException e) {
+            LOGGER.log(Level.SEVERE, "Error en los parametros de firma y guardado: " + e, e); //$NON-NLS-1$
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final Exception e) {
+            LOGGER.log(Level.SEVERE, "Error en los parametros de firma y guardado: " + e, e); //$NON-NLS-1$
+            final ErrorCode errorCode = ErrorCode.Internal.UNKNOWN_SIGNING_ERROR;
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        }
+	}
+
+	/**
+	 * Verbo {@code afirma://sign?...}, {@code afirma://cosign?...} y
+	 * {@code afirma://countersign?...} — operaciones de firma sin guardado.
+	 * El procesador {@link ProtocolInvocationLauncherSign} distingue internamente
+	 * el tipo de operación según los parámetros parseados.
+	 */
+	private static String handleSign(final String urlString, final LaunchContext ctx) {
+        LOGGER.info("Se invoca a la aplicacion para realizar una operacion de firma/multifirma"); //$NON-NLS-1$
+
+        ProtocolVersion requestedProtocolVersion = ctx.version();
+        try {
+            UrlParametersToSign params =
+            		ProtocolInvocationUriParserUtil.getParametersToSign(ctx.urlParams(), !ctx.bySocket());
+
+			// Si se indica un identificador de fichero, es que la configuracion de la operacion
+            // se tiene que descargar desde el servidor intermedio
+            if (params.getFileId() != null) {
+            	try {
+            		LOGGER.info("Se descargan los datos del servidor intermedio"); //$NON-NLS-1$
+
+            		final byte[] xmlData;
+            		try {
+            			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+            		} catch (final DecryptionException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+            		} catch (final SocketTimeoutException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la firma", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_TIMEOUT);
+            		} catch (final IOException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_SIGN_OPERATION);
+            		}
+
+            		LOGGER.info("Fin de la descarga de los datos. Se carga la configuracion de firma de la peticion"); //$NON-NLS-1$
+
+            		params = ProtocolInvocationUriParser.getParametersToSign(xmlData, true);
+            	} catch (final IntermediateServerErrorSendedException e) {
+            		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+            		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+            		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            	}
+            }
+
+    		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+    		if (requestedProtocolVersion == null) {
+    			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+    			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+    		}
+
+            // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+            // que se espere activamente hasta el fin de la tarea
+            if (!ctx.bySocket() && params.isActiveWaiting()) {
+            	requestWait(params.getStorageServletUrl(), params.getId());
+            }
+
+            LOGGER.info("Se inicia la operacion de firma. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
+
+            String msg;
+            try {
+            	final StringBuilder dataToSend = ProtocolInvocationLauncherSign.processSign(params, requestedProtocolVersion, null);
+            	msg = dataToSend.toString();
+            }
+            catch(final AOCancelledOperationException e) {
+                LOGGER.severe("Operacion de firma cancelada por el usuario"); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+			// solo entra en la excepcion en el caso de que haya que devolver errores a
+			// traves del servidor intermedio
+            catch(final SocketOperationException e) {
+                LOGGER.severe("Error durante la operacion de firma: " + e); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+
+            // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
+            // espera activa si se encontraba vigente
+            if (!ctx.bySocket()) {
+            	LOGGER.info("Enviamos el resultado de la operacion de firma al servidor intermedio"); //$NON-NLS-1$
+            	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+            }
+
+            return msg;
+        } catch (final NeedsUpdatedVersionException e) {
+            LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterLocalAccessRequestedException e) {
+            LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterException e) {
+        	LOGGER.log(Level.SEVERE, "Error en los parametros de firma", e); //$NON-NLS-1$
+        	ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final Exception e) {
+        	LOGGER.log(Level.SEVERE, "Error en los parametros de firma", e); //$NON-NLS-1$
+        	final ErrorCode errorCode = ErrorCode.Internal.UNKNOWN_SIGNING_ERROR;
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        }
 	}
 
 	/**
