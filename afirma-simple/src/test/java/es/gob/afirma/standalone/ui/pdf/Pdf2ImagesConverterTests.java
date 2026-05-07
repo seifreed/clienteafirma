@@ -14,6 +14,9 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
+import java.awt.GraphicsEnvironment;
+
+import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -88,6 +91,12 @@ public final class Pdf2ImagesConverterTests {
 	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfLoadUi() throws Exception {
+
+		// Test gráfico: skip cuando no hay display (CI Linux headless,
+		// contenedores). Crear un JFrame en modo headless lanza HeadlessException
+		// y es ortogonal a la lógica que se está probando.
+		Assume.assumeFalse("PDF UI test requires a graphical environment", //$NON-NLS-1$
+				GraphicsEnvironment.isHeadless());
 
 		final byte[] testPdf = AOUtil.getDataFromInputStream(ClassLoader.getSystemResourceAsStream(TEST_FILE));
 		LOGGER.info("Inicio de la carga"); //$NON-NLS-1$
