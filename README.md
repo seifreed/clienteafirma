@@ -45,7 +45,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.1** | JDK 8 → JDK 21 LTS sin cambios funcionales | ✅ Completado |
 | **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ✅ Completado (Tomcat 10.1+ / Jetty 12+; triphase service 3.0.0) |
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
-| **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | ⏳ Pendiente |
+| **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | ⏳ Pendiente |
 | **M3.6** | Hardening (Jazzer, PIT) y JUnit 5 | ⏳ Pendiente |
 | **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
@@ -77,9 +77,9 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Windows | ARM64 | 🟡 Vía emulación Windows-on-ARM x64; instalador nativo pendiente (jpackage) |
 | Windows | x86 (32-bit) | ❌ Drop oficial 1.10.0 |
 | Linux | x64 | ✅ DEB / RPM, requiere JDK&nbsp;21+ del sistema |
-| Linux | ARM64 (aarch64) | ✅ DEB / RPM `noarch`, JDK&nbsp;21 ARM64 + `nss-tools` system |
+| Linux | ARM64 (aarch64) | ✅ DEB / RPM `noarch`, JDK&nbsp;21 ARM64; bundled certutil ahora x86_64 ELF (M3.4), funciona vía qemu-user en runtime ARM o usa `nss-tools` system como fallback (`ConfiguratorFirefoxLinux.java`) |
 | macOS | x64 (Intel) | ✅ Pkgproj `Autofirma_Packages_x64` |
-| macOS | ARM64 (Apple Silicon) | 🟡 Pkgproj `Autofirma_Packages_aarch64` (`certutil` empaquetado x86_64 → Rosetta 2; nativo en M3.4) |
+| macOS | ARM64 (Apple Silicon) | ✅ Pkgproj `Autofirma_Packages_aarch64` + `certutil` Mach-O arm64 nativo (M3.4) — Rosetta 2 ya no requerida |
 
 ---
 

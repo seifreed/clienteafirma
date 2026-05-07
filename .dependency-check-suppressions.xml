@@ -15,42 +15,42 @@
 	-->
 
 	<!-- ============================================================
-	     Vendored Mozilla NSS toolkit (certutil + libs) from 2010
+	     Vendored Mozilla NSS toolkit (certutil.windows.zip — sqlite3.dll only)
 	     ============================================================
-	     `afirma-ui-simple-configurator/src/main/resources/{windows,linux,osx}/certutil.<os>.zip`
-	     ships a 2010-era Mozilla NSS distribution (certutil.exe, freebl3, libnspr4,
-	     nss3, nssckbi, nssdbm3, softokn3, sqlite3, ssl3, smime3) used during the
-	     post-install configurator to register the Autofirma trust root in the
-	     Mozilla NSS database (Firefox / Thunderbird).
+	     M3.4 (2026-05-07) repacked certutil.linux.zip and certutil.osx.zip with
+	     current NSS (Debian 3.123 + Homebrew 3.123.1). Those bundles no longer
+	     trigger any SQLite CVEs.
 
-	     Reachability assessment for the bundled sqlite3.dll CVEs:
+	     The Windows bundle still contains the 2010-era sqlite3.dll. Mozilla does
+	     not publish standalone NSS Windows binaries, so the repack requires a
+	     Firefox install on a Windows host (see scripts/repack-nss-windows.ps1).
+	     This is tracked as M3.4-windows in the roadmap.
+
+	     Reachability assessment for the remaining Windows sqlite3.dll CVEs:
 	       - The DLL is invoked exclusively by certutil.exe, locally, against the
 	         user's own NSS profile DB. There is no SQL surface exposed to network
 	         input, attacker-controlled file, or remote untrusted data.
-	       - Trigger conditions for the listed SQLite CVEs require a malicious SQL
-	         statement or a crafted database. The configurator does neither: it
-	         only adds certificates with `certutil -A` and mostly-fixed args.
+	       - Trigger conditions require a malicious SQL statement or a crafted
+	         database. The configurator does neither: it only runs `certutil -A`
+	         and `certutil -D` with fixed args.
 	       - The configurator runs once at install / uninstall time, then the
 	         binary is no longer executed.
-	       - Replacement is tracked under M3 (modernise NSS toolkit / replace
-	         vendored 2010 binary with current NSS or remove the embedded toolkit
-	         in favour of system NSS). See plan at
-	         ~/.claude/plans/haz-esto-1-cumplir-cozy-bachman.md (M3).
 
-	     Suppression scope: the embedded sqlite3.dll only. The other DLLs in the
-	     same archive (nss3, softokn3, etc.) are checked separately.
+	     Suppression scope: ONLY the sqlite3.dll inside certutil.windows.zip.
+	     The other DLLs in the same archive are checked separately.
 
 	     Reviewer: <name pending>, 2026-05-07.
-	     Renews: 2026-12-31. If still suppressed at renewal, escalate to release
-	     gate hold.
+	     Renews: 2026-12-31 (or earlier if M3.4-windows ships).
 	-->
 	<suppress until="2026-12-31Z">
 		<notes><![CDATA[
-			Vendored sqlite3.dll bundled inside certutil.<os>.zip (Mozilla NSS 2010 toolkit
-			used by the post-install configurator). Local-only invocation surface; CVEs
-			require attacker-controlled SQL or DB. Tracked for replacement in roadmap M3.
+			Windows-only: vendored sqlite3.dll inside certutil.windows.zip
+			(2010-era NSS bundled with the configurator). Local-only invocation,
+			no attacker-controlled SQL surface. M3.4-windows replaces this when
+			a Windows host with Firefox is available. Linux/macOS bundles were
+			repacked in M3.4 with current NSS and no longer hit these CVEs.
 		]]></notes>
-		<filePath regex="true">.*certutil\.(windows|linux|osx)\.zip[\\/]+certutil[\\/]+sqlite3\.dll</filePath>
+		<filePath regex="true">.*certutil\.windows\.zip[\\/]+certutil[\\/]+sqlite3\.dll</filePath>
 		<cve>CVE-2015-3414</cve>
 		<cve>CVE-2015-3415</cve>
 		<cve>CVE-2015-3416</cve>
@@ -104,6 +104,8 @@
 		<cve>CVE-2019-19959</cve>
 		<cve>CVE-2019-20218</cve>
 		<cve>CVE-2020-13871</cve>
+		<!-- Surfaced after M3.4 repack against the still-vendored Windows binary. -->
+		<cve>CVE-2021-36690</cve>
 	</suppress>
 
 	<!--

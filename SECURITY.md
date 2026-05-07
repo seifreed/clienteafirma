@@ -61,7 +61,7 @@ The current Java target is **JDK 21 LTS** (migrated from 1.8 on 2026-05-07). Sec
 | Linux | x64 | Supported (DEB / RPM, system JDK 21+) |
 | Linux | ARM64 (aarch64) | Supported (DEB / RPM, system JDK 21+); bundled certutil falls back to system `nss-tools` |
 | macOS | x64 (Intel) | Supported |
-| macOS | ARM64 (Apple Silicon) | Supported (bundled certutil currently runs through Rosetta 2; native binary tracked in M3.4) |
+| macOS | ARM64 (Apple Silicon) | Supported, bundled certutil now Mach-O arm64 native (M3.4, NSS 3.123 from Homebrew) — Rosetta 2 no longer required |
 
 ## Compromised material in this repository
 
