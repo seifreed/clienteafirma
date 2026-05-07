@@ -47,7 +47,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
-| **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit 5 | 🟡 JaCoCo cableado; PIT en `-Pmutation`; Jazzer en `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`). Migración JUnit 5 diferida (no bloqueante). |
+| **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit 5 | ✅ Completado — JaCoCo siempre activo; PIT bajo `-Pmutation` con `pitest-junit5-plugin`; Jazzer bajo `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`); JUnit Platform 5.13.2 + Jupiter + Vintage Engine en classpath de tests (los 146 `Test*.java` JUnit 4 corren sin tocarse, vía Vintage; nuevos tests usan `org.junit.jupiter.api.*` directamente). |
 | **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
 
 ### Diferencias principales frente al upstream
@@ -61,6 +61,10 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | `cyclonedx-maven-plugin` | — | **2.9.1** generando SBOM CycloneDX&nbsp;1.5 por módulo |
 | `maven-release-plugin` | 2.5.3 (2015) | **3.3.1** |
 | `org.mozilla:rhino-runtime` (transitivo) | 1.7.13 (CVE-2025-66453) | **1.7.15.1** (forzado en `dependencyManagement`) |
+| Plataforma de tests | `junit:junit:4.13.2` aislada | **JUnit Platform 5.13.2** (Jupiter + Vintage); JUnit 4 corre vía Vintage sin tocar tests existentes |
+| Coverage | — | **JaCoCo 0.8.13** activo siempre; reportes en `<módulo>/target/site/jacoco/` |
+| Mutation testing | — | **PIT 1.20.5** + `pitest-junit5-plugin` bajo `-Pmutation` |
+| Fuzzing | — | **Jazzer 0.24.0** bajo `-Pfuzz` (módulo `afirma-fuzz`, 3 harnesses) |
 | `javax.servlet:servlet-api` (3 WARs) | 2.5 (2007) | **`jakarta.servlet:jakarta.servlet-api:6.1.0`** (target Tomcat 10.1+ / Jetty 12+) |
 | `triphase.service.version` | 2.9.1 | **3.0.0** (major bump por breaking jakarta) |
 | `SECURITY.md`, `CONTRIBUTING.md` | — | Presentes con SLA y matriz de soporte |
@@ -71,11 +75,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 
 - **M3.4-windows — repack del bundle NSS para Windows.** Ejecutar `scripts/repack-nss-windows.ps1` en un host Windows con Firefox instalado. Eliminará la última supresión activa de `sqlite3.dll` (CVE-2021-36690). Es trabajo de release flow / CI con runner Windows, no se puede hacer desde un host macOS/Linux porque Mozilla no publica binarios standalone de NSS para Windows.
 - **M3.5 — fork iText → OpenPDF (bloqueado).** El fork interno `afirma-lib-itext:1.7` (namespace `com.aowagie.*`, ~2009) tiene parches de PAdES específicos de la AEAD que OpenPDF 1.3/2/3 no incorpora: `PdfPKCS7.getPkcs1()` para firma triphase, `InvalidPageNumberException`, sobrecargas de `createSignature(..., char, null, boolean, Calendar)`, `PdfStamper.preClose(HashMap, Calendar, ...)`, constructor extra de `PdfSignature`, etc. Sustituir requiere o portar los parches a OpenPDF (PR aguas arriba) o mantener un fork propio del fork. Estimación 2-3 semanas dedicadas. La sesión 2026-05-07 dejó la coordenada OpenPDF probada en `dependencyManagement` como referencia (revertida ahora a `afirma-lib-itext` para mantener verde).
-- **M3.6 — JUnit 5 (diferido).** Las suites JUnit&nbsp;4 (146 archivos `Test*.java`) siguen activas; PIT funciona contra ellas vía su soporte nativo. La migración a JUnit&nbsp;5 (`@Test` desde `org.junit.jupiter.api`) habilitaría:
-  1. Re-enchufar `pitest-junit5-plugin` (no requiere reescribir tests si se usa JUnit Platform Vintage).
-  2. Tests parametrizados nativos en lugar de los actuales `@Parameterized`.
-  3. `@TempDir` y `assertAll()`.
-  Es un esfuerzo aditivo, no bloquea; se puede afrontar gradualmente módulo a módulo. **Plan:** introducir `junit-jupiter-engine` + `junit-vintage-engine` en `dependencyManagement`, dejar suites antiguas sin tocar, y convertir nuevos tests a Jupiter.
+- **M3.6 — migración progresiva JUnit 4 → Jupiter (no bloqueante).** El JUnit Platform 5.13.2 ya está disponible en el classpath de tests vía `junit-bom` y los 146 `Test*.java` siguen ejecutando sin cambios a través de `junit-vintage-engine`. Cuando se quiera modernizar un test concreto basta con cambiar las imports a `org.junit.jupiter.api.*` y las aserciones a `org.junit.jupiter.api.Assertions.*`. Hecho como prueba de vida en `afirma-core/.../TestBase64.java`. No hay urgencia; convertir cuando se toque cada test por otro motivo.
 
 ---
 

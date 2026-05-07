@@ -89,17 +89,34 @@
 		     Jazzer: fuzz harness module under `-Pfuzz`, see `afirma-fuzz`. -->
 		<jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 		<pitest-maven.version>1.20.5</pitest-maven.version>
+		<pitest-junit5-plugin.version>1.2.2</pitest-junit5-plugin.version>
 		<jazzer.version>0.24.0</jazzer.version>
 
 		<!-- Reproducible build timestamp (CRA art. 13). Bump on each release. -->
 		<project.build.outputTimestamp>2026-05-07T00:00:00Z</project.build.outputTimestamp>
 
-		<!-- test-dependencies -->
+		<!-- test-dependencies. JUnit 5 (Jupiter) is the new default; junit-vintage-engine
+		     keeps the existing 146 JUnit 4 Test*.java suites running unchanged on the
+		     JUnit Platform. Once a test file imports org.junit.jupiter.api.Test and
+		     converts assertions, it runs natively on Jupiter. M3.6 (2026-05-07). -->
 		<junit.version>4.13.2</junit.version>
+		<junit-jupiter.version>5.13.2</junit-jupiter.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- M3.6: JUnit BOM aligns Jupiter API/Engine + Vintage Engine + Platform.
+			     `import` scope means consumers don't need to repeat versions for any
+			     org.junit:* artifact below. Surefire 3.5.x auto-detects Platform on
+			     classpath and routes JUnit 4 tests through Vintage transparently. -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
 			<dependency>
 				<groupId>es.gob.afirma.jmulticard</groupId>
 				<artifactId>jmulticard</artifactId>
@@ -216,7 +233,24 @@
 
 		</dependencies>
 	</dependencyManagement>
-	
+
+	<!-- M3.6: every module gets JUnit Platform + Jupiter + Vintage Engine on its
+	     test classpath. junit-vintage-engine transitively brings junit:junit:4.13.2
+	     so the existing 146 JUnit 4 Test*.java files keep working without code
+	     changes. New tests should import org.junit.jupiter.api.* directly. -->
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -288,14 +322,20 @@
 				</plugin>
 
 				<!-- M3.6: PIT mutation testing. Active only under `-Pmutation`.
-				     PIT 1.20.x ships native JUnit 4 support; the pitest-junit5-plugin
-				     would require JUnit Platform classes on the test classpath, which
-				     this project does not (yet) provide. JUnit 5 migration is tracked
-				     in the roadmap as a follow-up; when it lands, re-add the plugin. -->
+				     With JUnit Platform on the test classpath (Jupiter + Vintage)
+				     pitest-junit5-plugin can route to either engine. JUnit 4 tests
+				     keep running through the Vintage engine path. -->
 				<plugin>
 					<groupId>org.pitest</groupId>
 					<artifactId>pitest-maven</artifactId>
 					<version>${pitest-maven.version}</version>
+					<dependencies>
+						<dependency>
+							<groupId>org.pitest</groupId>
+							<artifactId>pitest-junit5-plugin</artifactId>
+							<version>${pitest-junit5-plugin.version}</version>
+						</dependency>
+					</dependencies>
 				</plugin>
 			</plugins>
 		</pluginManagement>
