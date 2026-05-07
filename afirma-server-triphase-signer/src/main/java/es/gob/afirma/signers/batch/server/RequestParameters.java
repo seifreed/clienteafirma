@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Clase para la lectura y guardado de los par&aacute;metros de una petici&oacute;n.

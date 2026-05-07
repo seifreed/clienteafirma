@@ -46,7 +46,9 @@
 		<jdk.version>21</jdk.version>
 		<clienteafirma.version>1.9.1</clienteafirma.version>
 		<afirma.legible.version>1_9_1</afirma.legible.version>
-		<triphase.service.version>2.9.1</triphase.service.version>
+		<!-- triphase.service 3.x: jakarta.servlet (Tomcat 10.1+ / Jetty 12+).
+		     Bumped from 2.9.1 in M3.2 (2026-05-07). Breaking change vs Tomcat 9. -->
+		<triphase.service.version>3.0.0</triphase.service.version>
 		<jmulticard.version>2.1</jmulticard.version>
 		
 		<afirma.lib.itext.version>1.7</afirma.lib.itext.version>
@@ -159,6 +161,17 @@
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
 				<scope>test</scope>
+			</dependency>
+
+			<!-- Jakarta Servlet 6.x — Jakarta EE 10 namespace (jakarta.servlet.*).
+			     Targets Tomcat 10.1+ / Jetty 12+. Migrated from javax.servlet 2.5
+			     in M3.2 (2026-05-07). The 3 WAR modules (server-triphase-signer,
+			     signature-retriever, signature-storage) consume this. -->
+			<dependency>
+				<groupId>jakarta.servlet</groupId>
+				<artifactId>jakarta.servlet-api</artifactId>
+				<version>6.1.0</version>
+				<scope>provided</scope>
 			</dependency>
 
 			<!-- Force patched Rhino. proxy-vole 1.0.18 brings rhino-runtime 1.7.13

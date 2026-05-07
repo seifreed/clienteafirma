@@ -43,7 +43,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M1** | CRA Wave 1 — `SECURITY.md`, SBOM CycloneDX, dependency-check, builds reproducibles | ✅ Completado |
 | **M2** | Cadena de suministro CI — GitHub Actions, CodeQL, Renovate, Dependabot | 🟡 Parcial (PR-gate + SAST + Renovate listos; Sigstore/SLSA pendiente) |
 | **M3.1** | JDK 8 → JDK 21 LTS sin cambios funcionales | ✅ Completado |
-| **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ⏳ Pendiente |
+| **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ✅ Completado (Tomcat 10.1+ / Jetty 12+; triphase service 3.0.0) |
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ⏳ Pendiente |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | ⏳ Pendiente |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | ⏳ Pendiente |
@@ -61,6 +61,8 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | `cyclonedx-maven-plugin` | — | **2.9.1** generando SBOM CycloneDX&nbsp;1.5 por módulo |
 | `maven-release-plugin` | 2.5.3 (2015) | **3.3.1** |
 | `org.mozilla:rhino-runtime` (transitivo) | 1.7.13 (CVE-2025-66453) | **1.7.15.1** (forzado en `dependencyManagement`) |
+| `javax.servlet:servlet-api` (3 WARs) | 2.5 (2007) | **`jakarta.servlet:jakarta.servlet-api:6.1.0`** (target Tomcat 10.1+ / Jetty 12+) |
+| `triphase.service.version` | 2.9.1 | **3.0.0** (major bump por breaking jakarta) |
 | `SECURITY.md`, `CONTRIBUTING.md` | — | Presentes con SLA y matriz de soporte |
 | Workflows GitHub Actions | — | `build.yml` (matrix Linux/Win/macOS), `codeql.yml`, `renovate.json`, `dependabot.yml` |
 | Windows x86 (32-bit) | Soportado | **Eliminado en 1.10.0** (Adoptium Temurin 21 no se distribuye para x86) |

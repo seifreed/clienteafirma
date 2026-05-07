@@ -43,8 +43,10 @@ Please include:
 | Component | Supported versions | End of security support |
 |---|---|---|
 | `afirma-simple` (Autofirma desktop) | Latest minor only (1.10.x) | When the next minor lands and after a 90-day overlap. |
-| `afirma-server-triphase-signer` | Latest minor only (2.9.x) | Same as desktop. |
+| `afirma-server-triphase-signer` | Latest minor only (3.0.x) — **Jakarta EE 9+ / Servlet 6.0**, requires Tomcat 10.1+ / Jetty 12+ | Same as desktop. |
+| `afirma-signature-retriever` / `afirma-signature-storage` | Latest minor only — also Jakarta EE 9+ as of 1.10.0 | Same as desktop. |
 | Published Maven artifacts (`es.gob.afirma:*`) | Latest minor only | Pinned by the same lifecycle. |
+| `afirma-server-triphase-signer 2.9.x` (servlet 2.5 / Tomcat 9) | **Not supported as of 1.10.0.** | Tomcat 9 is in maintenance-only mode upstream and does not load Jakarta EE 9 WARs. |
 | Older majors (1.9.x, 1.8.x, …) | **Not supported.** | Already past EoL. |
 
 The current Java target is **JDK 21 LTS** (migrated from 1.8 on 2026-05-07). Security commitments apply to running on the most recent **Adoptium Temurin 21** maintenance release. Older builds packaged for JDK 8 are not security-supported.
