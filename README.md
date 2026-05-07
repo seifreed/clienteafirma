@@ -48,7 +48,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
 | **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit 5 | ✅ Completado — JaCoCo siempre activo; PIT bajo `-Pmutation` con `pitest-junit5-plugin`; Jazzer bajo `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`); JUnit Platform 5.13.2 + Jupiter + Vintage Engine en classpath de tests (los 146 `Test*.java` JUnit 4 corren sin tocarse, vía Vintage; nuevos tests usan `org.junit.jupiter.api.*` directamente). |
-| **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
+| **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | 🟡 Esqueleto fase 1 — `afirma-crypto-jades` (B-B compact JWS), `afirma-trust-tsl` (parser ETSI TS 119 612 + verificador XMLDSig + `TrustListService`), `afirma-eudiw-bridge` (OID4VP `AuthorizationRequest`, SD-JWT VC parser, cliente HTTP), `EudiwProtocolHandler` para `afirma://eudiw-present`. Niveles JAdES T/LT/LTA, integración con LOTL real, JAR/JARM, DCQL nativo, conformance EU Reference Wallet y coordinación móvil pendientes (TODO M4.x). |
 
 ### Diferencias principales frente al upstream
 
@@ -76,6 +76,14 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 - **M3.4-windows — repack del bundle NSS para Windows.** Ejecutar `scripts/repack-nss-windows.ps1` en un host Windows con Firefox instalado. Eliminará la última supresión activa de `sqlite3.dll` (CVE-2021-36690). Es trabajo de release flow / CI con runner Windows, no se puede hacer desde un host macOS/Linux porque Mozilla no publica binarios standalone de NSS para Windows.
 - **M3.5 — fork iText → OpenPDF (bloqueado).** El fork interno `afirma-lib-itext:1.7` (namespace `com.aowagie.*`, ~2009) tiene parches de PAdES específicos de la AEAD que OpenPDF 1.3/2/3 no incorpora: `PdfPKCS7.getPkcs1()` para firma triphase, `InvalidPageNumberException`, sobrecargas de `createSignature(..., char, null, boolean, Calendar)`, `PdfStamper.preClose(HashMap, Calendar, ...)`, constructor extra de `PdfSignature`, etc. Sustituir requiere o portar los parches a OpenPDF (PR aguas arriba) o mantener un fork propio del fork. Estimación 2-3 semanas dedicadas. La sesión 2026-05-07 dejó la coordenada OpenPDF probada en `dependencyManagement` como referencia (revertida ahora a `afirma-lib-itext` para mantener verde).
 - **M3.6 — migración progresiva JUnit 4 → Jupiter (no bloqueante).** El JUnit Platform 5.13.2 ya está disponible en el classpath de tests vía `junit-bom` y los 146 `Test*.java` siguen ejecutando sin cambios a través de `junit-vintage-engine`. Cuando se quiera modernizar un test concreto basta con cambiar las imports a `org.junit.jupiter.api.*` y las aserciones a `org.junit.jupiter.api.Assertions.*`. Hecho como prueba de vida en `afirma-core/.../TestBase64.java`. No hay urgencia; convertir cuando se toque cada test por otro motivo.
+- **M4 — fase 2 (después de fase 1).** Lo que la sesión 2026-05-07 dejó pendiente:
+  - **JAdES T/LT/LTA:** integración con TSA real (timestamp), conexión con `afirma-trust-tsl` para LT/LTA, soporte JSON Serialization además del compact actual. Bloqueante: política sobre TSA (decisión CTT).
+  - **TSL/LOTL real:** descarga periódica de la LOTL (https://ec.europa.eu/tools/lotl/eu-lotl.xml), pin del certificado de firma de la Comisión, persistencia local de la cache, refresh policy 24h.
+  - **OID4VP completo:** soporte JAR (RFC 9101), JARM (RFC 9207), DCQL nativo (draft-23 §6) en lugar del legacy `presentation_definition_uri`.
+  - **SD-JWT VC verificación:** validar Issuer-signed JWT contra `TrustListService`, recalcular hashes de cada disclosure, comprobar Key Binding JWT (audience, nonce, signature).
+  - **Cableado dispatcher:** integrar `EudiwProtocolHandler` dentro de `ProtocolInvocationLauncher.launch(...)`.
+  - **Conformance:** suites EU Reference Wallet + eIDAS Test Bench.
+  - **Mobile:** contratos REST/deep-link con `afirma-android` y `afirma-ios` (repos separados en CTT).
 
 ---
 

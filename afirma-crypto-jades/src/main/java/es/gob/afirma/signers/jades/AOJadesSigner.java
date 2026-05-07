@@ -1,0 +1,236 @@
+/* Copyright (C) 2026 [Gobierno de España] / Agencia Estatal de Administración Digital
+ * This file is part of "Cliente @Firma".
+ * "Cliente @Firma" is free software; you can redistribute it and/or modify it under the terms of:
+ *   - the GNU General Public License as published by the Free Software Foundation;
+ *     either version 2 of the License, or (at your option) any later version.
+ *   - or The European Software License; either version 1.1 or (at your option) any later version.
+ */
+
+package es.gob.afirma.signers.jades;
+
+import java.io.IOException;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.logging.Logger;
+
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.util.Base64URL;
+
+import es.gob.afirma.core.AOException;
+import es.gob.afirma.core.ErrorCode;
+import es.gob.afirma.core.signers.AOSignConstants;
+import es.gob.afirma.core.signers.AOSignInfo;
+import es.gob.afirma.core.signers.AOSimpleSigner;
+
+/**
+ * Firmador JAdES-B-B (ETSI TS 119 182-1) sobre formato compact JWS.
+ *
+ * <p>JAdES es la transposición a JSON de XAdES y CAdES; usa JWS (RFC 7515)
+ * como contenedor base y añade cabeceras protegidas obligatorias para
+ * eIDAS:</p>
+ *
+ * <ul>
+ *   <li>{@code x5t#S256} — hash SHA-256 del certificado firmante (RFC 7515 §4.1.8).</li>
+ *   <li>{@code sigT} — fecha de firma reclamada (B-B baseline, ETSI EN 319 122-1 §5.2.1).</li>
+ *   <li>{@code crit} — declara qué cabeceras nuevas son críticas.</li>
+ * </ul>
+ *
+ * <p>Este harness implementa <strong>solo el nivel B-B (baseline básica)</strong>.
+ * Niveles superiores (T = timestamp, LT = long-term, LTA = archive) están
+ * marcados con TODO M4.x y se añadirán cuando exista TSA y TSL operativas
+ * (ver módulo {@code afirma-trust-tsl}).</p>
+ *
+ * <p>Solo se implementa el sub-perfil <em>compact</em>; el <em>JSON serialization</em>
+ * (con múltiples firmantes en un mismo objeto) no se necesita para los flujos
+ * actuales de Autofirma — la firma triphase ya sirve para multi-signer en otros
+ * formatos.</p>
+ */
+public final class AOJadesSigner implements AOSimpleSigner {
+
+	private static final Logger LOGGER = Logger.getLogger(AOJadesSigner.class.getName());
+
+	/** Tipo MIME del payload firmado, propagado a la cabecera protegida {@code cty}. */
+	public static final String EXTRA_PARAM_CONTENT_TYPE = "contentType";
+	/** Si {@code true} (por defecto) la firma resultante es <em>detached</em>: el payload
+	 *  no viaja dentro del JWS, solo su digest implícito. */
+	public static final String EXTRA_PARAM_DETACHED = "detached";
+
+	@Override
+	public byte[] sign(final byte[] data,
+			final String algorithm,
+			final PrivateKey key,
+			final Certificate[] certChain,
+			final Properties extraParams) throws AOException, IOException {
+
+		if (data == null || data.length == 0) {
+			throw new AOException("No se han proporcionado datos para firmar", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+		if (key == null) {
+			throw new AOException("No se ha proporcionado clave privada", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+		if (certChain == null || certChain.length == 0) {
+			throw new AOException("No se ha proporcionado cadena de certificados", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+
+		final Properties params = extraParams != null ? extraParams : new Properties();
+		final boolean detached = !"false".equalsIgnoreCase( //$NON-NLS-1$
+				params.getProperty(EXTRA_PARAM_DETACHED, "true")); //$NON-NLS-1$
+
+		try {
+			final JWSAlgorithm jwsAlg = mapAlgorithm(algorithm, key);
+			final X509Certificate signerCert = (X509Certificate) certChain[0];
+
+			final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(jwsAlg)
+					.type(JOSEObjectType.JOSE)
+					.x509CertSHA256Thumbprint(thumbprintSha256(signerCert))
+					.x509CertChain(buildX5cChain(certChain));
+
+			final List<String> critical = new ArrayList<>();
+			final Map<String, Object> jadesClaims = new HashMap<>();
+			jadesClaims.put("sigT", JadesTime.nowIso8601()); //$NON-NLS-1$
+			critical.add("sigT"); //$NON-NLS-1$
+
+			final String contentType = params.getProperty(EXTRA_PARAM_CONTENT_TYPE);
+			if (contentType != null && !contentType.isBlank()) {
+				headerBuilder.contentType(contentType);
+			}
+
+			headerBuilder.criticalParams(new java.util.HashSet<>(critical));
+			for (final Map.Entry<String, Object> entry : jadesClaims.entrySet()) {
+				headerBuilder.customParam(entry.getKey(), entry.getValue());
+			}
+
+			final JWSHeader header = headerBuilder.build();
+			final Payload payload = detached
+					? new Payload(Base64URL.encode(data).toString())
+					: new Payload(data);
+
+			final JWSObject jws = new JWSObject(header, payload);
+			jws.sign(buildSigner(key));
+
+			final String compact = detached
+					? jws.serialize(true)  // detached: omitir payload del compact form
+					: jws.serialize(false);
+
+			LOGGER.fine(() -> "JAdES-B-B firmado: alg=" + jwsAlg + ", detached=" + detached); //$NON-NLS-1$ //$NON-NLS-2$
+			return compact.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+		}
+		catch (final JOSEException e) {
+			throw new AOException("Error firmando JAdES: " + e.getMessage(), e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+	}
+
+	private static JWSAlgorithm mapAlgorithm(final String algorithm, final PrivateKey key) throws AOException {
+		final String alg = algorithm == null ? AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA : algorithm;
+		final boolean ec = key instanceof ECPrivateKey;
+		final boolean rsa = key instanceof RSAPrivateKey;
+
+		switch (alg.toUpperCase()) {
+			case "SHA256WITHRSA": //$NON-NLS-1$
+				if (!rsa) {
+					throw new AOException("Algoritmo " + alg + " requiere clave RSA", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				return JWSAlgorithm.RS256;
+			case "SHA384WITHRSA": //$NON-NLS-1$
+				return JWSAlgorithm.RS384;
+			case "SHA512WITHRSA": //$NON-NLS-1$
+				return JWSAlgorithm.RS512;
+			case "SHA256WITHECDSA": //$NON-NLS-1$
+				if (!ec) {
+					throw new AOException("Algoritmo " + alg + " requiere clave EC", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				return JWSAlgorithm.ES256;
+			case "SHA384WITHECDSA": //$NON-NLS-1$
+				return JWSAlgorithm.ES384;
+			case "SHA512WITHECDSA": //$NON-NLS-1$
+				return JWSAlgorithm.ES512;
+			default:
+				throw new AOException("Algoritmo no soportado para JAdES: " + alg, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+	}
+
+	private static JWSSigner buildSigner(final PrivateKey key) throws JOSEException, AOException {
+		if (key instanceof RSAPrivateKey rsa) {
+			return new RSASSASigner(rsa);
+		}
+		if (key instanceof ECPrivateKey ec) {
+			return new ECDSASigner(ec);
+		}
+		throw new AOException("Tipo de clave no soportado: " + key.getClass(), new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+	}
+
+	private static Base64URL thumbprintSha256(final X509Certificate cert) throws AOException {
+		try {
+			final java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
+			return Base64URL.encode(md.digest(cert.getEncoded()));
+		}
+		catch (final Exception e) {
+			throw new AOException("No se pudo calcular x5t#S256", e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+	}
+
+	private static List<com.nimbusds.jose.util.Base64> buildX5cChain(final Certificate[] certChain) throws AOException {
+		final List<com.nimbusds.jose.util.Base64> x5c = new ArrayList<>(certChain.length);
+		try {
+			for (final Certificate c : certChain) {
+				x5c.add(com.nimbusds.jose.util.Base64.encode(c.getEncoded()));
+			}
+		}
+		catch (final java.security.cert.CertificateEncodingException e) {
+			throw new AOException("Error codificando cadena de certificados", e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+		}
+		return x5c;
+	}
+
+	/** {@link AOSignInfo} mínimo para que el detector de formato reconozca un compact JWS. */
+	public AOSignInfo getSignInfo(final byte[] signData) {
+		final AOSignInfo info = new AOSignInfo("JAdES"); //$NON-NLS-1$
+		info.setVariant("B-B"); //$NON-NLS-1$
+		return info;
+	}
+
+	/** Heurística rápida: tres segmentos base64url separados por puntos = compact JWS. */
+	public boolean isSign(final byte[] data) {
+		if (data == null || data.length < 5) {
+			return false;
+		}
+		int dots = 0;
+		for (final byte b : data) {
+			if (b == '.') {
+				dots++;
+			}
+			else if (b == '\n' || b == '\r' || b == ' ') {
+				return false;
+			}
+		}
+		return dots == 2;
+	}
+
+	/** Helper test: decodifica el header protegido (sin verificar firma). */
+	public static String decodeProtectedHeader(final byte[] jws) {
+		final String s = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
+		final int firstDot = s.indexOf('.');
+		if (firstDot <= 0) {
+			throw new IllegalArgumentException("No es un compact JWS"); //$NON-NLS-1$
+		}
+		return new String(Base64.getUrlDecoder().decode(s.substring(0, firstDot)),
+				java.nio.charset.StandardCharsets.UTF_8);
+	}
+}

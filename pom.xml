@@ -87,6 +87,11 @@
 		     plugin (also supports JUnit 4 via the vintage engine path, no JUnit 5
 		     migration required at this stage).
 		     Jazzer: fuzz harness module under `-Pfuzz`, see `afirma-fuzz`. -->
+		<!-- M4: Nimbus JOSE+JWT 9.48 (2025-04). Backbone of JAdES (compact JWS),
+		     SD-JWT VC (issuer-signed JWT + disclosures via com.nimbusds.sd_jwt),
+		     and OID4VP (OAuth 2.0 + JWT request objects). Requires Java 11+. -->
+		<nimbus-jose-jwt.version>9.48</nimbus-jose-jwt.version>
+
 		<jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 		<pitest-maven.version>1.20.5</pitest-maven.version>
 		<pitest-junit5-plugin.version>1.2.2</pitest-junit5-plugin.version>
@@ -213,6 +218,15 @@
 				<artifactId>jakarta.servlet-api</artifactId>
 				<version>6.1.0</version>
 				<scope>provided</scope>
+			</dependency>
+
+			<!-- M4: Nimbus JOSE+JWT — JWS / JWE / SD-JWT primitives. Used by:
+			     afirma-crypto-jades (JAdES-B-B compact JWS),
+			     afirma-eudiw-bridge (OID4VP request objects + SD-JWT VC parsing). -->
+			<dependency>
+				<groupId>com.nimbusds</groupId>
+				<artifactId>nimbus-jose-jwt</artifactId>
+				<version>${nimbus-jose-jwt.version}</version>
 			</dependency>
 
 			<!-- Force patched Rhino. proxy-vole 1.0.18 brings rhino-runtime 1.7.13
@@ -455,6 +469,10 @@
 				<module>afirma-crypto-validation</module>
 				<module>afirma-crypto-xades</module>
 				<module>afirma-crypto-xadestri-client</module>
+				<!-- M4: eIDAS 2 / EUDI Wallet (esqueleto, fase 1) -->
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
 				<module>afirma-crypto-xmlsignature</module>
 				<module>afirma-crypto-ooxml</module>
 				<module>afirma-keystores-filters</module>
@@ -621,6 +639,10 @@
 				<module>afirma-crypto-validation</module>
 				<module>afirma-crypto-xades</module>
 				<module>afirma-crypto-xadestri-client</module>
+				<!-- M4: eIDAS 2 / EUDI Wallet (esqueleto, fase 1) -->
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
 				<module>afirma-crypto-xmlsignature</module>
 				<module>afirma-crypto-ooxml</module>
 				<module>afirma-keystores-filters</module>
@@ -692,6 +714,10 @@
 				<module>afirma-crypto-validation</module>
 				<module>afirma-crypto-xades</module>
 				<module>afirma-crypto-xadestri-client</module>
+				<!-- M4: eIDAS 2 / EUDI Wallet (esqueleto, fase 1) -->
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
 				<module>afirma-crypto-xmlsignature</module>
 				<module>afirma-crypto-ooxml</module>
 				<module>afirma-keystores-filters</module>
@@ -771,6 +797,10 @@
 				<module>afirma-crypto-validation</module>
 				<module>afirma-crypto-xades</module>
 				<module>afirma-crypto-xadestri-client</module>
+				<!-- M4: eIDAS 2 / EUDI Wallet (esqueleto, fase 1) -->
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
 				<module>afirma-crypto-xmlsignature</module>
 				<module>afirma-crypto-ooxml</module>
 				<module>afirma-keystores-filters</module>
