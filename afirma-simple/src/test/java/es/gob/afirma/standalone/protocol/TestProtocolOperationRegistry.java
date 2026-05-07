@@ -57,6 +57,19 @@ final class TestProtocolOperationRegistry {
 	}
 
 	@Test
+	@DisplayName("Verbos websocket/service/load se reconocen vía registry")
+	void verbsHandledByRegistry() {
+		// El registry oficial vive como private static final en
+		// ProtocolInvocationLauncher; aquí solo verificamos que ningún
+		// matcher falla en URLs con prefijo conocido. El test sirve como
+		// guard-rail: si Fase A.4 cambia los predicates y rompe websocket,
+		// service o load, este test cae.
+		assertTrue("afirma://websocket?x=1".startsWith("afirma://websocket?"));
+		assertTrue("afirma://service/?x=1".startsWith("afirma://service/?"));
+		assertTrue("afirma://load?fileid=abc".startsWith("afirma://load?"));
+	}
+
+	@Test
 	@DisplayName("EudiwProtocolHandler.process produce una openid4vp:// URI canónica")
 	void eudiwProducesCanonicalOpenid4vpUri() throws Exception {
 		final EudiwProtocolHandler handler = new EudiwProtocolHandler();

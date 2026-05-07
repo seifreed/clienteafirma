@@ -111,10 +111,43 @@ public final class ProtocolInvocationLauncher {
      * Introducido en la Fase A del plan Clean Code (2026-05-07): los verbos
      * nuevos se enchufan aquí en lugar de añadir un {@code else if} más al
      * dispatch legacy de {@link #launch(String, ProtocolVersion, boolean)}.
-     * Los 7 verbos legacy migrarán a este registry en la Fase A.1.
+     *
+     * <p>Estado de la migración:</p>
+     * <ul>
+     *   <li>Fase A: {@link EudiwProtocolHandler} (M4 verbo nuevo).</li>
+     *   <li>Fase A.3: websocket, service, load (esta sesión).</li>
+     *   <li>Fase A.4 (pendiente): batch, selectcert, save, signandsave,
+     *       sign|cosign|countersign — los 5 verbos con file_id download
+     *       desde servidor intermedio.</li>
+     * </ul>
      */
     private static final ProtocolOperationRegistry OPERATION_REGISTRY = new ProtocolOperationRegistry()
-    		.register(new EudiwProtocolHandler());
+    		.register(new EudiwProtocolHandler())
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://websocket?") || url.startsWith("afirma://websocket/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleWebSocket))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://service?") || url.startsWith("afirma://service/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleService))
+    		.register(verbHandler(
+    				url -> url.startsWith("afirma://load?") || url.startsWith("afirma://load/?"), //$NON-NLS-1$ //$NON-NLS-2$
+    				ProtocolInvocationLauncher::handleLoad));
+
+    /** Adapta una pareja (predicado, función) a un {@link ProtocolOperationHandler}. */
+    private static ProtocolOperationHandler verbHandler(
+    		final java.util.function.Predicate<String> matches,
+    		final java.util.function.BiFunction<String, LaunchContext, String> body) {
+    	return new ProtocolOperationHandler() {
+    		@Override
+    		public boolean handles(final String url) {
+    			return url != null && matches.test(url);
+    		}
+    		@Override
+    		public String process(final String url, final LaunchContext ctx) {
+    			return body.apply(url, ctx);
+    		}
+    	};
+    }
 
 	/**
 	 * Recupera la entrada con la clave y certificado prefijados para las
@@ -295,80 +328,9 @@ public final class ProtocolInvocationLauncher {
         	}
         }
 
-        // Se invoca la aplicacion para iniciar la comunicacion por socket
-        if (urlString.startsWith("afirma://websocket?") || urlString.startsWith("afirma://websocket/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-        	LOGGER.info("Se inicia el modo de comunicacion por websockets"); //$NON-NLS-1$
+        // Verbos websocket y service migrados al registry en Fase A.3
+        // (handleWebSocket / handleService).
 
-        	requestedProtocolVersion = getVersion(urlParams);
-        	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-
-        	final ChannelInfo channelInfo = getChannelInfo(urlParams);
-
-        	// Si no se indica ningun puerto, es que usamos el protocolo v3, segun el cual el puerto
-        	// a traves del que se establecera la conexion sera el
-        	if (channelInfo.getPorts() == null) {
-        		LOGGER.severe("Usando puerto por defecto para la comunicacion WebSocket"); //$NON-NLS-1$
-        		channelInfo.setPorts(new int[] { DEFAULT_WEBSOCKET_PORT });
-        	}
-
-        	try {
-
-        		// A partir de Autoscript 1.10 se admite la llamada asincrona a traves de Websockets
-        		final boolean asynchronous = jvc > 3;
-
-        		AfirmaWebSocketServerManager.startService(channelInfo, requestedProtocolVersion, asynchronous);
-        	} catch (final UnsupportedProtocolException e) {
-        		LOGGER.log(Level.SEVERE, "La version del protocolo no esta soportada (" + e.getVersion() + "). Se cerrara la aplicacion" , e); //$NON-NLS-1$ //$NON-NLS-2$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-        		forceCloseApplication(0);
-        	}
-        	catch (final SocketOperationException e) {
-        		LOGGER.log(Level.SEVERE, "No se pudo abrir ninguno de los puertos proporcionados. Se cerrara la aplicacion", e); //$NON-NLS-1$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.SOCKET_INITIALIZING_ERROR);
-        		forceCloseApplication(0);
-        	} catch (final SllKeyStoreException e) {
-        		LOGGER.log(Level.SEVERE, "No se ha encontrado o no ha podido cargarse el almacen del certificado SSL. Se cerrara la aplicacion", e); //$NON-NLS-1$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.LOADING_SSL_KEYSTORE_ERROR);
-        		forceCloseApplication(0);
-			}
-
-        	return OK_RESPONSE;
-        }
-		if (urlString.startsWith("afirma://service?") || urlString.startsWith("afirma://service/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-        	LOGGER.info("Se inicia el modo de comunicacion por sockets"); //$NON-NLS-1$
-
-        	requestedProtocolVersion = getVersion(urlParams);
-        	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-
-        	final ChannelInfo channelInfo = getChannelInfo(urlParams);
-
-        	// El listado de puertos de entre los que seleccionar uno es obligatorio
-        	// en esta opcion
-        	if (channelInfo.getPorts() == null) {
-        		LOGGER.log(Level.SEVERE, "No se ha proporcionado el listado de puertos para la conexion"); //$NON-NLS-1$
-        		final ErrorCode errorCode = SimpleErrorCode.Request.PORTS_NOT_FOUND;
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-        	}
-
-        	try {
-        		ServiceInvocationManager.startService(channelInfo, requestedProtocolVersion);
-        	} catch (final UnsupportedProtocolException e) {
-        		LOGGER.severe("La version del protocolo no esta soportada (" + e.getVersion() + "): " + e); //$NON-NLS-1$ //$NON-NLS-2$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-        	} catch (final SllKeyStoreException e) {
-        		LOGGER.log(Level.SEVERE, "No se ha encontrado o no ha podido cargarse el almacen del certificado SSL. Se cerrara la aplicacion", e); //$NON-NLS-1$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.LOADING_SSL_KEYSTORE_ERROR);
-        		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final IOException e) {
-        		LOGGER.log(Level.SEVERE, "No se ha podido abrir el socket o se ha cerrado durante la operacion. Se cierra la aplicacion", e); //$NON-NLS-1$
-        		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.SOCKET_INITIALIZING_ERROR);
-        		forceCloseApplication(0);
-			}
-
-        	return OK_RESPONSE;
-        }
 		if (urlString.startsWith("afirma://batch?") || urlString.startsWith("afirma://batch/?")) { //$NON-NLS-1$ //$NON-NLS-2$
         	LOGGER.info("Se invoca a la aplicacion para el procesado de un lote de firma"); //$NON-NLS-1$
 
@@ -846,98 +808,7 @@ public final class ProtocolInvocationLauncher {
 				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
             }
         }
-		if (urlString.startsWith("afirma://load?") || urlString.startsWith("afirma://load/?")) { //$NON-NLS-1$ //$NON-NLS-2$
-            LOGGER.info("Se invoca a la aplicacion para realizar una operacion de carga de uno o varios ficheros"); //$NON-NLS-1$
-
-            try {
-                UrlParametersToLoad params =
-                		ProtocolInvocationUriParserUtil.getParametersToLoad(urlParams);
-
-				// Si se indica un identificador de fichero, es que la configuracion de la
-				// operacion
-                // se tiene que descargar desde el servidor intermedio
-                if (params.getFileId() != null) {
-                	try {
-                		final byte[] xmlData;
-                		try {
-                			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
-                		} catch (final DecryptionException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
-                		} catch (final SocketTimeoutException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la carga de fichero", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_LOAD_TIMEOUT);
-                		} catch (final IOException e) {
-                			throw new IntermediateServerErrorSendedException(
-                					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
-                					SimpleErrorCode.Communication.RECIVING_DATA_OF_LOAD_OPERATION);
-                		}
-
-                		params = ProtocolInvocationUriParser.getParametersToLoad(xmlData);
-                	} catch (final IntermediateServerErrorSendedException e) {
-                		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
-                		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
-                		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                	}
-                }
-
-        		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
-        		if (requestedProtocolVersion == null) {
-        			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
-        			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, jvc);
-        		}
-
-                // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
-                // que se espere activamente hasta el fin de la tarea
-                if (!bySocket && params.isActiveWaiting()) {
-                	requestWait(params.getStorageServletUrl(), params.getId());
-                }
-
-                LOGGER.info("Se inicia la operacion de carga. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
-
-                String msg;
-                try {
-                    msg = ProtocolInvocationLauncherLoad.processLoad(params, requestedProtocolVersion);
-                }
-                catch(final AOCancelledOperationException e) {
-                    LOGGER.severe("Operacion de carga de datos cancelada por el usuario"); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-				// solo entra en la excepcion en el caso de que haya que devolver errores a
-				// traves del servidor intermedio
-                catch(final SocketOperationException e) {
-                    LOGGER.severe("Error durante la operacion de carga de fichero: " + e); //$NON-NLS-1$
-                    msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-                }
-
-                // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
-                // espera activa si se encontraba vigente
-                if (!bySocket) {
-                	LOGGER.info("Enviamos el resultado de la operacion de carga de fichero al servidor intermedio"); //$NON-NLS-1$
-                	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
-                }
-
-                return msg;
-			} catch (final NeedsUpdatedVersionException e) {
-                LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterLocalAccessRequestedException e) {
-                LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final ParameterException e) {
-                LOGGER.severe("Error en los parametros de carga: " + e); //$NON-NLS-1$
-				ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
-			} catch (final Exception e) {
-                LOGGER.severe("Error desconocido en la operacion de carga: " + e); //$NON-NLS-1$
-                final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_LOADING_DATA_ERROR;
-                ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
-				return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
-            }
-        }
+        // Verbo load migrado al registry en Fase A.3 (handleLoad).
 
 		LOGGER.severe("La operacion indicada en la URL no esta soportada: " + //$NON-NLS-1$
     				urlString.substring(0, Math.min(30, urlString.length())) + "..." //$NON-NLS-1$
@@ -1202,5 +1073,200 @@ public final class ProtocolInvocationLauncher {
 	 */
 	public static LoadKeystoreTask getLoadKeyStoreTask() {
 		return SESSION.loadKeyStoreTask();
+	}
+
+	// =========================================================================
+	// Handlers de verbos del protocolo afirma://
+	// =========================================================================
+	//
+	// Cada método handleXxx contiene la orquestación verbatim del verbo
+	// correspondiente extraída del antiguo if-chain de launch(). Se invocan
+	// vía OPERATION_REGISTRY (Fase A.3 del plan Clean Code, 2026-05-07).
+	//
+	// La regla es preservar comportamiento exacto:
+	//   - Mismo orden de operaciones
+	//   - Mismas excepciones capturadas
+	//   - Mismos códigos de error
+	//   - `requestedProtocolVersion` empieza en ctx.version() y puede
+	//     reasignarse desde la URL (websocket, service) o desde los params
+	//     (resto), igual que antes.
+	// =========================================================================
+
+	/**
+	 * Verbo {@code afirma://websocket?...} — apertura del canal WebSocket
+	 * (modo asíncrono desde Autoscript 1.10 cuando jvc &gt; 3).
+	 */
+	private static String handleWebSocket(final String urlString, final LaunchContext ctx) {
+    	LOGGER.info("Se inicia el modo de comunicacion por websockets"); //$NON-NLS-1$
+
+    	ProtocolVersion requestedProtocolVersion = getVersion(ctx.urlParams());
+    	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+
+    	final ChannelInfo channelInfo = getChannelInfo(ctx.urlParams());
+
+    	// Si no se indica ningun puerto, es que usamos el protocolo v3, segun el cual el puerto
+    	// a traves del que se establecera la conexion sera el
+    	if (channelInfo.getPorts() == null) {
+    		LOGGER.severe("Usando puerto por defecto para la comunicacion WebSocket"); //$NON-NLS-1$
+    		channelInfo.setPorts(new int[] { DEFAULT_WEBSOCKET_PORT });
+    	}
+
+    	try {
+    		// A partir de Autoscript 1.10 se admite la llamada asincrona a traves de Websockets
+    		final boolean asynchronous = ctx.javascriptVersionCode() > 3;
+    		AfirmaWebSocketServerManager.startService(channelInfo, requestedProtocolVersion, asynchronous);
+    	} catch (final UnsupportedProtocolException e) {
+    		LOGGER.log(Level.SEVERE, "La version del protocolo no esta soportada (" + e.getVersion() + "). Se cerrara la aplicacion" , e); //$NON-NLS-1$ //$NON-NLS-2$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+    		forceCloseApplication(0);
+    	}
+    	catch (final SocketOperationException e) {
+    		LOGGER.log(Level.SEVERE, "No se pudo abrir ninguno de los puertos proporcionados. Se cerrara la aplicacion", e); //$NON-NLS-1$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.SOCKET_INITIALIZING_ERROR);
+    		forceCloseApplication(0);
+    	} catch (final SllKeyStoreException e) {
+    		LOGGER.log(Level.SEVERE, "No se ha encontrado o no ha podido cargarse el almacen del certificado SSL. Se cerrara la aplicacion", e); //$NON-NLS-1$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.LOADING_SSL_KEYSTORE_ERROR);
+    		forceCloseApplication(0);
+		}
+
+    	return OK_RESPONSE;
+	}
+
+	/**
+	 * Verbo {@code afirma://service?...} — apertura del canal por sockets
+	 * (legacy; los puertos son obligatorios aquí).
+	 */
+	private static String handleService(final String urlString, final LaunchContext ctx) {
+    	LOGGER.info("Se inicia el modo de comunicacion por sockets"); //$NON-NLS-1$
+
+    	ProtocolVersion requestedProtocolVersion = getVersion(ctx.urlParams());
+    	requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+
+    	final ChannelInfo channelInfo = getChannelInfo(ctx.urlParams());
+
+    	// El listado de puertos de entre los que seleccionar uno es obligatorio
+    	// en esta opcion
+    	if (channelInfo.getPorts() == null) {
+    		LOGGER.log(Level.SEVERE, "No se ha proporcionado el listado de puertos para la conexion"); //$NON-NLS-1$
+    		final ErrorCode errorCode = SimpleErrorCode.Request.PORTS_NOT_FOUND;
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+    		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+    	}
+
+    	try {
+    		ServiceInvocationManager.startService(channelInfo, requestedProtocolVersion);
+    	} catch (final UnsupportedProtocolException e) {
+    		LOGGER.severe("La version del protocolo no esta soportada (" + e.getVersion() + "): " + e); //$NON-NLS-1$ //$NON-NLS-2$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+    		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+    	} catch (final SllKeyStoreException e) {
+    		LOGGER.log(Level.SEVERE, "No se ha encontrado o no ha podido cargarse el almacen del certificado SSL. Se cerrara la aplicacion", e); //$NON-NLS-1$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.LOADING_SSL_KEYSTORE_ERROR);
+    		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final IOException e) {
+    		LOGGER.log(Level.SEVERE, "No se ha podido abrir el socket o se ha cerrado durante la operacion. Se cierra la aplicacion", e); //$NON-NLS-1$
+    		ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, SimpleErrorCode.Internal.SOCKET_INITIALIZING_ERROR);
+    		forceCloseApplication(0);
+		}
+
+    	return OK_RESPONSE;
+	}
+
+	/**
+	 * Verbo {@code afirma://load?...} — carga de uno o varios ficheros desde
+	 * el servidor intermedio. Soporta file_id download para configuración remota.
+	 */
+	private static String handleLoad(final String urlString, final LaunchContext ctx) {
+        LOGGER.info("Se invoca a la aplicacion para realizar una operacion de carga de uno o varios ficheros"); //$NON-NLS-1$
+
+        ProtocolVersion requestedProtocolVersion = ctx.version();
+        try {
+            UrlParametersToLoad params =
+            		ProtocolInvocationUriParserUtil.getParametersToLoad(ctx.urlParams());
+
+			// Si se indica un identificador de fichero, es que la configuracion de la
+			// operacion se tiene que descargar desde el servidor intermedio
+            if (params.getFileId() != null) {
+            	try {
+            		final byte[] xmlData;
+            		try {
+            			xmlData = ProtocolInvocationLauncherUtil.getDataFromRetrieveServlet(params);
+            		} catch (final DecryptionException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al descifrar los datos obtenidos", e); //$NON-NLS-1$
+            		} catch (final SocketTimeoutException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Se excedio el tiempo de espera de la llamada al servico de recuperacion del servidor intermedio cuando se trataron de obtener los datos para la carga de fichero", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_LOAD_TIMEOUT);
+            		} catch (final IOException e) {
+            			throw new IntermediateServerErrorSendedException(
+            					"Error al recuperar los datos enviados por el cliente a traves del servidor intermedio", e, //$NON-NLS-1$
+            					SimpleErrorCode.Communication.RECIVING_DATA_OF_LOAD_OPERATION);
+            		}
+
+            		params = ProtocolInvocationUriParser.getParametersToLoad(xmlData);
+            	} catch (final IntermediateServerErrorSendedException e) {
+            		LOGGER.log(Level.SEVERE, "Se obtuvo un error al descargar los datos del servidor intermedio", e); //$NON-NLS-1$
+            		processIntermediateServiceError(e.getMessage(), e.getErrorCode(), params.getStorageServletUrl(), params.getId(), requestedProtocolVersion);
+            		return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            	}
+            }
+
+    		// Si la peticion no se hizo a traves de socket/websocket, la version de protocolo se indica en la propia operacion
+    		if (requestedProtocolVersion == null) {
+    			requestedProtocolVersion = parseProtocolVersion(params.getMinimumProtocolVersion());
+    			requestedProtocolVersion = reviewProtocolVersion(requestedProtocolVersion, ctx.javascriptVersionCode());
+    		}
+
+            // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
+            // que se espere activamente hasta el fin de la tarea
+            if (!ctx.bySocket() && params.isActiveWaiting()) {
+            	requestWait(params.getStorageServletUrl(), params.getId());
+            }
+
+            LOGGER.info("Se inicia la operacion de carga. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
+
+            String msg;
+            try {
+                msg = ProtocolInvocationLauncherLoad.processLoad(params, requestedProtocolVersion);
+            }
+            catch(final AOCancelledOperationException e) {
+                LOGGER.severe("Operacion de carga de datos cancelada por el usuario"); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+			// solo entra en la excepcion en el caso de que haya que devolver errores a
+			// traves del servidor intermedio
+            catch(final SocketOperationException e) {
+                LOGGER.severe("Error durante la operacion de carga de fichero: " + e); //$NON-NLS-1$
+                msg = ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+            }
+
+            // Si no es por sockets, se devuelve el resultado al servidor y detenemos la
+            // espera activa si se encontraba vigente
+            if (!ctx.bySocket()) {
+            	LOGGER.info("Enviamos el resultado de la operacion de carga de fichero al servidor intermedio"); //$NON-NLS-1$
+            	sendDataToServer(msg, params.getStorageServletUrl().toString(), params.getId(), requestedProtocolVersion);
+            }
+
+            return msg;
+		} catch (final NeedsUpdatedVersionException e) {
+            LOGGER.severe("Se necesita una version mas moderna de Autofirma para procesar la peticion: " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterLocalAccessRequestedException e) {
+            LOGGER.severe("Se ha pedido un acceso a una direccion local (localhost o 127.0.0.1): " + e); //$NON-NLS-1$
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final ParameterException e) {
+            LOGGER.severe("Error en los parametros de carga: " + e); //$NON-NLS-1$
+			ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, e);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, e.getErrorCode());
+		} catch (final Exception e) {
+            LOGGER.severe("Error desconocido en la operacion de carga: " + e); //$NON-NLS-1$
+            final ErrorCode errorCode = SimpleErrorCode.Internal.UNKNOWN_LOADING_DATA_ERROR;
+            ProtocolInvocationLauncherErrorManager.showError(requestedProtocolVersion, errorCode);
+			return ProtocolInvocationLauncherErrorManager.getErrorMessage(requestedProtocolVersion, errorCode);
+        }
 	}
 }
