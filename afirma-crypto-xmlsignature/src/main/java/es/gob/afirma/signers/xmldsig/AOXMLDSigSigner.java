@@ -1751,16 +1751,19 @@ public final class AOXMLDSigSigner implements AOSigner {
                 root = this.doc.getDocumentElement();
             }
 
-            // Selección de nodos vía Strategy (Fase D.1 plan Clean Code).
-            // Cada CounterSignTarget tiene su propio CountersignNodeSelector
-            // que filtra el conjunto de firmas a contrafirmar; la creación
-            // del nodo de contrafirma (cs) es la misma para los 4 destinos.
+            // Selección de nodos vía Strategy (Fase D.1) + creación de la
+            // contrafirma vía XmlSignatureCountersigner (Fase D.2). Cada
+            // CounterSignTarget tiene su propio CountersignNodeSelector que
+            // filtra el conjunto de firmas; la creación del nodo de
+            // contrafirma es la misma para los 4 destinos.
             final List<Element> nodesToCountersign =
                     CountersignNodeSelector.forTarget(targetType).selectNodes(root, targets);
+            final XmlSignatureCountersigner countersigner = new XmlSignatureCountersigner();
             for (final Element node : nodesToCountersign) {
                 try {
-                    cs(node, key, certChain, onlySignningCert,
-                            digestMethodAlgorithm, canonicalizationAlgorithm, xmlSignaturePrefix);
+                    countersigner.countersignNode(node, this.algo, key, certChain,
+                            onlySignningCert, digestMethodAlgorithm,
+                            canonicalizationAlgorithm, xmlSignaturePrefix);
                 }
                 catch (final AOException e) {
                     throw e;
@@ -1782,131 +1785,6 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         // convierte el xml resultante para devolverlo como byte[]
         return Utils.writeXML(this.doc.getDocumentElement(), originalXMLProperties, null, null);
-    }
-
-    /** Realiza la contrafirma de la firma pasada por par&aacute;metro.
-     * @param signature Elemento con el nodo de la firma a contrafirmar
-     * @param key Clave privada de firma.
-     * @param certChain Cadena de certificados del firmante.
-     * @param onlySignningCert Indica si debe incluirse solo el certificado de firma o toda la cadena
-     * @param refsDigestMethod Algoritmo de huella digital
-     * @param canonicalizationAlgorithm Algoritmo de canonicalizaci&oacute;n
-     * @param xmlSignaturePrefix Prefijo del namespace de firma
-     * @throws AOException Cuando ocurre cualquier problema durante el proceso */
-    private void cs(final Element signature,
-                    final PrivateKey key,
-                    final Certificate[] certChain,
-                    final boolean onlySignningCert,
-                    final String refsDigestMethod,
-                    final String canonicalizationAlgorithm,
-                    final String xmlSignaturePrefix) throws AOException {
-
-        // obtiene el nodo SignatureValue
-        final Element signatureValue = (Element) signature.getElementsByTagNameNS(XMLConstants.DSIGNNS, SIGNATURE_VALUE).item(0);
-
-        // crea la referencia a la firma que se contrafirma
-        final List<Reference> referenceList = new ArrayList<>();
-        final XMLSignatureFactory fac = Utils.getDOMFactory();
-        final DigestMethod digestMethod;
-        try {
-            digestMethod = fac.newDigestMethod(refsDigestMethod, null);
-        }
-        catch (final Exception e) {
-            throw new AOException(
-        		"No se ha podido obtener un generador de huellas digitales para el algoritmo '" + refsDigestMethod + "': " + e, e, XMLErrorCode.Request.INVALID_REFERENCES_HASH_ALGORITHM_URI //$NON-NLS-1$ //$NON-NLS-2$
-    		);
-        }
-        final String referenceId = "Reference-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-
-        try {
-            // Transformada para la canonicalizacion inclusiva con comentarios
-            final List<Transform> transformList = new ArrayList<>();
-            transformList.add(fac.newTransform(canonicalizationAlgorithm, (TransformParameterSpec) null));
-            referenceList.add(
-        		fac.newReference(
-            		"#" + signatureValue.getAttribute(ID_IDENTIFIER), //$NON-NLS-1$
-            		digestMethod,
-            		transformList,
-            		CSURI,
-            		referenceId
-        		)
-    		);
-        }
-        catch (final Exception e) {
-            throw new AOException("No se ha podido anadir la transformacion de canonizacion en la contrafirma: " + e, e, XMLErrorCode.Request.INVALID_CANONICALIZATION_URI); //$NON-NLS-1$
-        }
-
-        // definicion de identificadores
-        final String id = UUID.randomUUID().toString();
-        final String signatureId = "Signature-" + id; //$NON-NLS-1$
-        final String signatureValueId = "SignatureValue-" + id; //$NON-NLS-1$
-        final String keyInfoId = "KeyInfo-" + id; //$NON-NLS-1$
-
-        try {
-
-            // se anade una referencia a KeyInfo
-            referenceList.add(fac.newReference("#" + keyInfoId, digestMethod)); //$NON-NLS-1$
-
-            // KeyInfo
-            final KeyInfoFactory kif = fac.getKeyInfoFactory();
-            final X509Certificate cert = (X509Certificate) certChain[0];
-
-            final List<XMLStructure> content = new ArrayList<>();
-            content.add(kif.newKeyValue(cert.getPublicKey()));
-
-            // Si se nos ha pedido expresamente que no insertemos la cadena de certificacion,
-            // insertamos unicamente el certificado firmante. Tambien lo haremos cuando al
-            // recuperar la cadena nos devuelva null
-            Certificate[] certs = null;
-			if (!onlySignningCert) {
-				certs = certChain;
-			}
-            if (certs == null) {
-                certs = new Certificate[] {
-                    cert
-                };
-            }
-            content.add(kif.newX509Data(Arrays.asList(certs)));
-
-            final XMLSignature sign = fac.newXMLSignature(
-        		fac.newSignedInfo(
-    				fac.newCanonicalizationMethod(canonicalizationAlgorithm, (C14NMethodParameterSpec) null),
-    				fac.newSignatureMethod(XMLConstants.SIGN_ALGOS_URI.get(this.algo), null),
-    				referenceList
-				),
-        		kif.newKeyInfo(content, keyInfoId),
-        		null,
-        		signatureId,
-        		signatureValueId
-    		);
-
-            final DOMSignContext signContext = new DOMSignContext(
-        		key,
-        		signature.getOwnerDocument().getDocumentElement()
-    		);
-
-            signContext.putNamespacePrefix(XMLConstants.DSIGNNS, xmlSignaturePrefix);
-
-            try {
-            	// Instalamos un dereferenciador nuevo que solo actua cuando falla el por defecto
-            	signContext.setURIDereferencer(
-        			new CustomUriDereferencer(CustomUriDereferencer.getDefaultDereferencer())
-    			);
-            }
-            catch (final Exception e) {
-            	LOGGER.warning("No se ha podido instalar un dereferenciador a medida, es posible que fallen las firmas de nodos concretos: " + e); //$NON-NLS-1$
-            }
-
-            sign.sign(signContext);
-        }
-        catch (final NoSuchAlgorithmException e) {
-            throw new AOException(
-        		"Hay al menos un algoritmo no soportado: " + e, e, ErrorCode.Request.UNSUPPORTED_SIGNATURE_ALGORITHM //$NON-NLS-1$
-        	);
-        }
-        catch (final Exception e) {
-            throw new AOException("No se ha podido realizar la contrafirma: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-        }
     }
 
     /** {@inheritDoc} */
