@@ -47,7 +47,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
-| **M3.6** | Hardening (Jazzer, PIT) y JUnit 5 | ⏳ Pendiente |
+| **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit 5 | 🟡 JaCoCo cableado; PIT en `-Pmutation`; Jazzer en `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`). Migración JUnit 5 diferida (no bloqueante). |
 | **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | ⏳ Diseño |
 
 ### Diferencias principales frente al upstream
@@ -71,6 +71,11 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 
 - **M3.4-windows — repack del bundle NSS para Windows.** Ejecutar `scripts/repack-nss-windows.ps1` en un host Windows con Firefox instalado. Eliminará la última supresión activa de `sqlite3.dll` (CVE-2021-36690). Es trabajo de release flow / CI con runner Windows, no se puede hacer desde un host macOS/Linux porque Mozilla no publica binarios standalone de NSS para Windows.
 - **M3.5 — fork iText → OpenPDF (bloqueado).** El fork interno `afirma-lib-itext:1.7` (namespace `com.aowagie.*`, ~2009) tiene parches de PAdES específicos de la AEAD que OpenPDF 1.3/2/3 no incorpora: `PdfPKCS7.getPkcs1()` para firma triphase, `InvalidPageNumberException`, sobrecargas de `createSignature(..., char, null, boolean, Calendar)`, `PdfStamper.preClose(HashMap, Calendar, ...)`, constructor extra de `PdfSignature`, etc. Sustituir requiere o portar los parches a OpenPDF (PR aguas arriba) o mantener un fork propio del fork. Estimación 2-3 semanas dedicadas. La sesión 2026-05-07 dejó la coordenada OpenPDF probada en `dependencyManagement` como referencia (revertida ahora a `afirma-lib-itext` para mantener verde).
+- **M3.6 — JUnit 5 (diferido).** Las suites JUnit&nbsp;4 (146 archivos `Test*.java`) siguen activas; PIT funciona contra ellas vía su soporte nativo. La migración a JUnit&nbsp;5 (`@Test` desde `org.junit.jupiter.api`) habilitaría:
+  1. Re-enchufar `pitest-junit5-plugin` (no requiere reescribir tests si se usa JUnit Platform Vintage).
+  2. Tests parametrizados nativos en lugar de los actuales `@Parameterized`.
+  3. `@TempDir` y `assertAll()`.
+  Es un esfuerzo aditivo, no bloquea; se puede afrontar gradualmente módulo a módulo. **Plan:** introducir `junit-jupiter-engine` + `junit-vintage-engine` en `dependencyManagement`, dejar suites antiguas sin tocar, y convertir nuevos tests a Jupiter.
 
 ---
 
@@ -138,6 +143,31 @@ mvn -pl afirma-crypto-cades test -Dtest=TestCAdESCoSigner#testCoSignSimple
 | `sonar` | `-Psonar` | Análisis SonarQube |
 | `minhap` | `-Pminhap` | Despliegue al repo interno SCAE / redsara |
 | `env-deploy` | `-Denv=deploy` | Maven Central: source jar, javadoc, GPG + cosign, dep-check con `failBuildOnCVSS=7` |
+| `mutation` | `-Pmutation,env-dev` | Mutation testing con PIT 1.20 (M3.6). Reportes en `<módulo>/target/pit-reports/index.html`. |
+| `fuzz` | `-Pfuzz` | Añade el módulo `afirma-fuzz` con harnesses Jazzer (M3.6). |
+
+### Calidad — gates M3.6 (mutation, fuzz, coverage)
+
+```bash
+# Coverage JaCoCo (siempre activo; reporte en cada módulo)
+mvn -pl afirma-core verify
+open afirma-core/target/site/jacoco/index.html
+
+# Mutation testing — un módulo a la vez (PIT crea minion JVMs por test)
+mvn -P mutation,env-dev -pl afirma-crypto-cades test
+open afirma-crypto-cades/target/pit-reports/index.html
+
+# Fuzzing — script wrapper, usa libFuzzer interno de Jazzer
+scripts/run-fuzz.sh DerValueFuzzer 60       # 60 segundos sobre el parser DER
+scripts/run-fuzz.sh TriphaseDataFuzzer 300  # 5 minutos sobre TriphaseData.parser(byte[])
+scripts/run-fuzz.sh ProtocolUriFuzzer 300   # 5 minutos sobre afirma:// URI handler
+# Crashes y reproducers caen en afirma-fuzz/target/fuzz/<harness>/crashes/
+```
+
+> **Nota:** la gate `jacoco:check` (umbral mínimo) está intencionalmente sin
+> bindear hasta medir baseline por módulo (follow-up M3.6). PIT y Jazzer son
+> suplementarios — útiles ad-hoc, no bloquean PRs en CI hasta que los corpus
+> de fuzz estén estables.
 
 ---
 

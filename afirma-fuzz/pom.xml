@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>es.gob.afirma</groupId>
+		<artifactId>afirma-client</artifactId>
+		<version>1.9.1</version>
+	</parent>
+
+	<artifactId>afirma-fuzz</artifactId>
+	<packaging>jar</packaging>
+	<name>afirma-fuzz</name>
+	<description>Jazzer fuzz harnesses for crypto / protocol parsers (M3.6).</description>
+
+	<!--
+	  Built only under the `fuzz` profile (root pom.xml). The harnesses here
+	  target system-boundary parsers — DER/ASN.1, the TriphaseData XML envelope,
+	  and the afirma:// protocol URI parser — i.e., the surfaces that consume
+	  attacker-controlled bytes. Run via:
+
+	    mvn -Pfuzz -pl afirma-fuzz -am verify
+	    scripts/run-fuzz.sh <FuzzTargetClass> [duration]
+	-->
+
+	<dependencies>
+		<dependency>
+			<groupId>es.gob.afirma</groupId>
+			<artifactId>afirma-core</artifactId>
+			<version>${clienteafirma.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.code-intelligence</groupId>
+			<artifactId>jazzer-api</artifactId>
+			<version>${jazzer.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.code-intelligence</groupId>
+			<artifactId>jazzer-junit</artifactId>
+			<version>${jazzer.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<release>${jdk.version}</release>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

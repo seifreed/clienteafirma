@@ -79,6 +79,18 @@
 		     Compatible with our JDK 21 + suppressions schema 1.3. -->
 		<dependency-check-maven.version>12.2.2</dependency-check-maven.version>
 
+		<!-- M3.6 quality / hardening tooling (2026-05-07).
+		     JaCoCo: line+branch coverage, report-only initially. The `check` goal is
+		     intentionally not bound — turning it on as a build gate is deferred until
+		     baseline coverage is measured per module (tracked under M3.6 follow-up).
+		     PIT: mutation testing, behind `-Pmutation`. JUnit 4 supported by pitest-junit5
+		     plugin (also supports JUnit 4 via the vintage engine path, no JUnit 5
+		     migration required at this stage).
+		     Jazzer: fuzz harness module under `-Pfuzz`, see `afirma-fuzz`. -->
+		<jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+		<pitest-maven.version>1.20.5</pitest-maven.version>
+		<jazzer.version>0.24.0</jazzer.version>
+
 		<!-- Reproducible build timestamp (CRA art. 13). Bump on each release. -->
 		<project.build.outputTimestamp>2026-05-07T00:00:00Z</project.build.outputTimestamp>
 
@@ -263,11 +275,119 @@
 						<nvdValidForHours>168</nvdValidForHours>
 					</configuration>
 				</plugin>
+
+				<!-- M3.6: JaCoCo line+branch coverage. Bound to test phase via the
+				     top-level <plugins> below so every module produces a per-module
+				     report under target/site/jacoco/. The `check` goal is intentionally
+				     not bound (no enforced minimum yet); flip to a gate once the
+				     baseline per module is measured. -->
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco-maven-plugin.version}</version>
+				</plugin>
+
+				<!-- M3.6: PIT mutation testing. Active only under `-Pmutation`.
+				     PIT 1.20.x ships native JUnit 4 support; the pitest-junit5-plugin
+				     would require JUnit Platform classes on the test classpath, which
+				     this project does not (yet) provide. JUnit 5 migration is tracked
+				     in the roadmap as a follow-up; when it lands, re-add the plugin. -->
+				<plugin>
+					<groupId>org.pitest</groupId>
+					<artifactId>pitest-maven</artifactId>
+					<version>${pitest-maven.version}</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
+
+		<!-- JaCoCo runs on every build (default + every profile) so coverage data
+		     accumulates without requiring a special profile. -->
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>jacoco-prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	
 	<profiles>
+		<!-- ===== M3.6: mutation testing on demand =====
+		     Activate with `-Pmutation`. Recommended scope: one module at a time,
+		     e.g. `mvn -Pmutation -pl afirma-crypto-cades test`. Reports land at
+		     <module>/target/pit-reports/index.html. failWhenNoMutations=false so
+		     modules without tests don't break aggregate runs. -->
+		<profile>
+			<id>mutation</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-maven</artifactId>
+						<configuration>
+							<timestampedReports>false</timestampedReports>
+							<failWhenNoMutations>false</failWhenNoMutations>
+							<outputFormats>
+								<outputFormat>HTML</outputFormat>
+								<outputFormat>XML</outputFormat>
+							</outputFormats>
+							<!-- JDK 21+: same add-opens that the runtime fat JARs need
+							     for the keystore providers. PIT forks a minion JVM. -->
+							<jvmArgs>
+								<value>--add-opens=java.base/sun.security.x509=ALL-UNNAMED</value>
+								<value>--add-opens=java.base/sun.security.util=ALL-UNNAMED</value>
+								<value>--add-opens=java.base/sun.security.pkcs11=ALL-UNNAMED</value>
+								<value>--add-opens=java.base/sun.security.mscapi=ALL-UNNAMED</value>
+								<value>--enable-native-access=ALL-UNNAMED</value>
+							</jvmArgs>
+							<targetClasses>
+								<param>es.gob.afirma.*</param>
+							</targetClasses>
+							<targetTests>
+								<param>es.gob.afirma.test.*</param>
+								<param>es.gob.afirma.*.test*</param>
+								<param>es.gob.afirma.*Test*</param>
+							</targetTests>
+						</configuration>
+						<executions>
+							<execution>
+								<id>pit-mutation</id>
+								<phase>test</phase>
+								<goals>
+									<goal>mutationCoverage</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!-- ===== M3.6: fuzzing on demand =====
+		     Activate with `-Pfuzz`. Adds the afirma-fuzz harness module so it
+		     compiles and its targets are runnable via `mvn -Pfuzz -pl afirma-fuzz
+		     verify` or the helper script `scripts/run-fuzz.sh`. -->
+		<profile>
+			<id>fuzz</id>
+			<modules>
+				<module>afirma-fuzz</module>
+			</modules>
+		</profile>
+
 		<!-- ===== Construccion por defecto ===== -->
 		<profile>
 			<id>env-dev</id>
