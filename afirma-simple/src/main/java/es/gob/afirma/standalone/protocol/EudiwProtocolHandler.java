@@ -6,7 +6,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,9 +49,17 @@ public final class EudiwProtocolHandler {
 	}
 
 	/**
-	 * Parsea los parámetros de la URI a un mapa simple. Los valores se decodifican
-	 * percent-encoded ({@link StandardCharsets#UTF_8}). Lanza {@link IllegalArgumentException}
-	 * si la URI no corresponde al verbo {@code eudiw-present}.
+	 * Parsea los parámetros de la URI a un mapa preservando el orden de aparición.
+	 * Los valores se decodifican percent-encoded ({@link StandardCharsets#UTF_8}).
+	 *
+	 * <p>Como esta entrada es un <em>system boundary</em> (URLs externas), las
+	 * claves duplicadas se rechazan explícitamente con {@link IllegalArgumentException}
+	 * en lugar de sobreescribir silenciosamente — un atacante podría usar
+	 * <code>?nonce=XX&amp;nonce=YY</code> para divergir el nonce que el handler
+	 * valida del que la wallet ve.</p>
+	 *
+	 * @throws IllegalArgumentException si la URI no es {@code afirma://eudiw-present}
+	 *     o si la query contiene la misma clave más de una vez.
 	 */
 	public static Map<String, String> parseParameters(final URI uri) {
 		Objects.requireNonNull(uri, "uri");
@@ -65,16 +73,24 @@ public final class EudiwProtocolHandler {
 			return Collections.emptyMap();
 		}
 
-		final Map<String, String> params = new HashMap<>();
+		final Map<String, String> params = new LinkedHashMap<>();
 		for (final String pair : query.split("&")) { //$NON-NLS-1$
 			final int eq = pair.indexOf('=');
+			final String key;
+			final String value;
 			if (eq < 0) {
-				params.put(URLDecoder.decode(pair, StandardCharsets.UTF_8), ""); //$NON-NLS-1$
-				continue;
+				key = URLDecoder.decode(pair, StandardCharsets.UTF_8);
+				value = ""; //$NON-NLS-1$
 			}
-			final String k = URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
-			final String v = URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
-			params.put(k, v);
+			else {
+				key = URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
+				value = URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
+			}
+			if (params.containsKey(key)) {
+				throw new IllegalArgumentException(
+						"Parámetro duplicado en URI eudiw-present: " + key); //$NON-NLS-1$
+			}
+			params.put(key, value);
 		}
 		return Collections.unmodifiableMap(params);
 	}

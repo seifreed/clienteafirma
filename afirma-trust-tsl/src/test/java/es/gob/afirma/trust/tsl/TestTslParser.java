@@ -7,7 +7,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,6 +75,7 @@ final class TestTslParser {
 
 		final TrustServiceProvider tsp = tsl.providers().get(0);
 		assertEquals("FNMT-RCM", tsp.name());
+		assertEquals("ES", tsp.countryCode(), "El countryCode del TSP debe heredar del SchemeTerritory");
 		assertEquals(1, tsp.services().size());
 
 		final TrustServiceProvider.TrustService svc = tsp.services().get(0);
@@ -84,6 +100,35 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("findIssuer resuelve un certificado a su TSP (O(1) index)")
+	void findIssuerByIssuerSubject() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+		kpg.initialize(2048);
+		final KeyPair caKp = kpg.generateKeyPair();
+		final X509Certificate caCert = selfSigned(caKp, "CN=CA Test, O=AEAD");
+
+		// Cert hijo emitido por la "CA": issuer = subject del CA cert
+		final KeyPair leafKp = kpg.generateKeyPair();
+		final X509Certificate leaf = issuedBy(caKp, caCert, leafKp,
+				"CN=Suscriptor, O=Prueba");
+
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES",
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC",
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted",
+						List.of(caCert))));
+		final TslDocument tsl = new TslDocument(
+				"Operator", "ES", null, List.of(tsp), false);
+
+		final TrustListService svc = new TrustListService();
+		svc.ingest(tsl);
+		assertEquals(1, svc.loadedCount());
+		assertTrue(svc.findIssuer(leaf).isPresent(), "Debe resolver leaf → TSP por issuer DN");
+		assertEquals("FNMT-RCM", svc.findIssuer(leaf).get().name());
+	}
+
+	@Test
 	@DisplayName("Parser endurecido contra DOCTYPE (XXE)")
 	void rejectsDoctype() {
 		final String xxe = """
@@ -94,5 +139,36 @@ final class TestTslParser {
 		final TslParser parser = new TslParser();
 		assertThrows(TslException.class,
 				() -> parser.parse(xxe.getBytes(StandardCharsets.UTF_8)));
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
+		final Instant now = Instant.now();
+		final X500Name dn = new X500Name(subject);
+		final BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
+				dn, serial, Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				dn, kp.getPublic())
+				.build(new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate()));
+		return (X509Certificate) CertificateFactory.getInstance("X.509")
+				.generateCertificate(new java.io.ByteArrayInputStream(holder.getEncoded()));
+	}
+
+	private static X509Certificate issuedBy(final KeyPair issuerKp, final X509Certificate issuerCert,
+			final KeyPair subjectKp, final String subjectDn) throws Exception {
+		final Instant now = Instant.now();
+		// Reconstruir issuer desde los bytes del DN del CA evita la inversión RDN
+		// que produce X500Name(String) sobre un nombre con varios componentes.
+		final X500Name issuer = X500Name.getInstance(
+				issuerCert.getSubjectX500Principal().getEncoded());
+		final X500Name subject = new X500Name(subjectDn);
+		final ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+				.build(issuerKp.getPrivate());
+		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
+				issuer, BigInteger.valueOf(System.currentTimeMillis() + 1),
+				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				subject, subjectKp.getPublic())
+				.build(signer);
+		return (X509Certificate) CertificateFactory.getInstance("X.509")
+				.generateCertificate(new java.io.ByteArrayInputStream(holder.getEncoded()));
 	}
 }

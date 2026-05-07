@@ -9,7 +9,6 @@ import javax.xml.XMLConstants;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMValidateContext;
-import javax.xml.crypto.dsig.keyinfo.X509Data;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -68,12 +67,8 @@ public final class TslVerifier {
 			throw new TslException("Error verificando firma TSL: " + e.getMessage(), e); //$NON-NLS-1$
 		}
 	}
-
-	/** Placeholder para las versiones que extraen la clave del propio
-	 *  {@link X509Data}; útil cuando la TSL es self-contained (la LOTL no lo es,
-	 *  por eso requiere clave externa). TODO M4.x. */
-	@SuppressWarnings("unused")
-	private static PublicKey extractEmbeddedKey(final X509Data x509Data) {
-		throw new UnsupportedOperationException("M4.x — pendiente"); //$NON-NLS-1$
-	}
+	// TODO M4.x — soportar TSLs self-contained extrayendo la clave del propio
+	// <KeyInfo>/<X509Data>. La LOTL europea no es self-contained (su clave la
+	// publica la Comisión por separado), pero las TSLs nacionales pueden serlo
+	// según el reglamento de implementación de cada estado miembro.
 }

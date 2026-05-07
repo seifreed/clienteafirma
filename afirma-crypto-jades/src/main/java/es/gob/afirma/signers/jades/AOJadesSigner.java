@@ -17,6 +17,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -112,7 +113,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				headerBuilder.contentType(contentType);
 			}
 
-			headerBuilder.criticalParams(new java.util.HashSet<>(critical));
+			headerBuilder.criticalParams(new HashSet<>(critical));
 			for (final Map.Entry<String, Object> entry : jadesClaims.entrySet()) {
 				headerBuilder.customParam(entry.getKey(), entry.getValue());
 			}
@@ -139,30 +140,30 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static JWSAlgorithm mapAlgorithm(final String algorithm, final PrivateKey key) throws AOException {
 		final String alg = algorithm == null ? AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA : algorithm;
-		final boolean ec = key instanceof ECPrivateKey;
-		final boolean rsa = key instanceof RSAPrivateKey;
+		final String upper = alg.toUpperCase();
 
-		switch (alg.toUpperCase()) {
-			case "SHA256WITHRSA": //$NON-NLS-1$
-				if (!rsa) {
-					throw new AOException("Algoritmo " + alg + " requiere clave RSA", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				return JWSAlgorithm.RS256;
-			case "SHA384WITHRSA": //$NON-NLS-1$
-				return JWSAlgorithm.RS384;
-			case "SHA512WITHRSA": //$NON-NLS-1$
-				return JWSAlgorithm.RS512;
-			case "SHA256WITHECDSA": //$NON-NLS-1$
-				if (!ec) {
-					throw new AOException("Algoritmo " + alg + " requiere clave EC", new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				return JWSAlgorithm.ES256;
-			case "SHA384WITHECDSA": //$NON-NLS-1$
-				return JWSAlgorithm.ES384;
-			case "SHA512WITHECDSA": //$NON-NLS-1$
-				return JWSAlgorithm.ES512;
+		final boolean isRsaAlg = upper.endsWith("WITHRSA"); //$NON-NLS-1$
+		final boolean isEcAlg = upper.endsWith("WITHECDSA"); //$NON-NLS-1$
+
+		if (isRsaAlg && !(key instanceof RSAPrivateKey)) {
+			throw new AOException("Algoritmo " + alg + " requiere clave RSA", //$NON-NLS-1$ //$NON-NLS-2$
+					new ErrorCode(ErrorCode.ERROR_FUNCTIONAL));
+		}
+		if (isEcAlg && !(key instanceof ECPrivateKey)) {
+			throw new AOException("Algoritmo " + alg + " requiere clave EC", //$NON-NLS-1$ //$NON-NLS-2$
+					new ErrorCode(ErrorCode.ERROR_FUNCTIONAL));
+		}
+
+		switch (upper) {
+			case "SHA256WITHRSA":   return JWSAlgorithm.RS256; //$NON-NLS-1$
+			case "SHA384WITHRSA":   return JWSAlgorithm.RS384; //$NON-NLS-1$
+			case "SHA512WITHRSA":   return JWSAlgorithm.RS512; //$NON-NLS-1$
+			case "SHA256WITHECDSA": return JWSAlgorithm.ES256; //$NON-NLS-1$
+			case "SHA384WITHECDSA": return JWSAlgorithm.ES384; //$NON-NLS-1$
+			case "SHA512WITHECDSA": return JWSAlgorithm.ES512; //$NON-NLS-1$
 			default:
-				throw new AOException("Algoritmo no soportado para JAdES: " + alg, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
+				throw new AOException("Algoritmo no soportado para JAdES: " + alg, //$NON-NLS-1$
+						new ErrorCode(ErrorCode.ERROR_FUNCTIONAL));
 		}
 	}
 
@@ -223,8 +224,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		return dots == 2;
 	}
 
-	/** Helper test: decodifica el header protegido (sin verificar firma). */
-	public static String decodeProtectedHeader(final byte[] jws) {
+	/** Helper visible solo dentro del paquete (incluido el test): decodifica
+	 *  el header protegido sin verificar firma. NO es API estable. */
+	static String decodeProtectedHeader(final byte[] jws) {
 		final String s = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
 		final int firstDot = s.indexOf('.');
 		if (firstDot <= 0) {

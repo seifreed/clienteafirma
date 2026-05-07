@@ -62,12 +62,13 @@ public final class TslParser {
 				}
 			}
 
-			final List<TrustServiceProvider> providers = parseProviders(root);
+			final String resolvedTerritory = territory.isEmpty() ? "??" : territory; //$NON-NLS-1$
+			final List<TrustServiceProvider> providers = parseProviders(root, resolvedTerritory);
 			final boolean signed = root.getElementsByTagNameNS(DSIG_NS, "Signature").getLength() > 0; //$NON-NLS-1$
 
 			return new TslDocument(
 					schemeOperator.isEmpty() ? "?" : schemeOperator, //$NON-NLS-1$
-					territory.isEmpty() ? "??" : territory, //$NON-NLS-1$
+					resolvedTerritory,
 					nextUpdate,
 					providers,
 					signed);
@@ -80,7 +81,10 @@ public final class TslParser {
 		}
 	}
 
-	private List<TrustServiceProvider> parseProviders(final Element root) throws Exception {
+	/** Construye los proveedores TSP. El {@code countryCode} se hereda del
+	 *  {@code <SchemeTerritory>} del documento — ETSI TS 119 612 §5.3.4 garantiza
+	 *  que todos los TSPs de una TSL pertenecen al territorio del scheme operator. */
+	private List<TrustServiceProvider> parseProviders(final Element root, final String territory) throws Exception {
 		final List<TrustServiceProvider> result = new ArrayList<>();
 		final NodeList tspNodes = root.getElementsByTagNameNS(TSL_NS, "TrustServiceProvider"); //$NON-NLS-1$
 		final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
@@ -89,7 +93,6 @@ public final class TslParser {
 			final Element tsp = (Element) tspNodes.item(i);
 			final String name = textOrEmpty(tsp, TSL_NS, "Name"); //$NON-NLS-1$
 			final String tradeName = textOrEmpty(tsp, TSL_NS, "TradeName"); //$NON-NLS-1$
-			final String country = textOrEmpty(tsp, TSL_NS, "PostalCode"); //$NON-NLS-1$
 
 			final List<TrustServiceProvider.TrustService> services = new ArrayList<>();
 			final NodeList serviceNodes = tsp.getElementsByTagNameNS(TSL_NS, "TSPService"); //$NON-NLS-1$
@@ -109,7 +112,7 @@ public final class TslParser {
 			result.add(new TrustServiceProvider(
 					name.isEmpty() ? "?" : name, //$NON-NLS-1$
 					tradeName,
-					country.isEmpty() ? "??" : country, //$NON-NLS-1$
+					territory,
 					services));
 		}
 		return result;

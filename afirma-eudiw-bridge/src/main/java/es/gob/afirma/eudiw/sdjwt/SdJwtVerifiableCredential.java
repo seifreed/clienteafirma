@@ -35,7 +35,7 @@ import com.nimbusds.jwt.SignedJWT;
  */
 public final class SdJwtVerifiableCredential {
 
-	private static final char SEPARATOR = '~';
+	private static final String SEPARATOR = "~"; //$NON-NLS-1$
 
 	private final SignedJWT issuerSignedJwt;
 	private final List<String> disclosures;
@@ -74,13 +74,13 @@ public final class SdJwtVerifiableCredential {
 	 */
 	public static SdJwtVerifiableCredential parse(final String compact) throws ParseException {
 		Objects.requireNonNull(compact, "compact");
-		final String[] parts = compact.split(String.valueOf(SEPARATOR));
+		final String[] parts = compact.split(SEPARATOR);
 		if (parts.length < 1 || parts[0].isBlank()) {
 			throw new ParseException("Formato SD-JWT inválido: vacío o sin issuer JWT", 0); //$NON-NLS-1$
 		}
 
 		final SignedJWT issuerJwt = SignedJWT.parse(parts[0]);
-		final boolean trailingSeparator = compact.endsWith(String.valueOf(SEPARATOR));
+		final boolean trailingSeparator = compact.endsWith(SEPARATOR);
 
 		final List<String> disclosures = new ArrayList<>();
 		Optional<SignedJWT> keyBinding = Optional.empty();

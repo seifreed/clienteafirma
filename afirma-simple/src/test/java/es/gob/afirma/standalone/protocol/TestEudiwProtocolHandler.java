@@ -49,4 +49,12 @@ final class TestEudiwProtocolHandler {
 	void emptyQuery() {
 		assertTrue(EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present")).isEmpty());
 	}
+
+	@Test
+	@DisplayName("Claves duplicadas se rechazan (system boundary, prevención nonce-confusion)")
+	void rejectsDuplicateKeys() {
+		final URI uri = URI.create("afirma://eudiw-present?nonce=abc&state=s&nonce=zzz");
+		assertThrows(IllegalArgumentException.class,
+				() -> EudiwProtocolHandler.parseParameters(uri));
+	}
 }
