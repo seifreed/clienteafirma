@@ -20,7 +20,15 @@
 			<groupId>es.gob.afirma.lib</groupId>
 			<artifactId>afirma-lib-jmimemagic</artifactId>
 		</dependency>
-		
+
+		<!-- BouncyCastle ASN.1: prerequisito de la migración DerValue → BC
+		     (Fase F.1 plan Clean Code). bcprov-jdk18on incluye los paquetes
+		     org.bouncycastle.asn1.* utilizados por BcAsn1Adapter. -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
