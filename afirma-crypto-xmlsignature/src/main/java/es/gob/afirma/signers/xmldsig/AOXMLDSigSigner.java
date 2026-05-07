@@ -78,10 +78,8 @@ import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.XMLConstants;
 import es.gob.afirma.signers.xml.XMLErrorCode;
 import es.gob.afirma.signers.xml.XmlDSigProviderHelper;
-import es.gob.afirma.signers.xml.style.CannotDereferenceException;
-import es.gob.afirma.signers.xml.style.IsInnerlException;
-import es.gob.afirma.signers.xml.style.ReferenceIsNotXmlException;
 import es.gob.afirma.signers.xml.style.XmlStyle;
+import es.gob.afirma.signers.xml.style.XmlStyleResolver;
 import es.uji.crypto.xades.jxades.util.DOMOutputImpl;
 
 /** Manejador de firmas XML en formato XMLDSig.
@@ -383,31 +381,10 @@ public final class AOXMLDSigSigner implements AOSigner {
                 // Obtenemos el objeto XML y su codificacion
                 final Document docum = Utils.getNewDocumentBuilder().parse(new ByteArrayInputStream(data));
 
-                // Obtenemos la hoja de estilo del XML
+                // Obtenemos la hoja de estilo del XML. Resolución compartida
+                // con XAdES — ver XmlStyleResolver (Fase C plan Clean Code).
                 if (!ignoreStyleSheets) {
-                	try {
-                		xmlStyle = new XmlStyle(data, headless);
-                	}
-					catch (final IsInnerlException ex) {
-						LOGGER.info(
-							"La hoja de estilo esta referenciada internamente, por lo que no se necesita dereferenciar: " + ex//$NON-NLS-1$
-						);
-					}
-					catch (final ReferenceIsNotXmlException ex) {
-						LOGGER.warning(
-							"La hoja de estilo referenciada no es XML o no se ha dereferenciado apropiadamente: " + ex //$NON-NLS-1$
-						);
-					}
-					catch (final CannotDereferenceException ex) {
-						LOGGER.warning(
-							"La hoja de estilo no ha podido dereferenciar, probablemente sea un enlace relativo local: " + ex //$NON-NLS-1$
-						);
-					}
-					catch (final Exception ex) {
-						LOGGER.severe(
-							"Error intentando dereferenciar la hoja de estilo: " + ex //$NON-NLS-1$
-						);
-					}
+                	xmlStyle = XmlStyleResolver.resolve(data, headless, true);
                 }
 
                 // Si no hay asignado un MimeType o es el por defecto

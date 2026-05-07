@@ -65,10 +65,8 @@ import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.XMLConstants;
 import es.gob.afirma.signers.xml.XMLErrorCode;
 import es.gob.afirma.signers.xml.dereference.CustomUriDereferencer;
-import es.gob.afirma.signers.xml.style.CannotDereferenceException;
-import es.gob.afirma.signers.xml.style.IsInnerlException;
-import es.gob.afirma.signers.xml.style.ReferenceIsNotXmlException;
 import es.gob.afirma.signers.xml.style.XmlStyle;
+import es.gob.afirma.signers.xml.style.XmlStyleResolver;
 import es.uji.crypto.xades.jxades.security.xml.XAdES.CommitmentTypeIndication;
 import es.uji.crypto.xades.jxades.security.xml.XAdES.DataObjectFormat;
 import es.uji.crypto.xades.jxades.security.xml.XAdES.DataObjectFormatImpl;
@@ -422,37 +420,13 @@ public final class XAdESSigner {
 		// Si los datos son XML
 		if (docum != null) {
 
-			// ************************************************
-			// **** Obtencion de la hoja de estilo del XML ****
-			// ************************************************
+			// Resolución de la hoja de estilo (compartida con AOXMLDSigSigner
+			// vía XmlStyleResolver — Fase C plan Clean Code). XAdES no descarga
+			// hojas externas (allowExternal=false) como defensa contra
+			// referencias remotas no controladas.
 			if (!ignoreStyleSheets) {
-				try {
-					xmlStyle = new XmlStyle(data, headless, false);
-				}
-				catch (final IsInnerlException ex) {
-					LOGGER.info(
-						"La hoja de estilo esta referenciada internamente, por lo que no se necesita dereferenciar: " + ex //$NON-NLS-1$
-					);
-				}
-				catch (final ReferenceIsNotXmlException ex) {
-					LOGGER.warning(
-						"La hoja de estilo referenciada no es XML o no se ha dereferenciado apropiadamente: " + ex //$NON-NLS-1$
-					);
-				}
-				catch (final CannotDereferenceException ex) {
-					LOGGER.warning(
-						"La hoja de estilo no ha podido dereferenciar, probablemente sea un enlace relativo local: " + ex//$NON-NLS-1$
-					);
-				}
-				catch (final Exception ex) {
-					LOGGER.severe(
-						"Error intentando dereferenciar la hoja de estilo: " + ex //$NON-NLS-1$
-					);
-				}
+				xmlStyle = XmlStyleResolver.resolve(data, headless, false);
 			}
-			// ************************************************
-			// ** Fin obtencion de la hoja de estilo del XML **
-			// ************************************************
 
 			// Si no hay asignado un MimeType o es el por defecto
 			// establecemos el de XML
