@@ -186,7 +186,7 @@ public final class ProtocolInvocationLauncher {
 		SESSION.stickyKeyEntry(stickyKeyEntry);
 	}
 
-    @SuppressWarnings({ "unused", "static-method" })
+    @SuppressWarnings("unused")
 	void showAbout(final EventObject event) {
     	AboutDialog.showAbout(null);
     }

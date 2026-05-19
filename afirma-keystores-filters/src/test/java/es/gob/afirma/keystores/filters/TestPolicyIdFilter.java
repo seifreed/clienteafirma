@@ -14,7 +14,6 @@ public final class TestPolicyIdFilter {
 	/** Prueba del filtro de certificados por identificador de pol&iacute;tica de certificaci&oacute;n.
 	 * @throws Exception en cualquier error. */
 	@Test
-	@SuppressWarnings("static-method")
 	public void testPolicyIdFilterMatch() throws Exception {
 		final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate( //$NON-NLS-1$
 			ClassLoader.getSystemResourceAsStream("Tomas_DNI_FIRMA.cer") //$NON-NLS-1$

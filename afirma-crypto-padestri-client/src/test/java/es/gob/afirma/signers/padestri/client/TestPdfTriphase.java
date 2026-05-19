@@ -97,7 +97,6 @@ public class TestPdfTriphase {
 
 	/** Prueba de validaci&oacute;n de formato.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testFormat() throws Exception {
 		Assert.assertTrue(

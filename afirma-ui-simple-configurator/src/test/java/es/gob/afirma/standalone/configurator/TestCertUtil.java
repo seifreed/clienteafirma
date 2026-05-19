@@ -24,7 +24,6 @@ public final class TestCertUtil {
 
 	/** prueba de generaci&oacute;n de PKCS#12 SSL.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSslpkcs12Generation() throws Exception {
@@ -61,7 +60,6 @@ public final class TestCertUtil {
 
 	/** Prueba la generaci&oacute;n del certificado y almac&eacute;n de claves.
 	 * @throws Exception Cuando ocurre un error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCertGeneration() throws Exception {
 		final CertPack cp = CertUtil.getCertPackForLocalhostSsl("Autofirma", "654321"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -8,7 +8,6 @@ import org.junit.Test;
 public final class TestVisibleSignatures {
 
 	/** Prueba de texto en capa con patrones. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testLayerText() {
 		System.out.println(
@@ -20,7 +19,6 @@ public final class TestVisibleSignatures {
 	 * Comprueba que la funci&oacute;n de ofuscaci&oacute;n de identificadores
 	 * de usuario para las firmas visibles PDF funcione correctamente.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testObfuscateText() {
 

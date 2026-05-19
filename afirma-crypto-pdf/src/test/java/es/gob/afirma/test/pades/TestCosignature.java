@@ -26,7 +26,6 @@ public class TestCosignature {
 
 	/** Prueba de cofirma de PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCosignPdf() throws Exception {
 		Logger.getLogger("es.gob.afirma").info( //$NON-NLS-1$

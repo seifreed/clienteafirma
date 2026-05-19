@@ -32,7 +32,6 @@ public final class TestStandaloneTimestamp {
 
     /** Prueba de sello a nivel de documento de un PDF cofirmado.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
     @Test
     @Ignore
 	public void testTimestampCosignedPdf() throws Exception {
@@ -61,7 +60,6 @@ public final class TestStandaloneTimestamp {
 
     /** Prueba de sello a nivel de documento de un PDF normal.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
     @Test
     @Ignore
 	public void testTimestampPdf() throws Exception {

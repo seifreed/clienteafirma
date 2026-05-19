@@ -19,7 +19,6 @@ public final class SCChecker {
 	/** Comprueba que la versi&oacute;n de SpongyCastle existente sea v1.47 o superior.
 	 * @throws InvalidSpongyCastleException Cuando no se puede detectar la versi&oacute;n de
 	 * SpongyCastle disponible o no es compatible con afirma. */
-	@SuppressWarnings("static-method")
 	public void checkSpongyCastle() {
 		try {
 			Class.forName("org.bouncycastle.asn1.ASN1Primitive"); //$NON-NLS-1$

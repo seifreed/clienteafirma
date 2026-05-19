@@ -26,7 +26,6 @@ public final class TestPdfVersioning {
 
 	/** Prueba la declaraci&oacute;n de un PDF/A-1B.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfA1B() throws Exception {
 
@@ -60,7 +59,6 @@ public final class TestPdfVersioning {
 
 	/** Prueba la declaraci&oacute;n de versi&oacute;n PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfVersion() throws Exception {
 
@@ -95,7 +93,6 @@ public final class TestPdfVersioning {
 
 	/** Prueba la declaraci&oacute;n de versi&oacute;n PDF mas conformidad PDF/X.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfVersionOnPdfA() throws Exception {
 

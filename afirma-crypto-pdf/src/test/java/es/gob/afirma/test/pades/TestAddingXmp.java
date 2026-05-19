@@ -20,7 +20,6 @@ import es.gob.afirma.core.misc.Base64;
  * @author Tom&aacute;s Garc&iacute;a-Mer&aacute;s */
 public class TestAddingXmp {
 
-	@SuppressWarnings("static-method")
 	@Test
 	public void test() throws Exception {
 

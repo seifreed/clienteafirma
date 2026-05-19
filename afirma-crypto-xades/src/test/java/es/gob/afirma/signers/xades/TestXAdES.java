@@ -144,7 +144,6 @@ public final class TestXAdES {
 
     /** Prueba de firma de nodo indicado expl&iacute;citamente.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testNodeTbs() throws Exception {
 
@@ -199,7 +198,6 @@ public final class TestXAdES {
 
     /** Prueba de firma de nodo indicado expl&iacute;citamente.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testNodeTbsWithNamespace() throws Exception {
 
@@ -252,7 +250,6 @@ public final class TestXAdES {
     /** Prueba de firma de nodo indicado expl&iacute;citamente e indicando el tipo de dato que se
      * est&aacute; firmando.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testNodeTbsWithMimeType() throws Exception {
 
@@ -307,7 +304,6 @@ public final class TestXAdES {
 
     /** Pruebas de cofirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSign() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -380,7 +376,6 @@ public final class TestXAdES {
 
     /** Pruebas de cofirmacon Manifest.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSignManifest() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -451,7 +446,6 @@ public final class TestXAdES {
 
     /** Pruebas de contrafirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCounterSign() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -512,7 +506,6 @@ public final class TestXAdES {
 
     /** Pruebas de contrafirma con Manifest.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCounterSignManifest() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -578,7 +571,6 @@ public final class TestXAdES {
     /** Prueba con hoja de estilo externa.
      * <b>Necesita GUI</b>
      * @throws Exception Cuando ocurre un error. */
-    @SuppressWarnings("static-method")
 	@Test
     //@Ignore // Necesita GUI
     public void testSignExternalStyle() throws Exception {
@@ -666,7 +658,6 @@ public final class TestXAdES {
      * Prueba de firma convencional.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 
@@ -778,7 +769,6 @@ public final class TestXAdES {
      * Prueba de firma externally detached.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
 	public void testSignExternallyDetached() throws Exception {
 
@@ -864,7 +854,6 @@ public final class TestXAdES {
     /** Prueba de detecci&oacute;n de formato XAdES.
      * @throws Exception Cuando se produce un error durante la prueba.
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testDetection() throws Exception {
     	final String[][] files = new String[][] {
@@ -887,7 +876,6 @@ public final class TestXAdES {
      * Prueba de firma con certificado de curva el&iacute;ptica.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignatureWithECDSA() throws Exception {
 

@@ -26,7 +26,6 @@ public final class TestEssCertIdAsn1 {
 
 	/** Pruebas de codificaci&oacute;n de ESSCertIDv2.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Ignore
 	@Test
 	public void TestEssCertIdAsn1DefaultValue() throws Exception {

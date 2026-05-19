@@ -65,7 +65,6 @@ public final class TestContentTypeOidProperty {
      * Prueba de firma convencional.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 

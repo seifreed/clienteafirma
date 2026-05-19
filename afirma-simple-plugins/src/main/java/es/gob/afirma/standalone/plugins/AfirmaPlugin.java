@@ -89,7 +89,6 @@ public abstract class AfirmaPlugin {
 	 * @throws PluginControlledException Cuando se produce un error en el procesado
 	 * de los datos.
 	 */
-	@SuppressWarnings("static-method")
 	public byte[] preSignProcess(final byte[] data, final String format)
 			throws PluginControlledException {
 		return data;
@@ -105,7 +104,6 @@ public abstract class AfirmaPlugin {
 	 * @throws PluginControlledException Cuando se produce un error en el procesado
 	 * de la firma.
 	 */
-	@SuppressWarnings("static-method")
 	public byte[] postSignProcess(final byte[] signature, final String format, final Certificate[] certChain)
 			throws PluginControlledException {
 		return signature;

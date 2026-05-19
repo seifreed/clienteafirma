@@ -35,7 +35,6 @@ public final class SimpleTest {
 
     /** Prueba de la obtenci&oacute;n de almac&eacute;n y alias con Mozilla NSS.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
     @Test
     @Ignore // Necesita NSS
     public void testKeyStoreManagerCreation() throws Exception {
@@ -95,7 +94,6 @@ public final class SimpleTest {
 
     /** Prueba de la obtenci&oacute;n de almac&eacute;n y alias con NSS de systema.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
     @Test
     @Ignore // Necesita NSS
     public void testSystemKeyStoreManagerCreation() throws Exception {
@@ -122,7 +120,6 @@ public final class SimpleTest {
 
     /** Prueba de uso directo de NSS.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testDirectNssUsage() throws Exception {

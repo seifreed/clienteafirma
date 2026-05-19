@@ -18,7 +18,6 @@ public class Test_PAdES_Inc475804 {
 	 * La firma debe fallar por certificado caducado y no por cualquier otro error.
 	 * @throws Exception Cuando ocurre algun error no previsto.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testValidarPadesGeneradaSinAutofirma() throws Exception {
 		try (

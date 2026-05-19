@@ -45,7 +45,6 @@ public class TestProtocolInvocationBatch {
 	;
 
 	/** Prueba de firma por lotes. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita UI
 	public void testWithoutData() {

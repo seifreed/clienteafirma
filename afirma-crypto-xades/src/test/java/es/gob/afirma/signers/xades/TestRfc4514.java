@@ -7,7 +7,6 @@ import org.junit.Test;
 public final class TestRfc4514 {
 
 	/** Prueba de adecuaci&oacute;n de la codificaci&oacute;n de nombres X.500 acordes a la RFC 4514. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testEscapeHelper() {
 		System.out.println(

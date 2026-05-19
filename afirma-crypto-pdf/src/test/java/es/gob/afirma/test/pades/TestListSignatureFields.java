@@ -35,7 +35,6 @@ public final class TestListSignatureFields {
 
 	/** Pruebas de listado de campos de firma vac&iacute;ios.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testListEmptySignatureFields() throws Exception {
 		final PdfReader reader = new PdfReader(
@@ -48,7 +47,6 @@ public final class TestListSignatureFields {
 		System.out.println(emptySignatureFields);
 	}
 
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testAnalizeSignatureFields() throws Exception {
@@ -93,7 +91,6 @@ public final class TestListSignatureFields {
 
 	/** Prueba de firma usando un campo de un PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignEmptySignatureField() throws Exception {
 		Logger.getLogger("es.gob.afirma").info( //$NON-NLS-1$

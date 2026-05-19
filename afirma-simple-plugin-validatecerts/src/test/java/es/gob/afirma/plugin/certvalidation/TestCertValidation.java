@@ -16,7 +16,6 @@ public final class TestCertValidation {
 
 	/** Prueba de certificados FNMT Componentes.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testFnmt() throws Exception {
@@ -36,7 +35,6 @@ public final class TestCertValidation {
 
 	/** Prueba de certificados gen&eacute;ricos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testGen() throws Exception {

@@ -7,7 +7,6 @@ import org.junit.Test;
 public final class TestScChecker {
 
 	/** Prueba la comprobaci&oacute;n de la versi&oacute;n de SpongyCastle. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testScCheck() {
 		new SCChecker().checkSpongyCastle();

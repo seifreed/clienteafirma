@@ -102,7 +102,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de firma XAdES-ASiC-S.
 	 * @throws Exception Cuando falla la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un servidor trifasico
 	public void pruebaFirmaXAdESASiCS() throws Exception {
@@ -132,7 +131,6 @@ public class TestAOXAdESTriPhaseSigner {
 
 	/** Prueba de firma XAdES Detached de fichero grande.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaFirmaXAdESDetached() throws Exception {
@@ -173,7 +171,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma XAdES Detached de fichero grande.
 	 * @throws Exception Cuando falla la cofirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmaXAdESDetached() throws Exception {
@@ -216,7 +213,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma XAdES Detached.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaXAdESDetached() throws Exception {
@@ -257,7 +253,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma de una cofirma XAdES Detached.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeCofirmaXAdESDetached() throws Exception {
@@ -294,7 +289,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma de contrafirma XAdES Detached.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmadeContrafirmaXAdESDetached() throws Exception {
@@ -338,7 +332,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirmar una contrafirma XAdES Detached.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeContrafirmaXAdESDetached() throws Exception {
@@ -375,7 +368,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de firma XAdES Enveloping.
 	 * @throws Exception Cuando falla la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaFirmaXAdESEnveloping() throws Exception {
@@ -416,7 +408,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma XAdES Enveloping.
 	 * @throws Exception Cuando falla la cofirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmaXAdESEnveloping() throws Exception {
@@ -460,7 +451,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma XAdES Enveloping.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaXAdESEnveloping() throws Exception {
@@ -497,7 +487,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma XAdES Detached XL.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaXAdESDetachedXL() throws Exception {
@@ -534,7 +523,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma de una cofirma XAdES Enveloping.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeCofirmaXAdESEnveloping() throws Exception {
@@ -630,7 +618,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma de contrafirma XAdES Enveloping.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmadeContrafirmaXAdESEnveloping() throws Exception {
@@ -674,7 +661,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirmar una contrafirma XAdES Enveloping.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeContrafirmaXAdESEnveloping() throws Exception {
@@ -711,7 +697,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de firma XAdES Enveloped.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaFirmaXAdESEnveloped() throws Exception {
@@ -752,7 +737,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma XAdES Enveloped.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmaXAdESEnveloped() throws Exception {
@@ -796,7 +780,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma XAdES Enveloped.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaXAdESEnveloped() throws Exception {
@@ -833,7 +816,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirma de cofirma XAdES Enveloped.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeCofirmaXAdESEnveloped() throws Exception {
@@ -870,7 +852,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma de contrafirma XAdES Enveloped.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaCofirmadeContrafirmaXAdESEnveloped() throws Exception {
@@ -914,7 +895,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de contrafirmar una contrafirma XAdES Enveloped.
 	 * @throws Exception Cuando falla la contrafirma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void pruebaContrafirmaDeContrafirmaXAdESEnveloped() throws Exception {
@@ -951,7 +931,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de firma XAdES.
 	 * @throws Exception Cuando falla la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un servidor trifasico
 	public void pruebaFirmaXAdES() throws Exception {
@@ -983,7 +962,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de firma XAdES con certificado de curva eliptica.
 	 * @throws Exception Cuando falla la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un servidor trifasico
 	public void pruebaFirmaXAdES_ECDSA() throws Exception {
@@ -1022,7 +1000,6 @@ public class TestAOXAdESTriPhaseSigner {
 	 * Prueba de cofirma con MANIFEST.
 	 * @throws Exception Cuando falla la operaci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un servidor trifasico
 	public void pruebaCofirmaXAdESManifest() throws Exception {

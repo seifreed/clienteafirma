@@ -13,7 +13,6 @@ public final class TestMisc {
 	private static final String ID_STR = "Id=\""; //$NON-NLS-1$
 
 	/** Prueba de limpieza de delimitadores de nodos. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testNodeClean() {

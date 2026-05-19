@@ -14,7 +14,6 @@ public final class ASiCSTests {
 
 	/** prueba de creaci&oacute;n de contenedor ASiC-S.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testContainerCreation() throws Exception {
 		final byte[] zipFile = ASiCUtil.createSContainer(

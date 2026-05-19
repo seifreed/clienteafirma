@@ -20,7 +20,6 @@ public class TestCadesValidator {
 	/** Prueba la correcci&oacute;n del m&eacute;todo de identificaci&oacute;n de firmas CAdES con
 	 * una firma CAdES expl&iacute;cita.
 	 * @throws Exception Cuando se produce cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testComprobarFirmaCadesExplicit() throws Exception {
 		try (
@@ -38,7 +37,6 @@ public class TestCadesValidator {
 	/** Prueba la correcci&oacute;n del m&eacute;todo de identificaci&oacute;n de firmas CAdES con
 	 * una firma CAdES impl&iacute;cita.
 	 * @throws Exception Cuando se produce cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testComprobarFirmaCadesImplicit() throws Exception {
 		try (
@@ -56,7 +54,6 @@ public class TestCadesValidator {
 	 * Comprueba que una firma con ClaimedRole se considere v&aacute;lida.
 	 * @throws Exception Cuando no se puede cargar la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCadesSignedDataWithClaimedRole() throws Exception {
 

@@ -30,7 +30,6 @@ public class TestSignField {
 
 	/** Prueba de firma de PDF insertando imagen.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testImageOnPdf() throws Exception {
 		Logger.getLogger("es.gob.afirma").info( //$NON-NLS-1$
@@ -124,7 +123,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible en p&aacute;gina nueva en el PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testNewPage() throws Exception {
 
@@ -178,7 +176,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible sin r&uacute;brica.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCampoDeFirmaSoloConPosiciones() throws Exception {
 
@@ -225,7 +222,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible con r&uacute;brica.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCampoDeFirmaConPosicionesYRubrica() throws Exception {
 
@@ -277,7 +273,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible con un texto.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCampoDeFirmaConPosicionesYTexto() throws Exception {
 
@@ -328,7 +323,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible con r&uacute;brica y texto.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCampoDeFirmaConPosicionesRubricaYTexto() throws Exception {
 
@@ -385,7 +379,6 @@ public class TestSignField {
 
 	/** Prueba de firma PDF visible con r&uacute;brica y texto con todo el recuadro rotado.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCampoDeFirmaRotadoConPosicionesRubricaYTexto() throws Exception {
 

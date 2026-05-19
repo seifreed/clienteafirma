@@ -21,7 +21,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma CAdES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCadesImplicitValidation() throws Exception {
 		try (
@@ -34,7 +33,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma CAdES explicita sin datos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCadesExplicitValidationWithoutData() throws Exception {
 		try (
@@ -47,7 +45,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma CAdES expl&iacute;cita con los datos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCadesExplicitValidationWithData() throws Exception {
 		try (
@@ -62,7 +59,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma CAdES expl&iacute;cita con datos erroneos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCadesExplicitValidationWrongData() throws Exception {
 		try (
@@ -75,7 +71,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma PAdES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPadesValidation() throws Exception {
 		try (
@@ -88,7 +83,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma PAdES-EPES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPadesEpesValidation() throws Exception {
 		try (
@@ -101,7 +95,6 @@ public class TestSignatureValidation {
 
 	/** Prueba de validaci&oacute;n de firma PAdES-EPES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testXadesEpesValidation() throws Exception {
 		try (

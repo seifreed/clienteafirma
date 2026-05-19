@@ -43,7 +43,6 @@ public final class TestFnmtCertValidation {
 
 	/** Prueba de certificados FNMT revocados.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testRevoked() throws Exception {
@@ -80,7 +79,6 @@ public final class TestFnmtCertValidation {
 
 	/** Prueba de certificados FNMT v&aacute;lidos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testValid() throws Exception {

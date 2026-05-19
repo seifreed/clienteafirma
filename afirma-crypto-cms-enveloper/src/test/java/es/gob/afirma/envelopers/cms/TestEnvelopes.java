@@ -26,7 +26,6 @@ public final class TestEnvelopes {
     private static final String CERT_PASS = "12341234"; //$NON-NLS-1$
     private static final String CERT_ALIAS = "fisico activo prueba"; //$NON-NLS-1$
 
-    @SuppressWarnings("static-method")
 	@Before
     public void initProvider() {
     	if (Security.getProvider(org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -36,7 +35,6 @@ public final class TestEnvelopes {
 
 	/** Prueba de apertura de sobre.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void openEnvelope() throws Exception {
 
@@ -59,7 +57,6 @@ public final class TestEnvelopes {
 
 	/** Prueba de creaci&oacute;n de sobre.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void createAndOpenEnvelope() throws Exception {
 
@@ -114,7 +111,6 @@ public final class TestEnvelopes {
 
 	/** Prueba de creaci&oacute;n de sobre con curva el&iacute;ptica.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore	// Se ignora por problemas al encontrar proveedor de curva eliptica
 	public void createAndOpenEnvelopeEc() throws Exception {

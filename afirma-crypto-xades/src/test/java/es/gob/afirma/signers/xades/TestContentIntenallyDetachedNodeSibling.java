@@ -64,7 +64,6 @@ public final class TestContentIntenallyDetachedNodeSibling {
 
     /** Prueba de firma <i>Internally Detached</i> de nodo.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 

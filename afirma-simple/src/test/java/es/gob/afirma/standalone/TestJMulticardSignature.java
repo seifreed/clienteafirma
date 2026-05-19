@@ -23,7 +23,6 @@ public final class TestJMulticardSignature {
 	/** Realiza una firma XAdES con el certificado del DNIe a trav&eacute;s del
 	 * almac&eacute;n de Mozilla Firefox.
 	 * @throws Exception Cuando ocurre cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita DNIe
 	public void testFirmaXAdESJMulticardSignature() throws Exception {

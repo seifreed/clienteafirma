@@ -28,7 +28,6 @@ public final class TestXAdESTriWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloping de binario con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testXadesEnvelopingUseManifestBinary() throws Exception {
@@ -64,7 +63,6 @@ public final class TestXAdESTriWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloping de XML con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testXadesEnvelopingUseManifestXML() throws Exception {
@@ -100,7 +98,6 @@ public final class TestXAdESTriWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloped con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testXadesEnvelopedUseManifest() throws Exception {
@@ -137,7 +134,6 @@ public final class TestXAdESTriWithManifest {
 
 	/** Pruebas de cofirma XAdES con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testCoSignXadesWithManifest() throws Exception {
@@ -170,7 +166,6 @@ public final class TestXAdESTriWithManifest {
 
 	/** Pruebas de contrafirma XAdES con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testCounterSignXadesWithManifest() throws Exception {

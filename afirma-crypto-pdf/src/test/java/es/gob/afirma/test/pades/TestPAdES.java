@@ -91,7 +91,6 @@ public class TestPAdES {
 
     /** Prueba de identificaci&oacute;n de un PDF sin ninguna firma.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testIsSign() throws Exception {
     	try (
@@ -134,7 +133,6 @@ public class TestPAdES {
 
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testTimestampedSignatureAndDocument() throws Exception {
@@ -222,7 +220,6 @@ public class TestPAdES {
 
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testTimestampedDocument() throws Exception {
@@ -286,7 +283,6 @@ public class TestPAdES {
 
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testTimestampedDocumentWithoutSignature() throws Exception {
@@ -331,7 +327,6 @@ public class TestPAdES {
 
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testTimestampedSignature() throws Exception {
@@ -393,7 +388,6 @@ public class TestPAdES {
 
     /** Prueba de firma convencional.
      * @throws Exception en cualquier error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 
@@ -478,7 +472,6 @@ public class TestPAdES {
 
     /** Prueba la firma de un PDF certificado.
      * @throws Exception en cualquier error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCertifiedSignature() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -576,7 +569,6 @@ public class TestPAdES {
 
     /** Prueba la firma de un PDF certificado.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCertificatedSignature() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -645,7 +637,6 @@ public class TestPAdES {
 
     /** Prueba de la verificaci&oacute;n de la versi&oacute;n de iText.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testIdentyFormat() throws Exception {
 
@@ -663,7 +654,6 @@ public class TestPAdES {
 
     /** Prueba de la verificaci&oacute;n de la versi&oacute;n de iText.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testReservedSignatureSize() throws Exception {
 
@@ -700,7 +690,6 @@ public class TestPAdES {
 
     /** Prueba de firma visible PDF sobre un documento PDF/A.
      * @throws Exception Cuando ocurre cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testVisibleSignature() throws Exception {
 

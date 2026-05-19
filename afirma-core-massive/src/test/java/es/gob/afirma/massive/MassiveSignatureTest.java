@@ -131,7 +131,6 @@ public class MassiveSignatureTest {
 	 * Genera todo tipo de firmas y multifirmas masivas.
 	 * @throws Exception Cuando se produce cualquier error durante la ejecuci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void pruebaTodasLasCombinacionesDeFirmaProgramatica() throws Exception {
 
@@ -197,7 +196,6 @@ public class MassiveSignatureTest {
 	 * Configura un formato de firma al inicio y lo cambia a lo largo de la ejecuci&oacute;n para firmas en otros formatos.
 	 * @throws Exception Cuando se produce cualquier error durante la ejecuci&oacute;n.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void pruebaCambioDeFormatoEnCaliente() throws Exception {
 

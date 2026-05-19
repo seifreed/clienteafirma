@@ -42,7 +42,6 @@ public class TestAOFacturaETriPhaseSigner {
 	 * Prueba de firma FacturaE trif&aacute;sica.
 	 * @throws Exception Cuando falla la firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un servidor trifasico
 	public void pruebaFirmaFacturaE() throws Exception {

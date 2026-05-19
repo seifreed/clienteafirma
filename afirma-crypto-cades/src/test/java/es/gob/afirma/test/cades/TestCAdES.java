@@ -112,7 +112,6 @@ public final class TestCAdES {
 
 	/** Prueba de firma de JPEG para establecimiento de ContentHint.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testJpegSign() throws Exception {
 
@@ -149,7 +148,6 @@ public final class TestCAdES {
 
 	/** Prueba de firma convencional.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignature() throws Exception {
 		/*
@@ -240,7 +238,6 @@ public final class TestCAdES {
 
 	/** Prueba de firma indicando los cargos del firmante.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignatureWithClaimedRoles() throws Exception {
 

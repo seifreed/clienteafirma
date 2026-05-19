@@ -22,7 +22,6 @@ public class TestGetSignersStructure {
 	 * Prueba a extraer los nodos de firma de una contrafirma CAdES-BES.
 	 * @throws Exception Cuando ocurre cualquier error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testGetStructureCounterSignCadesBES() throws Exception {
 
@@ -43,7 +42,6 @@ public class TestGetSignersStructure {
 	 * Prueba a extraer los nodos de firma de una firma CAdES-T.
 	 * @throws Exception Cuando ocurre cualquier error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testGetStructureCadesT() throws Exception {
 
@@ -64,7 +62,6 @@ public class TestGetSignersStructure {
 	 * Prueba a extraer los nodos de firma de una firma CAdES-A.
 	 * @throws Exception Cuando ocurre cualquier error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testGetStructureCadesA() throws Exception {
 

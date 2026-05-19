@@ -23,7 +23,6 @@ public class TestCompatibilidad {
 
 	/** Prueba de cofirma CAdES sobre firma CMS.
 	 * @throws Exception en caso de cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCofirmaCadesSobreCms() throws Exception {
 

@@ -58,7 +58,6 @@ public abstract class SignDataProcessor {
 	 * @return {@code true} para continuar con el procesado, {@code false} para detenerlo. Por
 	 * defecto, {@code false}.
 	 */
-	@SuppressWarnings("static-method")
 	public boolean isErrorsAllowed() {
 		return false;
 	}

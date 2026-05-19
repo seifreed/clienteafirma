@@ -22,7 +22,6 @@ public class TestProtocolInvocation {
 	// firma://warmup
 
 	/** Prueba de protocolo sin indicar datos. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita UI
 	public void testWithoutData() {
@@ -30,7 +29,6 @@ public class TestProtocolInvocation {
 	}
 
 	/** Prueba de protocolo con almac&eacute;n de claves establecido manualmente. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita NSS
 	public void testCustomStore() {
@@ -38,7 +36,6 @@ public class TestProtocolInvocation {
 	}
 
 	/** Prueba de protocolo con firma de hash. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Requiere de servidor remoto y UI
 	public void testSignHash() {
@@ -46,7 +43,6 @@ public class TestProtocolInvocation {
 	}
 
 	/** Prueba de protocolo con firma visible de PDF. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Requiere de servidor remoto y UI
 	public void testSignPdfWithVisibleText() {
@@ -55,7 +51,6 @@ public class TestProtocolInvocation {
 
 	/** Prueba de protocolo para servicio local.
 	 * @throws Exception En cualquier error */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita UI
 	public void testService() throws Exception {

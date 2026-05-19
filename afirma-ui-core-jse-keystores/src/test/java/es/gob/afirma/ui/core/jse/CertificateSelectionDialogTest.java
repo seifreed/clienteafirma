@@ -28,7 +28,6 @@ public class CertificateSelectionDialogTest {
 
 	/** Prueba de di&aacute;logo de selecci&oacute;n de certificados.
 	 * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void showCertDialogTest() throws Exception {

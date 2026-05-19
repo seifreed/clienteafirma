@@ -26,7 +26,6 @@ public final class Test305907 {
 
 	/** Prueba de detecci&oacute;n de firmas no registradas.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testReadRaw() throws Exception {
 

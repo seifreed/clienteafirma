@@ -81,7 +81,6 @@ public final class TestCAdESCommitment {
 
 	/** Prueba de firma con CommitmentTypeIndications.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignature() throws Exception {
 

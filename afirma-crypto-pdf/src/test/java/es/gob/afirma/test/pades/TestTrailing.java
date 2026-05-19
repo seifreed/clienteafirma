@@ -25,7 +25,6 @@ public final class TestTrailing {
 	/** Prueba de opciones de creaci&oacute;n de revisiones en firmas de PDF con datos tras
 	 * la marca de fin de fichero.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRevisionOnTrailedPdf() throws Exception {
 

@@ -17,7 +17,6 @@ public class TestSignatureExtractor {
 	/**
 	 * Prueba las funciones de extraccion de certificados de la firma de un JAR.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testExtractSigningCertificatesFromJar() {
 		final byte[] signature;

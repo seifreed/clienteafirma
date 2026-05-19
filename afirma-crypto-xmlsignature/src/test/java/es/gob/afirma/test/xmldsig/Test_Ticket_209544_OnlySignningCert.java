@@ -77,7 +77,6 @@ public final class Test_Ticket_209544_OnlySignningCert {
      * Prueba de firma convencional.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignatureWithIncludeOnlySignningCertProperty() throws Exception {
 
@@ -157,7 +156,6 @@ public final class Test_Ticket_209544_OnlySignningCert {
 
     /** Pruebas de cofirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSignWithIncludeOnlySignningCertProperty() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -247,7 +245,6 @@ public final class Test_Ticket_209544_OnlySignningCert {
 
     /** Pruebas de contrafirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCounterSignWithIncludeOnlySignningCertProperty() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$

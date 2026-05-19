@@ -26,7 +26,6 @@ public final class TestSignTime {
 
 	/** Prueba de firma con fecha pre-establecida.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignTime() throws Exception {
 

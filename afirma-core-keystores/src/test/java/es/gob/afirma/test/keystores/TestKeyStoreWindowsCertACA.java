@@ -31,7 +31,6 @@ public class TestKeyStoreWindowsCertACA {
 
     /** Prueba de carga y uso de certificado ACA en CAPI con AOKeyStoreManager.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testStandaloneKeyChain() throws Exception {
@@ -71,7 +70,6 @@ public class TestKeyStoreWindowsCertACA {
 
     /** Prueba de CAPI para certificados ACA.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testMSCapi() throws Exception {
@@ -88,7 +86,6 @@ public class TestKeyStoreWindowsCertACA {
 
     /** Prueba de PKCS#12 para certificados ACA.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testPkcs12() throws Exception {
 

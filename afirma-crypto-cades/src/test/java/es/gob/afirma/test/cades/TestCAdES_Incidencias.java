@@ -29,7 +29,6 @@ public final class TestCAdES_Incidencias {
 	 * de tipo:
 	 * <code>java.lang.ClassCastException: org.bouncycastle.asn1.ASN1GeneralizedTime cannot be cast to org.bouncycastle.asn1.ASN1UTCTime</code>
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void inc71506_ExtraccionDatosCadesCanarias() throws Exception {
 

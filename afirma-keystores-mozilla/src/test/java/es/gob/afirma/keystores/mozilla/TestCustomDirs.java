@@ -14,7 +14,6 @@ public class TestCustomDirs {
 
 	/** Pruebas de directorio de perfiles a medida.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCustomProfilesDir() throws Exception {
 

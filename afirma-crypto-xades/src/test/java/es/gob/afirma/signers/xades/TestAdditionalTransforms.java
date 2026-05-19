@@ -38,7 +38,6 @@ public final class TestAdditionalTransforms {
 
     /** Prueba de transformaciones a medida XPATH1.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testXPATH1Transform() throws Exception {
 
@@ -68,7 +67,6 @@ public final class TestAdditionalTransforms {
 
     /** Prueba de transformaciones a medida BASE64.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testBASE64Transform() throws Exception {
 

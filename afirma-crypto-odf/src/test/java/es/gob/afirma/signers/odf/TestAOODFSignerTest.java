@@ -84,7 +84,6 @@ public final class TestAOODFSignerTest {
 	 * Firma documentos ODF.
 	 * @throws Exception Cuando se produce un error en el proceso de firma.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
     public void firmaODF() throws Exception {
 
@@ -130,7 +129,6 @@ public final class TestAOODFSignerTest {
      * Prueba a firmar y cofirmar un fichero ODF.
      * @throws Exception Cuando se produce un error durante la operaci&oacute;n de firma o cofirma.
      */
-	@SuppressWarnings("static-method")
 	@Test
     public void firmaYCofirmaODF() throws Exception {
         final PrivateKeyEntry pke = loadKeyEntry(CERT_PATH, CERT_PASS, CERT_ALIAS);

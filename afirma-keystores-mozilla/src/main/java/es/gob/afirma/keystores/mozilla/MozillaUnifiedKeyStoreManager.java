@@ -215,7 +215,6 @@ public class MozillaUnifiedKeyStoreManager extends AggregatedKeyStoreManager {
 		init(AOKeyStore.MOZ_UNI, null, this.passwordCallback, this.configParams, true);
 	}
 
-	@SuppressWarnings("static-method")
 	protected Map<String, String> getExternalStores() {
 		return MozillaKeyStoreUtilities.getMozillaPKCS11Modules(
 			// Si no es Linux o NO nos han indicado que incluyamos controlador nativo DNIe, lo excluimos
@@ -226,7 +225,6 @@ public class MozillaUnifiedKeyStoreManager extends AggregatedKeyStoreManager {
 		);
 	}
 
-	@SuppressWarnings("static-method")
 	protected Map<String, String> getExternalStores(final boolean excludePreferredKeyStores) {
 		return MozillaKeyStoreUtilities.getMozillaPKCS11Modules(excludePreferredKeyStores, true);
 	}

@@ -101,7 +101,6 @@ public final class TestXMLdSig {
 
     /** Prueba de firma Enveloped sin transformaci&oacute;n XPath y sin <i>canonicalizaci&oacute;n</i>.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testEvelopedWithoutXpath() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -136,7 +135,6 @@ public final class TestXMLdSig {
 
     /** Prueba de firma convencional.
      * @throws Exception en cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 
@@ -235,7 +233,6 @@ public final class TestXMLdSig {
 
     /** Pruebas de cofirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSign() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -305,7 +302,6 @@ public final class TestXMLdSig {
 
     /** Pruebas de contrafirma.
      * @throws Exception Cuando ocurre un error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCounterSign() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$

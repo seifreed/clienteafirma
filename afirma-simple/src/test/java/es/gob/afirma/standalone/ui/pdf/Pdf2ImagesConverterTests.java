@@ -37,7 +37,6 @@ public final class Pdf2ImagesConverterTests {
 
 	/** prueba de conversi&oacute;n de PDF a conjunto de im&aacute;genes.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	//XXX: Esto va a fallar porque ahora la conversion de imagenes no realiza las de todo el documento
@@ -56,7 +55,6 @@ public final class Pdf2ImagesConverterTests {
 
 	/** Prueba de la conversi&oacute; en segundo plano de PDF a im&aacute;genes.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testPdfLoad() throws Exception {
@@ -88,7 +86,6 @@ public final class Pdf2ImagesConverterTests {
 
 	/** Prueba gr&aacute;fica de la conversi&oacute; en segundo plano de PDF a im&aacute;genes.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfLoadUi() throws Exception {
 

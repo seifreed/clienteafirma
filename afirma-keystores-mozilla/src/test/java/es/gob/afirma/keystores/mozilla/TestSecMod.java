@@ -13,7 +13,6 @@ public final class TestSecMod {
 
 	/** Prueba el an&aacute;lisis de "secmod.db".
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSecmodParsing() throws Exception {
 		final String path = new File(new File(

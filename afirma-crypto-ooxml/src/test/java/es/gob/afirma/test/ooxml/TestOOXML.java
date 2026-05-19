@@ -82,7 +82,6 @@ public final class TestOOXML {
     };
 
     /** Prueba de reconocimiento de formato. */
-    @SuppressWarnings("static-method")
 	@Test
     public void TestFormatDetection() {
     	for (final byte[] data : DATAS) {
@@ -95,7 +94,6 @@ public final class TestOOXML {
      * Prueba a extraer la estructura de firma.
      * @throws IOException Cuando falla la extracci&oacute;n.
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testGetSignersStructure() throws IOException {
     	new AOOOXMLSigner().getSignersStructure(DATAS[0], false);
@@ -103,7 +101,6 @@ public final class TestOOXML {
 
     /** Prueba de firma convencional.
      * @throws Exception en cualquier error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
 
@@ -160,7 +157,6 @@ public final class TestOOXML {
 
     /** Prueba de cofirma.
      * @throws Exception en cualquier error */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSignature() throws Exception {
 

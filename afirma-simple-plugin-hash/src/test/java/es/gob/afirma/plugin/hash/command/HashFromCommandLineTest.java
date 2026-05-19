@@ -13,7 +13,6 @@ import es.gob.afirma.standalone.plugins.PluginControlledException;
 public final class HashFromCommandLineTest {
 
 	/** Prueba de la comprobaci&oacute;n de huellas digitales. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testHashCheck() {
@@ -26,7 +25,6 @@ public final class HashFromCommandLineTest {
 	 * @throws PluginControlledException Cuando ha ocurrido un error durante la ejecuci&oacute;n de
 	 * la operaci&oacute;n. En este caso, el mensaje de la excepci&oacute;n se mostrar&aacute; al
 	 * usuario. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testHashCheckDirectory() throws IllegalArgumentException, PluginControlledException {

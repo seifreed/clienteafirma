@@ -29,7 +29,6 @@ public final class UiTester {
 	static final Logger LOGGER = Logger.getLogger("es.gob.afirma"); //$NON-NLS-1$
 
 	/** Prueba de di&aacute;logo fallido. */
-	@SuppressWarnings({ "static-method" })
 	@Test
 	public void testFailedDialog() {
 		SignPdfDialog.getVisibleSignatureExtraParams(IS_SIGN, IS_MASSIVE_SIGN, new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff }, null, true, false, false, extraParams -> {
@@ -39,7 +38,6 @@ public final class UiTester {
 
 	/** Prueba de di&aacute;logo.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings({ "static-method" })
 	@Test
 	@Ignore // Requiere interfaz grafica
 	public void testDialog() throws Exception {
@@ -58,7 +56,6 @@ public final class UiTester {
 
 	/** Prueba el panel de vista de p&aacute;ginas del PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Requiere interfaz grafica
 	public void testMainPanel() throws Exception {

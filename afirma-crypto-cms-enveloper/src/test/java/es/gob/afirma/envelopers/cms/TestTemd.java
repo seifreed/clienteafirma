@@ -31,7 +31,6 @@ public final class TestTemd {
 
 	/** Prueba de creaci&oacute;n de sobre con PKCS#11 FNMT.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void createEnvelopePkcs11Fnmt() throws Exception {
@@ -111,7 +110,6 @@ public final class TestTemd {
 
 	/** Prueba de creaci&oacute;n de sobre con CAPI.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void createEnvelopeCapi() throws Exception {

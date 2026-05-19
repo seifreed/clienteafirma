@@ -40,7 +40,6 @@ public final class MiniTestDNI {
 
     /** Mini-prueba CAdES especifica para DNIe.
      * @throws Exception en caso de cualquier tipo de problema. */
-    @SuppressWarnings({ "static-method" })
     @Ignore // Necesita un DNIe
 	@Test
     public void testCAdESDNIe() throws Exception {

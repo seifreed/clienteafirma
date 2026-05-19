@@ -58,7 +58,6 @@ public final class TestMetadata {
 
 	/** Prueba del establecimiento de informaci&oacute;n adicional en el diccionario PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testMoreInfo() throws Exception {
 

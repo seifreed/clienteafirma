@@ -22,7 +22,6 @@ public final class TestJavaBug8182580 {
 
 	/** Prueba simple de firma XAdES con clave de curva el&iacute;ptica.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSignXadesEc() throws Exception {

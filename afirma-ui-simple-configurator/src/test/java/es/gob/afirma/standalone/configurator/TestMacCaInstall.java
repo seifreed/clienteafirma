@@ -29,7 +29,6 @@ public final class TestMacCaInstall {
 
 	/** Prueba la instalaci&oacute;n usando un comando de OS X y AppleScript.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita macOS. Este modo de uso deja de funciona con macOS Big Sur
 	public void testInstallRootCAWithScript() throws Exception {
@@ -64,7 +63,6 @@ public final class TestMacCaInstall {
 	 * Instala un certificado de CA en el llavero mediante un proceso que ejecuta directamente "security"
 	 * @throws Exception Cuando ocurre cualquier error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testInstallRootCaWithProcess() throws Exception {
@@ -137,7 +135,6 @@ public final class TestMacCaInstall {
 	 * Instala un certificado SSL en el llavero mediante un proceso que ejecuta directamente "security"
 	 * @throws Exception Cuando ocurre cualquier error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testInstallSslCertWithProcess() throws Exception {

@@ -33,7 +33,6 @@ public class TestMacKeyChain {
 
     /** Prueba de carga y uso de un <i>KeyChain</i> en fichero suelto.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Requieren contrasena del almacen
     public void testStandaloneKeyChain() throws Exception {
@@ -80,7 +79,6 @@ public class TestMacKeyChain {
     /** Prueba de carga y uso del <i>KayChain</i> del sistema.
      * Requiere importada en el sistema una entrada con alias "anf usuario activo" que tenga clave privada
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	//@Ignore // Requieren contrasena del almacen
     public void testSystemKeyChain() throws Exception {

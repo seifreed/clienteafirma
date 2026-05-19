@@ -19,7 +19,6 @@ public class TestCallBackHandler {
 
 	/** Prueba de <i>CallbackHandlerProtection</i>.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testProviderWithCallbackHandlerProtection() throws Exception {
@@ -46,7 +45,6 @@ public class TestCallBackHandler {
 	 * @throws Exception En cualquier error. */
 	@Test
 	@Ignore
-	@SuppressWarnings("static-method")
 	public void testProviderWithPasswordProtection() throws Exception {
 		final Provider p = new DnieProvider();
 		Security.addProvider(p);
@@ -70,7 +68,6 @@ public class TestCallBackHandler {
 	 * @throws Exception En cualquier error. */
 	@Test
 	@Ignore
-	@SuppressWarnings("static-method")
 	public void testProviderWithKeyStoreBuilderWithCallbackHandlerProtection() throws Exception {
 		final KeyStore.Builder kb = KeyStore.Builder.newInstance(
 				"DNI", //$NON-NLS-1$
@@ -94,7 +91,6 @@ public class TestCallBackHandler {
 	 * @throws Exception En cualquier error. */
 	@Test
 	@Ignore
-	@SuppressWarnings("static-method")
 	public void testProviderWithKeyStoreBuilderWithPasswordProtection() throws Exception {
 		final KeyStore.Builder kb = KeyStore.Builder.newInstance(
 				"DNI", //$NON-NLS-1$

@@ -45,7 +45,6 @@ public class TestAOKeystoreFactory {
 
     /** Pruebas de AOKeyStoreFactory de los tipos sin dependencias de otros m&oacute;dulos
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Solo para Windows
     public void testAOKeystoreFactoryCAPI() throws Exception {
@@ -77,7 +76,6 @@ public class TestAOKeystoreFactory {
 
     /** Pruebas de AOKeyStoreFactory de los tipos sin dependencias de otros m&oacute;dulos
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
     public void testAOKeystoreFactory() throws Exception {

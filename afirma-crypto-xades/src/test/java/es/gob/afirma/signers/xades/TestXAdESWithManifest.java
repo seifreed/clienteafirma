@@ -26,7 +26,6 @@ public final class TestXAdESWithManifest {
 
     /** Prueba de firma XAdES Externally Detached con Manifest y URI no dereferenciable (URN).
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testXadesExternallyDetachedUseManifest() throws Exception {
 		final KeyStore ks = KeyStore.getInstance("PKCS12"); //$NON-NLS-1$
@@ -73,7 +72,6 @@ public final class TestXAdESWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloping de binario con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	@Deprecated
@@ -119,7 +117,6 @@ public final class TestXAdESWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloping de XML con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	@Deprecated
@@ -166,7 +163,6 @@ public final class TestXAdESWithManifest {
 
 	/** Pruebas de firmas XAdES Enveloped con MANIFEST.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test(expected=es.gob.afirma.core.AOUnsupportedSignFormatException.class)
 	@Ignore
 	@Deprecated

@@ -73,7 +73,6 @@ public final class TestEnvelopedOnCusomNode {
     /** Prueba de XAdES Enveloped con inserci&oacute;n de firma en el mismo nodo espec&iacute;fico
 	 * que se firma.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testSignNodeAndInsertSignatureOnMainNode() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -107,7 +106,6 @@ public final class TestEnvelopedOnCusomNode {
 	/** Prueba de XAdES Enveloped con inserci&oacute;n de firma en el mismo nodo espec&iacute;fico
 	 * que se firma.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void TestInsertSignatureOnSignedNode() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
@@ -140,7 +138,6 @@ public final class TestEnvelopedOnCusomNode {
 
 	/** Prueba de XAdES Enveloped con inserci&oacute;n de firma en nodo espec&iacute;fico.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void TestInsertSignatureOnCustomNode() throws Exception {
 
@@ -175,7 +172,6 @@ public final class TestEnvelopedOnCusomNode {
 
 	/** Prueba de XAdES Enveloped con inserci&oacute;n de firma en nodo espec&iacute;fico sobre un XML con un namespace.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void TestInsertSignatureOnCustomNodeWithNamespace() throws Exception {
 
@@ -210,7 +206,6 @@ public final class TestEnvelopedOnCusomNode {
 
 	/** Prueba de XAdES Enveloped sin transformaci&oacute;n XPath extra.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testAvoidXpathExtraTransformsOnEnveloped() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$

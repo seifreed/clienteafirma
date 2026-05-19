@@ -19,7 +19,6 @@ public final class TestSafelayerEnvelopes {
 
 	/** Prueba de apertura de sobre.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void openSafelayerEnvelope() throws Exception {

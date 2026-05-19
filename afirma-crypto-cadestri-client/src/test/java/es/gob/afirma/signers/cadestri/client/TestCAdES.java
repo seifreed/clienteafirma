@@ -96,7 +96,6 @@ public final class TestCAdES {
 
 	/** Prueba de firma convencional.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore("Necesita el servidor")
 	public void testSignature() throws Exception {
@@ -149,7 +148,6 @@ public final class TestCAdES {
 	 * Prueba de cofirma.
 	 * @throws Exception en cualquier error
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore("Necesita el servidor")
 	public void testCoSignature() throws Exception {

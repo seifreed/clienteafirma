@@ -36,7 +36,6 @@ public final class TestXAdESWithTimeStamp {
 
     /** Pruebas de XAdES-T.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Ignore
 	@Test
     public void testXAdEST() throws Exception {
@@ -77,7 +76,6 @@ public final class TestXAdESWithTimeStamp {
 
     /** Pruebas de XAdES-T-Level.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Ignore
 	@Test
     public void testXAdESTLevel() throws Exception {

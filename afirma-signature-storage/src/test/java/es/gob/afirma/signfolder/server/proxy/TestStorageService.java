@@ -22,7 +22,6 @@ public final class TestStorageService {
 
 	/** Prueba de almac&eacute;n de un texto simple.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // No ejecutamos de forma automatica
 	public void testStoreSimpleText() throws Exception {

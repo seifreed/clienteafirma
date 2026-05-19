@@ -15,7 +15,6 @@ public final class TestGetSignersStructure {
 
 	/** Prueba de obtenci&oacute;n de estructura de firmantes de una firma XAdES-A.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testGetSignersStructureXadesA() throws Exception {
 		final byte[] sign = AOUtil.getDataFromInputStream(
@@ -28,7 +27,6 @@ public final class TestGetSignersStructure {
 
 	/** Prueba de obtenci&oacute;n de estructura de firmantes de una contrafirma XAdES-A.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testGetSignersStructureXadesACounter() throws Exception {
 		final byte[] sign = AOUtil.getDataFromInputStream(

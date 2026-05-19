@@ -18,7 +18,6 @@ public class KeyStoreAddressBookTest {
 	/** Prueba de acceso a la libreta a traves del proveedor MSCAPIAddressBook.
 	 * @throws Exception Cuando no se localiza el proveedor, ocurren un problema
 	 * en su carga o al listar los certificados. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita CAPI
 	public void pruebaProveedorDeAccesoLibretaDirecciones() throws Exception {
@@ -42,7 +41,6 @@ public class KeyStoreAddressBookTest {
 	/** Prueba de acceso al almac&eacute;n CAPI CA.
 	 * @throws Exception Cuando no se localiza el proveedor, ocurren un problema
 	 * en su carga o al listar los certificados. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita CAPI
 	public void pruebaProveedorDeAccesoCA() throws Exception {

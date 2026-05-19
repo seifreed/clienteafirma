@@ -18,7 +18,6 @@ public final class TestRetrieveService {
 
 	/** Prueba de recuperaci&oacute;n de un texto simple.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // No ejecutamos de forma automatica
 	public void testRetrieveSimpleText() throws Exception {

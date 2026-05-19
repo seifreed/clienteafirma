@@ -18,7 +18,6 @@ public final class SaveTest {
 	 * Prueba de di&aacute;logo de guardado.
 	 * @throws IOException En cualquier error.
 	 */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void showSaveFileDialogTest() throws IOException {

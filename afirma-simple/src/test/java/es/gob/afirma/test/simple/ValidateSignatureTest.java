@@ -47,7 +47,6 @@ public class ValidateSignatureTest {
 	/** Prueba de validaci&oacute;n de firmas.
 	 * @throws IOException En errores de tratamiento de datos.
 	 * @throws RuntimeConfigNeededException No deberia ocurrir nunca. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testValidateXMLSign() throws IOException, RuntimeConfigNeededException {
 
@@ -79,7 +78,6 @@ public class ValidateSignatureTest {
 	/** Prueba de validaci&oacute;n de firmas.
 	 * @throws IOException En errores de tratamiento de datos.
 	 * @throws RuntimeConfigNeededException No deberia ocurrir nunca. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testValidateBinarySign() throws IOException, RuntimeConfigNeededException {
 

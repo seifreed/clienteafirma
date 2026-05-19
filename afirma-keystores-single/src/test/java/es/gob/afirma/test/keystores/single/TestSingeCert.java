@@ -25,7 +25,6 @@ public class TestSingeCert {
      * Pruebas de apertura de certificados sueltos.
      * @throws Exception Cuando falla la carga del almac&eacute;n.
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSingleKeyStore() throws Exception {
 

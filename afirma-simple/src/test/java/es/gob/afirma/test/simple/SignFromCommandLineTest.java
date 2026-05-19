@@ -18,7 +18,6 @@ public final class SignFromCommandLineTest {
 
 	/** Prueba de generaci&oacute;n de firma visible PDF.
 	 * @throws Exception Cuando ocurre cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSignPadesVisible() throws Exception {
@@ -50,7 +49,6 @@ public final class SignFromCommandLineTest {
 
 	/** Prueba de generaci&oacute;n de firma visible PDF con r&uacute;brica.
 	 * @throws Exception Cuando ocurre cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSignPadesVisibleWithRubric() throws Exception {
@@ -83,7 +81,6 @@ public final class SignFromCommandLineTest {
 
 	/** Prueba de generaci&oacute;n de firma visible PDF para varias p&aacute;ginas.
 	 * @throws Exception Cuando ocurre cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSignPadesVisibleMultiplePages() throws Exception {

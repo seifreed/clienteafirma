@@ -40,7 +40,6 @@ public final class TestPkcs11 {
 
 	/** Prueba de firma con PKCS#11 del DNIe.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore //Dependiente del PKCS#11
 	public void testPkcs11Dnie() throws Exception {
@@ -66,7 +65,6 @@ public final class TestPkcs11 {
 
 	/** Prueba de firma con PKCS#11 de la tarjeta CERES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore //Dependiente del PKCS#11
 	public void testPkcs11Fnmt() throws Exception {
@@ -92,7 +90,6 @@ public final class TestPkcs11 {
 
 	/** Prueba de firma con PKCS#11 usando directamente JRE.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Dependiente del PKCS#11
 	public void testRawPkcs11() throws Exception {

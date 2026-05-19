@@ -14,7 +14,6 @@ public final class TestSscdFilter {
 
 	/** Prueba simple del filtro.
 	 * @throws Exception En cualquier error */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testFilter() throws Exception {
 		final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate( //$NON-NLS-1$

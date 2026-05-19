@@ -19,7 +19,6 @@ public final class TestPseudonymFilter {
 	/** Prueba del filtro de certificados por identificador de pol&iacute;tica de certificaci&oacute;n.
 	 * @throws Exception en cualquier error. */
 	@Test
-	@SuppressWarnings("static-method")
 	public void testPolicyIdFilterMatch() throws Exception {
 		final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate( //$NON-NLS-1$
 			ClassLoader.getSystemResourceAsStream("pseu-000.cer") //$NON-NLS-1$
@@ -30,7 +29,6 @@ public final class TestPseudonymFilter {
 	/** Prueba del filtro de certificados por identificador de pol&iacute;tica de certificaci&oacute;n.
 	 * @throws Exception en cualquier error. */
 	@Test
-	@SuppressWarnings("static-method")
 	@Ignore
 	public void testPolicyIdFilter() throws Exception {
 		final AOKeyStoreManager ksm  = AOKeyStoreManagerFactory.getAOKeyStoreManager(

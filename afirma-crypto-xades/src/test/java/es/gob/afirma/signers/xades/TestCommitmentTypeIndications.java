@@ -40,7 +40,6 @@ public final class TestCommitmentTypeIndications {
 
 	/** Prueba de XAdES Enveloped con inserci&oacute;n de CommitmentTypeIndication.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCommitmentTypeIndication() throws Exception {
 

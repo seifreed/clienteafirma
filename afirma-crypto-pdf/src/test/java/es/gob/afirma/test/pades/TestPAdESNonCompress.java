@@ -29,7 +29,6 @@ public class TestPAdESNonCompress {
 	 * Ejecuta una firma PAdES sin comprimir.
 	 * @throws Exception Cuando ocurre alg&uacute;n error.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPadesDoNotCompressPdf() throws Exception {
 

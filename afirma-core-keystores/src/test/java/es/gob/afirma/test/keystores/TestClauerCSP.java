@@ -17,7 +17,6 @@ public final class TestClauerCSP {
 
 	/** Prueba de firma con CSP.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un CLAUER en Windows
 	public void testCapi() throws Exception {

@@ -42,7 +42,6 @@ public final class TestEcdsa {
 
 	/** Prueba de firma SHA256withECDSA con PAdES.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void signEcdsa() throws Exception {
 

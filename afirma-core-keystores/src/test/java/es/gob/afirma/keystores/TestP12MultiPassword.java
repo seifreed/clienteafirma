@@ -23,7 +23,6 @@ public class TestP12MultiPassword {
 
 	/** Prueba un almac&eacute;n PKCS#12 con distintas conttrase&ntilde;as.
 	 * @throws Exception Si ocurre cualquier problema */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testPkcs12StoreWithMultiplePasswords() throws Exception {

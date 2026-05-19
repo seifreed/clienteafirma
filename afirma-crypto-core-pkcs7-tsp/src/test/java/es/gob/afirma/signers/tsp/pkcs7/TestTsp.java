@@ -19,7 +19,6 @@ public class TestTsp {
 
 	/** Prueba de obtenci&oacute;n directa de <i>token</i> TSP RFC3161 por HTTP.
 	 * @throws Exception En cualquier error */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void TestRfc3161TokenHttp() throws Exception {

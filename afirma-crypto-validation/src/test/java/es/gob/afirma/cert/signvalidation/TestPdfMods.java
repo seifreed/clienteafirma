@@ -24,7 +24,6 @@ public class TestPdfMods {
 	 * haber modificado el documento.
 	 * @throws Exception Cuando ocurre cualquier error no esperado en la prueba.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testComprobarFormularioModificado() throws Exception {
 		try (final InputStream is = ClassLoader.getSystemResourceAsStream(PDF_FORM_MOD_PATH)) {
@@ -48,7 +47,6 @@ public class TestPdfMods {
 	 * despu&eacute;s de haber modificado el documento.
 	 * @throws Exception Cuando ocurre cualquier error no esperado en la prueba.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testComprobarFormularioModificadoConCamposSinDeclarar() throws Exception {
 		try (final InputStream is = ClassLoader.getSystemResourceAsStream(PDF_FORM_PLAIN_MOD_PATH)) {
@@ -72,7 +70,6 @@ public class TestPdfMods {
 	 * despu&eacute;s de haber modificado el documento.
 	 * @throws Exception Cuando ocurre cualquier error no esperado en la prueba.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testComprobarPdfShadowAttack() throws Exception {
 		try (final InputStream is = ClassLoader.getSystemResourceAsStream(PDF_SHADOW_ATTACK_PATH)) {

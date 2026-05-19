@@ -200,7 +200,6 @@ public class TestINC78353 {
 
 	/** Cierra el flujo de lectura del almac&eacute;n de certificados.
 	 * @throws IOException Cuando ocurre alg&uacute;n problema al cerrar el flujo de datos. */
-	@SuppressWarnings("static-method")
 	@After
 	public void cerrar() throws IOException {
 		ksIs.close();

@@ -33,7 +33,6 @@ public final class TestPDFX {
 
 	/** Prueba firma de PDF con revisi&oacute;n en la primera firma.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRevSignature() throws Exception {
 
@@ -64,7 +63,6 @@ public final class TestPDFX {
 
 	/** Prueba firma de PDF-X.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfASignature() throws Exception {
 

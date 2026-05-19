@@ -20,7 +20,6 @@ import es.gob.afirma.signers.pades.AOPDFSigner;
 
 /** Pruebas de extracci&oacute;n de firmantes de PDF firmados en los que se
  * han encontrado problemas anteriormente. */
-@SuppressWarnings("static-method")
 public final class TestGetSignersStructure {
 
     private static final String CERT_PATH = "PFActivoFirSHA256.pfx"; //$NON-NLS-1$

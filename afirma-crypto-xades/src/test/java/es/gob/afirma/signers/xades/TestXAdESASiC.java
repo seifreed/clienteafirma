@@ -22,7 +22,6 @@ public final class TestXAdESASiC {
 
     /** Prueba de firma simple XAdES ASiC-S.
      * @throws Exception En culaquier error. */
-    @SuppressWarnings("static-method")
     @Test
 	public void TestSimpleASiCS() throws Exception {
 
@@ -54,7 +53,6 @@ public final class TestXAdESASiC {
 
     /** Prueba de firma simple XAdES ASiC-S.
      * @throws Exception En culaquier error. */
-    @SuppressWarnings("static-method")
     @Test
 	public void TestCosignASiCS() throws Exception {
 

@@ -78,7 +78,6 @@ public final class TestCMS {
      * Prueba de firma convencional.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testSignature() throws Exception {
       /*
@@ -174,7 +173,6 @@ public final class TestCMS {
      * Prueba de cofirma.
      * @throws Exception en cualquier error
      */
-    @SuppressWarnings("static-method")
 	@Test
     public void testCoSignature() throws Exception {
 

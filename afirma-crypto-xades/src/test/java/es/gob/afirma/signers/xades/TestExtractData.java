@@ -28,7 +28,6 @@ public class TestExtractData {
 	/**
 	 * Comprueba que no se extraigan los datos firmados de las firmas Externally Detached.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testExtractDataFromExternallyDetached() {
 
@@ -53,7 +52,6 @@ public class TestExtractData {
 	/**
 	 * Comprueba que no se extraigan los datos firmados de las firmas Externally Detached.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testExtractDataFromXadesWithManifest() {
 

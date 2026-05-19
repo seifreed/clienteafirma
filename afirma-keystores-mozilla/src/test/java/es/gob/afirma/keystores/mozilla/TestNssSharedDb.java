@@ -23,7 +23,6 @@ public final class TestNssSharedDb {
 
 	/** prueba del an&aacute;lisis de "pkcs11.txt".
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRawPkcs11Txt() throws Exception {
 
@@ -61,7 +60,6 @@ public final class TestNssSharedDb {
 
 	/** Prueba de lectura de <i>pkcs11.txt</i>.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRawPkcs11txtFunction() throws Exception {
 		final byte[] pkcs11Txt;
@@ -97,7 +95,6 @@ public final class TestNssSharedDb {
 
 	/** Prueba de lectura de <i>pkcs11.txt</i>.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRawPkcs11txtTest2() throws Exception {
 		final byte[] pkcs11Txt;
@@ -125,7 +122,6 @@ public final class TestNssSharedDb {
 
 	/** Prueba de lectura de <i>pkcs11.txt</i>.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRawPkcs11txtTest3() throws Exception {
 		final byte[] pkcs11Txt;
@@ -156,7 +152,6 @@ public final class TestNssSharedDb {
 	/**
 	 * Carga el almacen NSS del sistema.
 	 */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testLoadSystemSharedNSS() {

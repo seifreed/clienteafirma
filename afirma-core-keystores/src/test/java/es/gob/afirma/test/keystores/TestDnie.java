@@ -45,7 +45,6 @@ public class TestDnie {
 
     /** Prueba de carga y uso del almac&eacute;n DNIe 100% Java.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un DNIe
     public void testDnieJava() throws Exception {
@@ -78,7 +77,6 @@ public class TestDnie {
 
     /** Prueba de carga y uso del almac&eacute;n DNIe en MS-CAPI.
      * @throws Exception En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un DNIe
     public void testDnieCapi() throws Exception {
@@ -130,7 +128,6 @@ public class TestDnie {
      * gestor de almac&eacute;n de tipo PKCS#11 del Cliente.
      * @throws Exception En cualquier error.
      */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un DNIe
     public void testDnie64BitsPkcs11() throws Exception {
@@ -165,7 +162,6 @@ public class TestDnie {
      * del cliente.
      * @throws Exception En cualquier error.
      */
-    @SuppressWarnings("static-method")
 	@Test
 	@Ignore // Necesita un DNIe
     public void testRawDniePkcs11() throws Exception {
