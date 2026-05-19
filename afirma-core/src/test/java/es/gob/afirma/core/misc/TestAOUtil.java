@@ -21,7 +21,6 @@ import org.junit.Test;
 public final class TestAOUtil {
 
 	/** Prueba los m&eacute;todos de <code>Platform</code> */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPlatform() {
 		System.out.println(Platform.getSystemLibDir());
@@ -29,14 +28,12 @@ public final class TestAOUtil {
 
 	/** Prueba de paso a formato URI de ruta de fichero.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCreateUri() throws Exception {
 		System.out.println(AOUtil.createURI("c:\\kaka\\naca\\/das des\\a.txt")); //$NON-NLS-1$
 	}
 
     /** Prueba para el getCN(), reconstruido para prescindir de <code>javax.naming</code>. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testGetCN() {
         final String principals[][] = {
@@ -90,7 +87,6 @@ public final class TestAOUtil {
 
     /** Prueba de conversi&oacute;n de Base64 a <code>Properties</code>.
      * @throws IOException En cualquier error. */
-    @SuppressWarnings("static-method")
 	@Test
     public void testBase64ToProperties() throws IOException {
 

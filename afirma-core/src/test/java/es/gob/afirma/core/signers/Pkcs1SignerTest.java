@@ -20,7 +20,6 @@ public class Pkcs1SignerTest {
     private static final char[] CERT_EC_PASS = "ciudadanohw_ecc_2023v1".toCharArray(); //$NON-NLS-1$
     private static final String CERT_EC_ALIAS = "manuela blanco vidal - nif:10000322z"; //$NON-NLS-1$
 
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPkcs1RsaSign() throws Exception {
 
@@ -43,7 +42,6 @@ public class Pkcs1SignerTest {
 		Assert.assertTrue("Error al verificar la firma RSA", sig.verify(pkcs1)); //$NON-NLS-1$
 	}
 
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPkcs1EcdsaSign() throws Exception {
 

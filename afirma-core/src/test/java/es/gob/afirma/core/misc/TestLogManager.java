@@ -13,7 +13,6 @@ public final class TestLogManager {
 
 	/** Prueba de la obtenci&oacute;n del registro.
 	 * @throws Exception SI hay cualquier problema durante la prueba */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testLogRetrieve() throws Exception {
 		LogManager.install(App.OTHER, null);

@@ -46,7 +46,6 @@ public final class TestDataDownloader {
 
 	/** Prueba manual de HTTP POST.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void doDirectPost() throws Exception {
@@ -81,7 +80,6 @@ public final class TestDataDownloader {
 
 	/** Prueba de lectura del URL "file://".
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testDataDownloaderFile() throws Exception {
@@ -93,7 +91,6 @@ public final class TestDataDownloader {
 
 	/** Prueba de lectura de URL inexistente.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testDataDownloaderInvalidUrl() throws Exception {
@@ -106,7 +103,6 @@ public final class TestDataDownloader {
 
 	/** Prueba de POST.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testPost() throws Exception {
@@ -122,7 +118,6 @@ public final class TestDataDownloader {
 
 	/** Prueba de GET.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testGet() throws Exception {

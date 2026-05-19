@@ -23,7 +23,6 @@ public final class TestKeyUsage {
 
 	/** Pruebas de impresi&oacute;n en consola del <i>KeyUsage</i>.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testCertKeyUsage() throws Exception {
 		final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$

@@ -11,7 +11,6 @@ public final class TestHttpConnection {
 
 	/** Prueba la conexi&oacute;n Https con un certificado no reconocido por Java.
 	 * @throws IOException En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testHttpsConnection() throws IOException {

@@ -11,7 +11,6 @@ import es.gob.afirma.core.signers.AOSignConstants;
 public final class TestConstants {
 
 	/** Prueba de obtenci&oacute;n de nombre de algoritmo de huella <i>NONE</i>. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testDigestNone() {

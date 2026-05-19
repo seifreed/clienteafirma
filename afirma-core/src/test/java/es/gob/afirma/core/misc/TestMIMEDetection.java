@@ -11,7 +11,6 @@ public final class TestMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos PDF.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPdfDetection() throws Exception {
 		final byte[] file;
@@ -26,7 +25,6 @@ public final class TestMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos TXT.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testTxtDetection() throws Exception {
 		final byte[] file = "Hola Mundo!!".getBytes(); //$NON-NLS-1$
@@ -36,7 +34,6 @@ public final class TestMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos XML.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testXmlDetection() throws Exception {
 		final byte[] file;
@@ -51,7 +48,6 @@ public final class TestMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de archivos RAR.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testRarDetection() throws Exception {
 		final byte[] file;

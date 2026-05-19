@@ -11,7 +11,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos Excel.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testExcelDetection() throws Exception {
 		final byte[] file;
@@ -26,7 +25,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos Word.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testWordDetection() throws Exception {
 		final byte[] file;
@@ -41,7 +39,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos Word tipo OOXML.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testWordOoxmlDetection() throws Exception {
 		final byte[] file;
@@ -56,7 +53,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos PowerPoint.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testPowerPointDetection() throws Exception {
 		final byte[] file;
@@ -71,7 +67,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos Project.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testProjectDetection() throws Exception {
 		final byte[] file;
@@ -86,7 +81,6 @@ public final class TestOfficeMIMEDetection {
 
 	/** Prueba la detecci&oacute;n de documentos Visio.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testVisioDetection() throws Exception {
 		final byte[] file;

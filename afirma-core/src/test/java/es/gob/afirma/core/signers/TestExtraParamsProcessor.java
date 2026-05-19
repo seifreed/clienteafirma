@@ -18,7 +18,6 @@ import org.junit.Test;
 public final class TestExtraParamsProcessor {
 
     /** Prueba del paso de propiedades desde String con l&iacute;neas delimitadas por <code>\n</code> a <code>Properties</code> de Java. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testExtraParamProcessor() {
 

@@ -21,7 +21,6 @@ public final class TestZipForData {
 
 	/** Comprueba las ganancias de tama&ntilde;o al comprimir unos datos de firma de ejemplo.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testSizes() throws Exception {
@@ -38,7 +37,6 @@ public final class TestZipForData {
 
 	/** Prueba la funci&oacute;n de descarga de datos indicando que son comprimidos.
 	 * @throws Exception En cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testDownloadData() throws Exception {
@@ -53,7 +51,6 @@ public final class TestZipForData {
 
 	/** Prueba de obtenci&oacute;n del valor del par&aacute;metro <code>gzip</code>
 	 * de un mapa de cadenas. */
-	@SuppressWarnings("static-method")
 	@Test
 	@Ignore
 	public void testParamParse() {

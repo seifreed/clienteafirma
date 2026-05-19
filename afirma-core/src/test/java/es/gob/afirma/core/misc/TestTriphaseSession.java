@@ -12,7 +12,6 @@ public final class TestTriphaseSession {
 
 	/** Prueba de an&aacute;lisis de XML de sesi&oacute;n trif&aacute;sica.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testTriphaseXmlParsing() throws Exception {
 		final byte[] xml;
@@ -29,7 +28,6 @@ public final class TestTriphaseSession {
 
 	/** Prueba de an&aacute;lisis de XML de sesi&oacute;n trif&aacute;sica con indicaci&oacute;n de formato.
 	 * @throws Exception en cualquier error. */
-	@SuppressWarnings("static-method")
 	@Test
 	public void testTriphaseXmlParsingWithFormat() throws Exception {
 		final byte[] xml;
