@@ -424,19 +424,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      *                quiere comprobar
      * @return <code>true</code> si la firma es <i>detached</i>, <code>false</code> en caso contrario. */
     public static boolean isDetached(final Element element) {
-
-    	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
-
-    	// Si no se encuentran firmas, no es una firma
-    	if (signatureElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
-
-    	return XAdESSignatureTypeDetector.isInternallyDetached(element, dataReferenceList);
+    	final FirstSignatureRefs refs = resolveFirstSignatureRefs(element);
+    	return refs != null && XAdESSignatureTypeDetector.isInternallyDetached(element, refs.dataReferenceList());
     }
 
 	/** Comprueba si la firma es <i>externally detached</i>. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -456,18 +445,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      * @return {@code true} si la firma es <i>externally detached</i>, {@code false}
      * en caso contrario. */
     public static boolean isExternallyDetached(final Element element) {
-    	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
-
-    	// Si no se encuentran firmas, no es una firma
-    	if (signatureElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
-
-    	return XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList);
+    	final FirstSignatureRefs refs = resolveFirstSignatureRefs(element);
+    	return refs != null && XAdESSignatureTypeDetector.isExternallyDetached(refs.dataReferenceList());
     }
 
     /** Comprueba si una firma de manifest. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -483,18 +462,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      *                quiere comprobar
      * @return {@code true} si es una firma con <i>manifest</i>, {@code false} en caso contrario. */
     public static boolean isManifestSignature(final Element element) {
-    	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
-
-    	// Si no se encuentran firmas, no es una firma
-    	if (signatureElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
-
-    	return XAdESSignatureTypeDetector.usesManifest(dataReferenceList);
+    	final FirstSignatureRefs refs = resolveFirstSignatureRefs(element);
+    	return refs != null && XAdESSignatureTypeDetector.usesManifest(refs.dataReferenceList());
     }
 
 	/** Comprueba si la firma es <i>enveloped</i>. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -518,18 +487,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      * @return <code>true</code> cuando la firma es <i>enveloped</i>, <code>false</code> en caso
      *         contrario. */
     public static boolean isEnveloped(final Element element) {
-    	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
-
-    	// Si no se encuentran firmas, no es una firma
-    	if (signatureElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
-
-    	return XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList);
+    	final FirstSignatureRefs refs = resolveFirstSignatureRefs(element);
+    	return refs != null && XAdESSignatureTypeDetector.isEnveloped(refs.signatureElement(), refs.dataReferenceList());
     }
 
 
@@ -547,19 +506,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      * @return <code>true</code> cuando la firma es <i>enveloping</i>, <code>false</code> en caso
      *         contrario. */
     public static boolean isEnveloping(final Element element) {
-
-    	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
-
-    	// Si no se encuentran firmas, no es una firma
-    	if (signatureElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
-
-    	return XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList);
+    	final FirstSignatureRefs refs = resolveFirstSignatureRefs(element);
+    	return refs != null && XAdESSignatureTypeDetector.isEnveloping(refs.signatureElement(), refs.dataReferenceList());
     }
 
     /** {@inheritDoc} */
@@ -697,6 +645,32 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 
         // convierte el documento obtenido en un array de bytes
         return Utils.writeXML(elementRes, null, null, null);
+    }
+
+    /**
+     * Tupla con el primer elemento {@code <Signature>} del XML y el listado de sus
+     * referencias a datos. Resultado intermedio compartido por los m&eacute;todos
+     * {@code isDetached}, {@code isExternallyDetached}, {@code isManifestSignature},
+     * {@code isEnveloped} e {@code isEnveloping}, que aplican distintos predicados
+     * sobre los mismos datos.
+     */
+    private record FirstSignatureRefs(Element signatureElement, List<Element> dataReferenceList) {}
+
+    /**
+     * Localiza la primera firma del XML y obtiene su listado de referencias.
+     * Devuelve {@code null} si el documento no contiene ninguna firma.
+     *
+     * <p>Centraliza el preámbulo de los m&eacute;todos {@code isXxx}; antes
+     * cada uno repet&iacute;a las mismas 12 l&iacute;neas con el mismo
+     * idiom (early-return si no hay firma).</p>
+     */
+    private static FirstSignatureRefs resolveFirstSignatureRefs(final Element element) {
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
+    	if (signatureElement == null) {
+    		return null;
+    	}
+    	return new FirstSignatureRefs(signatureElement,
+    			XAdESDomLookup.getSignatureDataReferenceList(signatureElement));
     }
 
     /**
