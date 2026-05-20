@@ -359,76 +359,15 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         // Firma Explicita
         else {
-            // ESTE BLOQUE CONTIENE EL PROCESO A SEGUIR EN EL MODO EXPLICITO,
-            // ESTO ES, NO FIRMAMOS LOS DATOS SINO SU HASH
-            byte[] digestValue = null;
-            // Si la URI no es nula recogemos los datos de fuera
-            if (uri != null) {
-                byte[] tmpData = null;
-                try {
-                    tmpData = AOUtil.getDataFromInputStream(AOUtil.loadFile(uri));
-                }
-                catch (final Exception e) {
-                    throw new AOException("No se han podido obtener los datos de la URI externa", e, XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR); //$NON-NLS-1$
-                }
-                // Vemos si hemos obtenido bien los datos de la URI
-                if (tmpData != null && tmpData.length > 0) {
-                    try {
-                        digestValue = MessageDigest.getInstance("SHA1").digest(tmpData); //$NON-NLS-1$
-                    }
-                    catch (final Exception e) {
-                        throw new AOException("No se ha podido obtener el SHA1 de los datos de la URI externa", e, ErrorCode.Internal.UNSUPPORTED_HASH_ALGORITHM); //$NON-NLS-1$
-                    }
-                }
-            }
-            // Si no tenemos URI y se nos inserto directamente el hash de los
-            // datos
-            else if (precalculatedHashAlgorithm != null) {
-                digestValue = data;
-            }
-            // Si solo tenemos los datos
-            else {
-                try {
-                    digestValue = MessageDigest.getInstance("SHA1").digest(data); //$NON-NLS-1$
-                }
-                catch (final Exception e) {
-                    throw new AOException("No se ha podido obtener el SHA1 de los datos proporcionados: " + e, e, ErrorCode.Internal.UNSUPPORTED_HASH_ALGORITHM); //$NON-NLS-1$
-                }
-            }
-
-            final Document docFile;
-            try {
-                docFile = Utils.getNewDocumentBuilder().newDocument();
-            }
-            catch (final Exception e) {
-                throw new AOException("No se ha podido crear el documento XML contenedor: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-            dataElement = docFile.createElement(DETACHED_CONTENT_ELEMENT_NAME);
-
-            encoding = XMLConstants.BASE64_ENCODING;
-            // En el caso de la firma explicita, se firma el Hash de los datos
-            // en lugar de los propios datos.
-            // En este caso, los indicaremos a traves del MimeType en donde
-            // establecemos un tipo especial
-            // que designa al hash. Independientemente del algoritmo de firma
-            // utilizado, el Hash de las firmas
-            // explicitas de datos siempre sera SHA1, salvo que el hash se haya
-            // establecido desde fuera.
-            if (precalculatedHashAlgorithm != null) {
-                mimeType = "hash/" + precalculatedHashAlgorithm.toLowerCase(); //$NON-NLS-1$
-            }
-            else {
-                mimeType = "hash/sha1"; //$NON-NLS-1$
-            }
-
-            dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
-            dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
-            dataElement.setAttributeNS(null, ENCODING_STR, encoding);
-
-            dataElement.setTextContent(Base64.encode(digestValue));
-            isBase64 = true;
-
-            // FIN BLOQUE EXPLICITO
+            final PreparedDataElement prepared = prepareDataElementExplicit(
+                    data, uri, precalculatedHashAlgorithm, contentId);
+            dataElement = prepared.dataElement();
+            mimeType = prepared.mimeType();
+            encoding = prepared.encoding();
+            isBase64 = prepared.isBase64();
+            wasEncodedToBase64 = prepared.wasEncodedToBase64();
+            // xmlStyle se queda en el valor por defecto (XmlStyle vacío)
+            // porque la rama EXPLICIT no resuelve hojas de estilo.
         }
 
         // ***************************************************
@@ -687,6 +626,98 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         return new PreparedDataElement(dataElement, isBase64, wasEncodedToBase64,
                 mimeType, encoding, uri, xmlStyle);
+    }
+
+    /** Prepara el {@code dataElement} en modo EXPLICIT: en lugar de firmar
+     * los datos, se firma su hash. Tres caminos según los inputs:
+     *
+     * <ul>
+     * <li>{@code uri != null}: se descargan los datos de la URI externa y
+     *     se calcula su SHA-1.</li>
+     * <li>{@code precalculatedHashAlgorithm != null}: {@code data} ya es
+     *     el digest precalculado; se usa tal cual.</li>
+     * <li>Por defecto: se calcula SHA-1 sobre {@code data}.</li>
+     * </ul>
+     *
+     * <p>Construye un nuevo {@link Document} con un elemento {@code <CONTENT>}
+     * cuyo texto es el digest en Base64 y cuyo MimeType es
+     * {@code "hash/<alg>"} (donde {@code <alg>} es {@code sha1} salvo que
+     * se haya pasado un {@code precalculatedHashAlgorithm} distinto).</p>
+     *
+     * <p>EXPLICIT no resuelve hojas de estilo, no muta
+     * {@code originalXMLProperties} y nunca cambia {@code uri}: el record
+     * devuelto lleva un {@link XmlStyle} vacío. El campo {@code uri} del
+     * record es el mismo de entrada y no se usa en fases posteriores en
+     * este modo.</p> */
+    private static PreparedDataElement prepareDataElementExplicit(
+            final byte[] data,
+            final URI uri,
+            final String precalculatedHashAlgorithm,
+            final String contentId) throws AOException {
+
+        // ESTE BLOQUE CONTIENE EL PROCESO A SEGUIR EN EL MODO EXPLICITO,
+        // ESTO ES, NO FIRMAMOS LOS DATOS SINO SU HASH
+        byte[] digestValue = null;
+        if (uri != null) {
+            // Si la URI no es nula recogemos los datos de fuera
+            byte[] tmpData = null;
+            try {
+                tmpData = AOUtil.getDataFromInputStream(AOUtil.loadFile(uri));
+            }
+            catch (final Exception e) {
+                throw new AOException("No se han podido obtener los datos de la URI externa", e, XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR); //$NON-NLS-1$
+            }
+            // Vemos si hemos obtenido bien los datos de la URI
+            if (tmpData != null && tmpData.length > 0) {
+                try {
+                    digestValue = MessageDigest.getInstance("SHA1").digest(tmpData); //$NON-NLS-1$
+                }
+                catch (final Exception e) {
+                    throw new AOException("No se ha podido obtener el SHA1 de los datos de la URI externa", e, ErrorCode.Internal.UNSUPPORTED_HASH_ALGORITHM); //$NON-NLS-1$
+                }
+            }
+        }
+        else if (precalculatedHashAlgorithm != null) {
+            // Si no tenemos URI y se nos inserto directamente el hash de los datos
+            digestValue = data;
+        }
+        else {
+            // Si solo tenemos los datos
+            try {
+                digestValue = MessageDigest.getInstance("SHA1").digest(data); //$NON-NLS-1$
+            }
+            catch (final Exception e) {
+                throw new AOException("No se ha podido obtener el SHA1 de los datos proporcionados: " + e, e, ErrorCode.Internal.UNSUPPORTED_HASH_ALGORITHM); //$NON-NLS-1$
+            }
+        }
+
+        final Document docFile;
+        try {
+            docFile = Utils.getNewDocumentBuilder().newDocument();
+        }
+        catch (final Exception e) {
+            throw new AOException("No se ha podido crear el documento XML contenedor: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+        }
+        final Element dataElement = docFile.createElement(DETACHED_CONTENT_ELEMENT_NAME);
+
+        final String encoding = XMLConstants.BASE64_ENCODING;
+        // En el caso de la firma explicita, se firma el Hash de los datos
+        // en lugar de los propios datos. Los indicaremos a traves del
+        // MimeType en donde establecemos un tipo especial que designa al
+        // hash. Independientemente del algoritmo de firma utilizado, el
+        // Hash de las firmas explicitas de datos siempre sera SHA1, salvo
+        // que el hash se haya establecido desde fuera.
+        final String mimeType = precalculatedHashAlgorithm != null
+                ? "hash/" + precalculatedHashAlgorithm.toLowerCase() //$NON-NLS-1$
+                : "hash/sha1"; //$NON-NLS-1$
+
+        dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
+        dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
+        dataElement.setAttributeNS(null, ENCODING_STR, encoding);
+        dataElement.setTextContent(Base64.encode(digestValue));
+
+        return new PreparedDataElement(dataElement, true, false,
+                mimeType, encoding, uri, new XmlStyle());
     }
 
     /** Valida los parámetros de entrada de {@link #sign} y empaqueta los
