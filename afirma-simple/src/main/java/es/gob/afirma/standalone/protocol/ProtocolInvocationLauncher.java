@@ -36,6 +36,7 @@ import es.gob.afirma.core.misc.protocol.ParameterLocalAccessRequestedException;
 import es.gob.afirma.core.misc.protocol.ProtocolInvocationUriParser;
 import es.gob.afirma.core.misc.protocol.ProtocolInvocationUriParserUtil;
 import es.gob.afirma.core.misc.protocol.ProtocolVersion;
+import es.gob.afirma.core.misc.protocol.UrlParameters;
 import es.gob.afirma.core.misc.protocol.UrlParametersForBatch;
 import es.gob.afirma.core.misc.protocol.UrlParametersToLoad;
 import es.gob.afirma.core.misc.protocol.UrlParametersToSave;
@@ -395,6 +396,22 @@ public final class ProtocolInvocationLauncher {
 	    	thread.start();
 		} catch (final Exception e) {
 			LOGGER.warning("Se ha interrumpido la espera activa para la conexion con servidor intermedio: " + e); //$NON-NLS-1$
+		}
+	}
+
+	/**
+	 * Si la comunicaci&oacute;n con el cliente JS NO es por socket y los par&aacute;metros piden
+	 * espera activa, lanza el {@link ActiveWaitingThread} que mantiene viva la conexi&oacute;n
+	 * con el servidor intermedio. Patr&oacute;n compartido por los 5 verbos que devuelven
+	 * resultado v&iacute;a servidor intermedio (batch/selectcert/save/signandsave/sign).
+	 *
+	 * @param params Par&aacute;metros de la operaci&oacute;n con la URL y el id de almac&eacute;n.
+	 * @param bySocket {@code true} si la conversaci&oacute;n vuelve por socket; en ese caso no
+	 *                 hace nada porque no existe ese punto de retorno intermedio.
+	 */
+	private static void startActiveWaitingIfNeeded(final UrlParameters params, final boolean bySocket) {
+		if (!bySocket && params.isActiveWaiting()) {
+			requestWait(params.getStorageServletUrl(), params.getId());
 		}
 	}
 
@@ -769,9 +786,7 @@ public final class ProtocolInvocationLauncher {
 
             // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
             // que se espere activamente hasta el fin de la tarea
-            if (!ctx.bySocket() && params.isActiveWaiting()) {
-            	requestWait(params.getStorageServletUrl(), params.getId());
-            }
+            startActiveWaitingIfNeeded(params, ctx.bySocket());
 
 			LOGGER.info(
 					"Se inicia la operacion de firma de lote. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
@@ -859,9 +874,7 @@ public final class ProtocolInvocationLauncher {
 
     		// En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
     		// que se espere activamente hasta el fin de la tarea
-    		if (!ctx.bySocket() && params.isActiveWaiting()) {
-    			requestWait(params.getStorageServletUrl(), params.getId());
-    		}
+    		startActiveWaitingIfNeeded(params, ctx.bySocket());
 
     		LOGGER.info("Se inicia la operacion de seleccion de certificado. Version de protocolo: " //$NON-NLS-1$
     				+ requestedProtocolVersion);
@@ -958,9 +971,7 @@ public final class ProtocolInvocationLauncher {
 
             // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
             // que se espere activamente hasta el fin de la tarea
-            if (!ctx.bySocket() && params.isActiveWaiting()) {
-            	requestWait(params.getStorageServletUrl(), params.getId());
-            }
+            startActiveWaitingIfNeeded(params, ctx.bySocket());
 
             LOGGER.info("Se inicia la operacion de guardado. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
 
@@ -1058,9 +1069,7 @@ public final class ProtocolInvocationLauncher {
 
             // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
             // que se espere activamente hasta el fin de la tarea
-            if (!ctx.bySocket() && params.isActiveWaiting()) {
-            	requestWait(params.getStorageServletUrl(), params.getId());
-            }
+            startActiveWaitingIfNeeded(params, ctx.bySocket());
 
 			LOGGER.info("Se inicia la operacion de firma y guardado. Version de protocolo: " //$NON-NLS-1$
 					+ requestedProtocolVersion);
@@ -1163,9 +1172,7 @@ public final class ProtocolInvocationLauncher {
 
             // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
             // que se espere activamente hasta el fin de la tarea
-            if (!ctx.bySocket() && params.isActiveWaiting()) {
-            	requestWait(params.getStorageServletUrl(), params.getId());
-            }
+            startActiveWaitingIfNeeded(params, ctx.bySocket());
 
             LOGGER.info("Se inicia la operacion de firma. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
 
@@ -1261,9 +1268,7 @@ public final class ProtocolInvocationLauncher {
 
             // En caso de comunicacion por servidor intermedio, solicitamos, si corresponde,
             // que se espere activamente hasta el fin de la tarea
-            if (!ctx.bySocket() && params.isActiveWaiting()) {
-            	requestWait(params.getStorageServletUrl(), params.getId());
-            }
+            startActiveWaitingIfNeeded(params, ctx.bySocket());
 
             LOGGER.info("Se inicia la operacion de carga. Version de protocolo: " + requestedProtocolVersion); //$NON-NLS-1$
 
