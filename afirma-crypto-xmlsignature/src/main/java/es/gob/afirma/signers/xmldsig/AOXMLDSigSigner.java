@@ -845,108 +845,10 @@ public final class AOXMLDSigSigner implements AOSigner {
         // tenemos o usando un Message Digest
         // precalculado si no tenemos otro remedio
         else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED)) {
-            Reference ref = null;
-            // No tenemos uri, suponemos que los datos son el message digest
-            if (precalculatedHashAlgorithm != null && (uri == null || uri.getScheme().equals("") || uri.getScheme().equals("file"))) { //$NON-NLS-1$ //$NON-NLS-2$
-                DigestMethod dm = null;
-                try {
-                    // Convertimos el algoritmo del Message Digest externo a la
-                    // nomenclatura XML
-                    if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA1")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA1, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-256")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA256, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-512")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA512, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("RIPEMD160")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.RIPEMD160, null);
-                    }
-                }
-                catch (final Exception e) {
-                    throw new AOException("No se ha podido crear el metodo de huella digital para la referencia Externally Detached", e, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
-                }
-                if (dm == null) {
-                    throw new AOException("Metodo de Message Digest para la referencia Externally Detached no soportado: " + precalculatedHashAlgorithm, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
-                }
-                ref = fac.newReference(
-                    "", //$NON-NLS-1$
-                    dm,
-                    null,
-                    XMLConstants.OBJURI, // Es un nodo a firmar
-                    referenceId,
-                    data
-                );
-            }
-            else // Si es una referencia de tipo file:// obtenemos el fichero y
-            // creamos una referencia solo con
-            // el message digest
-            if (uri != null && uri.getScheme().equals("file")) { //$NON-NLS-1$
-                try {
-                    ref = fac.newReference(
-                        "", //$NON-NLS-1$
-                        digestMethod,
-                        null,
-                        XMLConstants.OBJURI,
-                        referenceId,
-                        MessageDigest.getInstance(
-                            AOSignConstants.getDigestAlgorithmName(digestMethodAlgorithm)
-                        ).digest(AOUtil.getDataFromInputStream(AOUtil.loadFile(uri)))
-                    );
-                }
-                catch (final Exception e) {
-                    throw new AOException("No se ha podido crear la referencia XML a partir de la URI local " + uri.toASCIIString(), e, //$NON-NLS-1$
-                            XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR);
-                }
-            }
-            // Si es una referencia distinta de file:// suponemos que es
-            // dereferenciable de forma universal
-            // por lo que dejamos que Java lo haga todo
-            else if (uri != null) {
-                try {
-                    ref = fac.newReference(uri.toASCIIString(), digestMethod);
-                }
-                catch (final Exception e) {
-                    throw new AOException(
-                        "No se ha podido crear la referencia Externally Detached, probablemente por no obtenerse el metodo de digest", //$NON-NLS-1$
-                        e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR
-                    );
-                }
-            }
-            if (ref == null) {
-                throw new AOException("Error al generar la firma Externally Detached, no se ha podido crear la referencia externa", XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-            referenceList.add(ref);
-
-            // Hojas de estilo remotas en Externally Detached
-            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null) {
-                // Comprobamos que la URL es valida
-                if (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
-                    try {
-                        referenceList.add(
-                            fac.newReference(
-                                xmlStyle.getStyleHref(),
-                                digestMethod,
-                                canonicalizationTransform != null
-                                    ? Collections.singletonList(canonicalizationTransform)
-                                    : null,
-                                XMLConstants.OBJURI,
-                                referenceStyleId
-                            )
-                        );
-                    }
-                    catch (final Exception e) {
-                        LOGGER.severe(
-                            "No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma Externally Detached, esta no se firmara: " + e //$NON-NLS-1$
-                        );
-                    }
-                }
-                else {
-                    LOGGER.warning("Se necesita una referencia externa HTTP o HTTPS a la hoja de estilo para referenciarla en firmas XML Externally Detached"); //$NON-NLS-1$
-                }
-            }
+            buildReferencesForExternallyDetached(data, uri,
+                    precalculatedHashAlgorithm, digestMethodAlgorithm,
+                    fac, digestMethod, canonicalizationTransform,
+                    xmlStyle, referenceList, referenceId, referenceStyleId);
         }
 
         // crea una referencia indicando que se trata de una firma enveloped
@@ -1146,6 +1048,130 @@ public final class AOXMLDSigSigner implements AOSigner {
                 LOGGER.severe(
                     "No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Detached Implicita, esta no se firmara: " + e //$NON-NLS-1$
                 );
+            }
+        }
+    }
+
+    /** Construye la referencia específica del formato XMLDSig
+     * EXTERNALLY_DETACHED. La referencia puede construirse a partir de
+     * (a) un hash precalculado (si {@code precalculatedHashAlgorithm} y
+     * los datos están presentes y no hay URI válida no-file), (b) una URI
+     * {@code file://} (calculando el digest del fichero local), o (c) una
+     * URI dereferenciable (dejando que Java resuelva la dereferenciación).
+     * Si hay hoja de estilo remota http(s)://, añade una referencia
+     * adicional. */
+    private static void buildReferencesForExternallyDetached(
+            final byte[] data,
+            final URI uri,
+            final String precalculatedHashAlgorithm,
+            final String digestMethodAlgorithm,
+            final XMLSignatureFactory fac,
+            final DigestMethod digestMethod,
+            final Transform canonicalizationTransform,
+            final XmlStyle xmlStyle,
+            final List<Reference> referenceList,
+            final String referenceId,
+            final String referenceStyleId) throws AOException {
+
+        Reference ref = null;
+        // No tenemos uri, suponemos que los datos son el message digest
+        if (precalculatedHashAlgorithm != null && (uri == null || uri.getScheme().equals("") || uri.getScheme().equals("file"))) { //$NON-NLS-1$ //$NON-NLS-2$
+            DigestMethod dm = null;
+            try {
+                // Convertimos el algoritmo del Message Digest externo a la
+                // nomenclatura XML
+                if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA1")) { //$NON-NLS-1$
+                    dm = fac.newDigestMethod(DigestMethod.SHA1, null);
+                }
+                else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-256")) { //$NON-NLS-1$
+                    dm = fac.newDigestMethod(DigestMethod.SHA256, null);
+                }
+                else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-512")) { //$NON-NLS-1$
+                    dm = fac.newDigestMethod(DigestMethod.SHA512, null);
+                }
+                else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("RIPEMD160")) { //$NON-NLS-1$
+                    dm = fac.newDigestMethod(DigestMethod.RIPEMD160, null);
+                }
+            }
+            catch (final Exception e) {
+                throw new AOException("No se ha podido crear el metodo de huella digital para la referencia Externally Detached", e, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
+            }
+            if (dm == null) {
+                throw new AOException("Metodo de Message Digest para la referencia Externally Detached no soportado: " + precalculatedHashAlgorithm, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
+            }
+            ref = fac.newReference(
+                "", //$NON-NLS-1$
+                dm,
+                null,
+                XMLConstants.OBJURI, // Es un nodo a firmar
+                referenceId,
+                data
+            );
+        }
+        else if (uri != null && uri.getScheme().equals("file")) { //$NON-NLS-1$
+            // Si es una referencia de tipo file:// obtenemos el fichero y
+            // creamos una referencia solo con el message digest
+            try {
+                ref = fac.newReference(
+                    "", //$NON-NLS-1$
+                    digestMethod,
+                    null,
+                    XMLConstants.OBJURI,
+                    referenceId,
+                    MessageDigest.getInstance(
+                        AOSignConstants.getDigestAlgorithmName(digestMethodAlgorithm)
+                    ).digest(AOUtil.getDataFromInputStream(AOUtil.loadFile(uri)))
+                );
+            }
+            catch (final Exception e) {
+                throw new AOException("No se ha podido crear la referencia XML a partir de la URI local " + uri.toASCIIString(), e, //$NON-NLS-1$
+                        XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR);
+            }
+        }
+        else if (uri != null) {
+            // Si es una referencia distinta de file:// suponemos que es
+            // dereferenciable de forma universal, por lo que dejamos que
+            // Java lo haga todo
+            try {
+                ref = fac.newReference(uri.toASCIIString(), digestMethod);
+            }
+            catch (final Exception e) {
+                throw new AOException(
+                    "No se ha podido crear la referencia Externally Detached, probablemente por no obtenerse el metodo de digest", //$NON-NLS-1$
+                    e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR
+                );
+            }
+        }
+        if (ref == null) {
+            throw new AOException("Error al generar la firma Externally Detached, no se ha podido crear la referencia externa", XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+        }
+        referenceList.add(ref);
+
+        // Hojas de estilo remotas en Externally Detached
+        if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null) {
+            // Comprobamos que la URL es valida
+            if (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
+                try {
+                    referenceList.add(
+                        fac.newReference(
+                            xmlStyle.getStyleHref(),
+                            digestMethod,
+                            canonicalizationTransform != null
+                                ? Collections.singletonList(canonicalizationTransform)
+                                : null,
+                            XMLConstants.OBJURI,
+                            referenceStyleId
+                        )
+                    );
+                }
+                catch (final Exception e) {
+                    LOGGER.severe(
+                        "No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma Externally Detached, esta no se firmara: " + e //$NON-NLS-1$
+                    );
+                }
+            }
+            else {
+                LOGGER.warning("Se necesita una referencia externa HTTP o HTTPS a la hoja de estilo para referenciarla en firmas XML Externally Detached"); //$NON-NLS-1$
             }
         }
     }
