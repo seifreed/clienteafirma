@@ -311,7 +311,7 @@ public final class XAdESSigner {
 
 			// Si no hay asignado un MimeType o es el por defecto
 			// establecemos el de XML
-			if (mimeType == null || XMLConstants.DEFAULT_MIMETYPE.equals(mimeType)) {
+			if (mimeType == null || MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
 				mimeType = "text/xml"; //$NON-NLS-1$
 			}
 
@@ -422,7 +422,7 @@ public final class XAdESSigner {
 						}
 
 						dataElement.setAttributeNS(null, AOXAdESSigner.XMLDSIG_ATTR_MIMETYPE_STR,
-								mimeType != null ? mimeType : XMLConstants.DEFAULT_MIMETYPE);
+								mimeType != null ? mimeType : MimeHelper.DEFAULT_MIMETYPE);
 
 						dataElement.setTextContent(Base64.encode(decodedData));
 					}
@@ -447,7 +447,7 @@ public final class XAdESSigner {
 						}
 
 						dataElement.setAttributeNS(null, AOXAdESSigner.XMLDSIG_ATTR_MIMETYPE_STR,
-								mimeType != null ? mimeType : XMLConstants.DEFAULT_MIMETYPE);
+								mimeType != null ? mimeType : MimeHelper.DEFAULT_MIMETYPE);
 
 						dataElement.setTextContent(Base64.encode(data));
 						wasEncodedToBase64 = true;
@@ -596,7 +596,7 @@ public final class XAdESSigner {
 				envelopingObject = fac.newXMLObject(
 						structures,
 						objectId,
-						mimeType != null ? mimeType : XMLConstants.DEFAULT_MIMETYPE,
+						mimeType != null ? mimeType : MimeHelper.DEFAULT_MIMETYPE,
 						encoding);
 
 				// Crea la referencia al nuevo elemento Object o al nodo especifico a firmar
@@ -1231,7 +1231,7 @@ public final class XAdESSigner {
 		return new DataObjectFormatImpl(
 			null,
 			objectIdentifier,
-			mimeType != null ? mimeType : XMLConstants.DEFAULT_MIMETYPE,
+			mimeType != null ? mimeType : MimeHelper.DEFAULT_MIMETYPE,
 			encoding,
 			"#" + referenceId //$NON-NLS-1$
 		);

@@ -386,7 +386,7 @@ public final class AOXMLDSigSigner implements AOSigner {
 
                 // Si no hay asignado un MimeType o es el por defecto
                 // establecemos el de XML
-                if (mimeType == null || XMLConstants.DEFAULT_MIMETYPE.equals(mimeType)) {
+                if (mimeType == null || MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
                     mimeType = "text/xml"; //$NON-NLS-1$
                 }
 
@@ -461,7 +461,7 @@ public final class AOXMLDSigSigner implements AOSigner {
                     uri = null;
                     encoding = XMLConstants.BASE64_ENCODING;
                     if (mimeType == null) {
-                        mimeType = XMLConstants.DEFAULT_MIMETYPE;
+                        mimeType = MimeHelper.DEFAULT_MIMETYPE;
                     }
 
                     dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
@@ -481,7 +481,7 @@ public final class AOXMLDSigSigner implements AOSigner {
                         final byte[] decodedData = Base64.decode(data, 0, data.length, false);
                         final MimeHelper mimeTypeHelper = new MimeHelper(decodedData);
                         final String tempMimeType = mimeTypeHelper.getMimeType();
-                        mimeType = tempMimeType != null ? tempMimeType : XMLConstants.DEFAULT_MIMETYPE;
+                        mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
                         dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
                         dataElement.setTextContent(new String(data));
                     }
@@ -494,10 +494,10 @@ public final class AOXMLDSigSigner implements AOSigner {
                         }
 
                         // Identificamos el MimeType
-                        if (XMLConstants.DEFAULT_MIMETYPE.equals(mimeType)) {
+                        if (MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
                         	final MimeHelper mimeTypeHelper = new MimeHelper(data);
                             final String tempMimeType = mimeTypeHelper.getMimeType();
-                            mimeType = tempMimeType != null ? tempMimeType : XMLConstants.DEFAULT_MIMETYPE;
+                            mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
                         }
                         dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
                         dataElement.setTextContent(Base64.encode(data));
