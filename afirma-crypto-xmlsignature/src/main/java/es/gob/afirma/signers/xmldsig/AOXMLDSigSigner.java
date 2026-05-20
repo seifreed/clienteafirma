@@ -835,63 +835,10 @@ public final class AOXMLDSigSigner implements AOSigner {
         // crea una referencia al documento mediante la URI hacia el
         // identificador del nodo CONTENT
         else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_DETACHED)) {
-            try {
-                if (dataElement != null) {
-                    // inserta en el nuevo documento de firma el documento a
-                    // firmar
-                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(dataElement));
-                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
-                    referenceList.add(
-                        fac.newReference(
-                            tmpUri,
-                            digestMethod,
-                            transformList,
-                            XMLConstants.OBJURI,
-                            referenceId
-                        )
-                    );
-                }
-                if (xmlStyle.getStyleElement() != null) {
-                    // inserta en el nuevo documento de firma la hoja de estilo
-                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(xmlStyle.getStyleElement()));
-                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
-                    referenceList.add(
-                        fac.newReference(
-                            tmpStyleUri,
-                            digestMethod,
-                            canonicalizationTransform != null
-                                ? Collections.singletonList(canonicalizationTransform)
-                                : null,
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato detached implicito", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            // Hojas de estilo remotas para detached. Comprobamos si la referencia al estilo es externa
-            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null
-                    && (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-                try {
-                    referenceList.add(
-                        fac.newReference(
-                            xmlStyle.getStyleHref(),
-                            digestMethod,
-                            Collections.singletonList(fac.newTransform(canonicalizationAlgorithm, (TransformParameterSpec) null)),
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-                catch (final Exception e) {
-                    LOGGER.severe(
-                        "No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Detached Implicita, esta no se firmara: " + e //$NON-NLS-1$
-                    );
-                }
-            }
+            buildReferencesForDetached(dataElement, docSignature, xmlStyle,
+                    fac, digestMethod, transformList, canonicalizationTransform,
+                    canonicalizationAlgorithm, referenceList,
+                    tmpUri, tmpStyleUri, referenceId, referenceStyleId);
         }
 
         // Crea una referencia al documento mediante la URI externa si la
@@ -1124,6 +1071,83 @@ public final class AOXMLDSigSigner implements AOSigner {
                 canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
 
         return new Phase4Result(envelopingObject, envelopingStyleObject);
+    }
+
+    /** Construye las referencias específicas del formato XMLDSig DETACHED.
+     * Adopta el {@code dataElement} y, opcionalmente, la hoja de estilo
+     * dentro del documento de firma; añade las referencias internas hacia
+     * ellos por URI {@code #id}. Si hay hoja de estilo remota
+     * (http(s)://...), añade una referencia adicional a la URL externa
+     * con la transformación de canonicalización configurada. */
+    private static void buildReferencesForDetached(
+            final Element dataElement,
+            final Document docSignature,
+            final XmlStyle xmlStyle,
+            final XMLSignatureFactory fac,
+            final DigestMethod digestMethod,
+            final List<Transform> transformList,
+            final Transform canonicalizationTransform,
+            final String canonicalizationAlgorithm,
+            final List<Reference> referenceList,
+            final String tmpUri,
+            final String tmpStyleUri,
+            final String referenceId,
+            final String referenceStyleId) throws AOException {
+
+        try {
+            if (dataElement != null) {
+                // inserta en el nuevo documento de firma el documento a firmar
+                docSignature.getDocumentElement().appendChild(docSignature.adoptNode(dataElement));
+                referenceList.add(
+                    fac.newReference(
+                        tmpUri,
+                        digestMethod,
+                        transformList,
+                        XMLConstants.OBJURI,
+                        referenceId
+                    )
+                );
+            }
+            if (xmlStyle.getStyleElement() != null) {
+                // inserta en el nuevo documento de firma la hoja de estilo
+                docSignature.getDocumentElement().appendChild(docSignature.adoptNode(xmlStyle.getStyleElement()));
+                referenceList.add(
+                    fac.newReference(
+                        tmpStyleUri,
+                        digestMethod,
+                        canonicalizationTransform != null
+                            ? Collections.singletonList(canonicalizationTransform)
+                            : null,
+                        XMLConstants.OBJURI,
+                        referenceStyleId
+                    )
+                );
+            }
+        }
+        catch (final Exception e) {
+            throw new AOException("Error al generar la firma en formato detached implicito", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
+        }
+
+        // Hojas de estilo remotas para detached. Comprobamos si la referencia al estilo es externa
+        if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null
+                && (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
+            try {
+                referenceList.add(
+                    fac.newReference(
+                        xmlStyle.getStyleHref(),
+                        digestMethod,
+                        Collections.singletonList(fac.newTransform(canonicalizationAlgorithm, (TransformParameterSpec) null)),
+                        XMLConstants.OBJURI,
+                        referenceStyleId
+                    )
+                );
+            }
+            catch (final Exception e) {
+                LOGGER.severe(
+                    "No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Detached Implicita, esta no se firmara: " + e //$NON-NLS-1$
+                );
+            }
+        }
     }
 
     /** Contexto inmutable con todos los datos de configuración que necesita
