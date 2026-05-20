@@ -36,13 +36,6 @@ import es.gob.afirma.core.ui.AOUIFactory;
  * <p>La clase es {@code final} y no instanciable. */
 public final class XAdESProfileChecks {
 
-    private static final String[] SUPPORTED_XADES_NAMESPACE_URIS = {
-        XAdESConstants.NAMESPACE_XADES_NO_VERSION,
-        XAdESConstants.NAMESPACE_XADES_1_2_2,
-        XAdESConstants.NAMESPACE_XADES_1_3_2,
-        XAdESConstants.NAMESPACE_XADES_1_4_1
-    };
-
     private XAdESProfileChecks() {
         // No instanciable
     }
@@ -57,7 +50,7 @@ public final class XAdESProfileChecks {
     public static boolean checkSignNodes(final List<Node> signNodes) {
         for (final Node signNode : signNodes) {
             int lenCount = 0;
-            for (final String xadesNamespace : SUPPORTED_XADES_NAMESPACE_URIS) {
+            for (final String xadesNamespace : XAdESConstants.SUPPORTED_XADES_NAMESPACE_URIS) {
                 lenCount += ((Element) signNode).getElementsByTagNameNS(xadesNamespace, XAdESConstants.TAG_QUALIFYING_PROPERTIES).getLength();
             }
             if (lenCount == 0) {
@@ -89,7 +82,7 @@ public final class XAdESProfileChecks {
                 final String namespaceUri = qualifyingPropsList.item(i).getNamespaceURI();
 
                 boolean existingNamespace = false;
-                for (final String xadesNameSpace : SUPPORTED_XADES_NAMESPACE_URIS) {
+                for (final String xadesNameSpace : XAdESConstants.SUPPORTED_XADES_NAMESPACE_URIS) {
                     if (xadesNameSpace.equals(namespaceUri)) {
                         existingNamespace = true;
                         xadesNamespaceUris.add(namespaceUri);

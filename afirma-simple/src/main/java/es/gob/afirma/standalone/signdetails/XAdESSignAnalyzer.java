@@ -56,13 +56,6 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
 
 	private static final String FORMAT_XADES = "XAdES"; //$NON-NLS-1$s
 
-	static final String[] SUPPORTED_XADES_NAMESPACE_URIS = new String[] {
-			XAdESConstants.NAMESPACE_XADES_NO_VERSION,
-		    XAdESConstants.NAMESPACE_XADES_1_2_2,
-		    XAdESConstants.NAMESPACE_XADES_1_3_2,
-		    XAdESConstants.NAMESPACE_XADES_1_4_1
-	};
-
 	static {
 		SIGN_ALGOS_URI = new HashMap<>();
 		SIGN_ALGOS_URI.put(URL_SHA1_RSA, "SHA1withRSA"); //$NON-NLS-1$
@@ -178,7 +171,7 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
 			final Element qualifyingProps = (Element) qualifyingPropsNodeList.item(0);
 			final String namespaceUri = qualifyingProps.getNamespaceURI();
 
-			for (final String xadesNameSpace : SUPPORTED_XADES_NAMESPACE_URIS) {
+			for (final String xadesNameSpace : XAdESConstants.SUPPORTED_XADES_NAMESPACE_URIS) {
 				if (xadesNameSpace.equals(namespaceUri)) {
 					existingNamespace = true;
 				}

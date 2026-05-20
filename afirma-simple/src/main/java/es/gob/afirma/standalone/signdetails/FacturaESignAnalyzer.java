@@ -74,13 +74,6 @@ public class FacturaESignAnalyzer implements SignAnalyzer {
     	FACTURAE_CLAIMED_ROLES.put("third party", "Tercero"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	static final String[] SUPPORTED_XADES_NAMESPACE_URIS = new String[] {
-			XAdESConstants.NAMESPACE_XADES_NO_VERSION,
-		    XAdESConstants.NAMESPACE_XADES_1_2_2,
-		    XAdESConstants.NAMESPACE_XADES_1_3_2,
-		    XAdESConstants.NAMESPACE_XADES_1_4_1
-	};
-
 	public FacturaESignAnalyzer(final byte [] data) throws Exception {
     	try {
 
@@ -175,7 +168,7 @@ public class FacturaESignAnalyzer implements SignAnalyzer {
 			final Element qualifyingProps = (Element) qualifyingPropsNodeList.item(0);
 			final String namespaceUri = qualifyingProps.getNamespaceURI();
 
-			for (final String xadesNameSpace : SUPPORTED_XADES_NAMESPACE_URIS) {
+			for (final String xadesNameSpace : XAdESConstants.SUPPORTED_XADES_NAMESPACE_URIS) {
 				if (xadesNameSpace.equals(namespaceUri)) {
 					existingNamespace = true;
 				}

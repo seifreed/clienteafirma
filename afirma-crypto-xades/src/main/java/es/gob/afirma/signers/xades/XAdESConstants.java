@@ -126,6 +126,19 @@ public class XAdESConstants {
     /** URI que define el espacio de nombres de XAdES v1.4.1. */
     public static final String NAMESPACE_XADES_1_4_1 = "http://uri.etsi.org/01903/v1.4.1#"; //$NON-NLS-1$
 
+    /** Conjunto de espacios de nombres XAdES soportados por el cliente
+     * (sin versi&oacute;n, 1.2.2, 1.3.2 y 1.4.1).
+     *
+     * <p>NOTA: XAdES 1.1.1 ({@link #NAMESPACE_XADES_1_1_1}) NO est&aacute;
+     * en esta lista — el cliente no lo soporta como destino de firma o
+     * comprobaci&oacute;n de perfil. */
+    public static final String[] SUPPORTED_XADES_NAMESPACE_URIS = {
+        NAMESPACE_XADES_NO_VERSION,
+        NAMESPACE_XADES_1_2_2,
+        NAMESPACE_XADES_1_3_2,
+        NAMESPACE_XADES_1_4_1
+    };
+
     /** URI que define la versi&oacute;n por defecto de XAdES. */
     static final String DEFAULT_NAMESPACE_XADES = NAMESPACE_XADES_1_3_2;
 
