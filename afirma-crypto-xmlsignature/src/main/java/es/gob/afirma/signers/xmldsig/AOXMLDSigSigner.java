@@ -594,19 +594,7 @@ public final class AOXMLDSigSigner implements AOSigner {
         final String tmpStyleUri = "#" + styleId; //$NON-NLS-1$
 
         // Crea el nuevo documento de firma
-        Document docSignature = null;
-        try {
-            docSignature = Utils.getNewDocumentBuilder().newDocument();
-            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
-                docSignature.appendChild(docSignature.adoptNode(dataElement));
-            }
-            else {
-                docSignature.appendChild(docSignature.createElement(AFIRMA));
-            }
-        }
-        catch (final Exception e) {
-            throw new AOException("Error al crear la firma en formato " + format + ", modo " + mode, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        Document docSignature = createSignatureDocument(format, mode, dataElement);
 
         final List<Reference> referenceList = new ArrayList<>();
         final XMLSignatureFactory fac = Utils.getDOMFactory();
@@ -1068,6 +1056,34 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         docSignature = postprocessEnvelopingDocument(docSignature, format, xmlSignaturePrefix);
         return serializeSignatureToBytes(docSignature, format, originalXMLProperties, xmlStyle);
+    }
+
+    /** Crea el {@link Document} contenedor de la firma. En modo <i>enveloped</i>
+     * adopta el {@code dataElement} de entrada (que pasa a ser la raíz del
+     * documento de firma); en el resto de formatos crea un {@code <AFIRMA>}
+     * vacío que sirve como envoltorio temporal hasta el post-proceso.
+     * @param format Formato XMLDSig.
+     * @param mode Modo (IMPLICIT/EXPLICIT) — solo se usa en el mensaje de error.
+     * @param dataElement Elemento adoptado en ENVELOPED; ignorado en otros formatos.
+     * @return El {@link Document} listo para recibir la firma.
+     * @throws AOException Si el {@link DocumentBuilder} no puede crear el documento. */
+    private static Document createSignatureDocument(final String format, final String mode,
+            final Element dataElement) throws AOException {
+        try {
+            final Document docSignature = Utils.getNewDocumentBuilder().newDocument();
+            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
+                docSignature.appendChild(docSignature.adoptNode(dataElement));
+            }
+            else {
+                docSignature.appendChild(docSignature.createElement(AFIRMA));
+            }
+            return docSignature;
+        }
+        catch (final Exception e) {
+            throw new AOException(
+                "Error al crear la firma en formato " + format + ", modo " + mode, //$NON-NLS-1$ //$NON-NLS-2$
+                e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR);
+        }
     }
 
     /** Extrae el nodo {@code <Signature>} a un Document nuevo cuando la firma es
