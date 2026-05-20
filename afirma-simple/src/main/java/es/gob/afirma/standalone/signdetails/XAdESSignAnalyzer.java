@@ -21,6 +21,7 @@ import es.gob.afirma.core.signers.AdESPolicy;
 import es.gob.afirma.core.util.tree.AOTreeModel;
 import es.gob.afirma.signers.xades.AOXAdESSigner;
 import es.gob.afirma.signers.xades.XAdESConstants;
+import es.gob.afirma.signers.xades.XAdESSignatureTypeDetector;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.XMLConstants;
@@ -395,19 +396,19 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
         // Establecemos la variante de firma
-    	if (XAdESUtil.isSignatureElementEnveloped(signatureElement, dataReferenceList)) {
+    	if (XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList)) {
         	return SimpleAfirmaMessages.getString("ValidationInfoDialog.12"); //$NON-NLS-1$
         }
-    	else if (XAdESUtil.isSignatureWithManifest(dataReferenceList)) {
+    	else if (XAdESSignatureTypeDetector.usesManifest(dataReferenceList)) {
         	return SimpleAfirmaMessages.getString("ValidationInfoDialog.16"); //$NON-NLS-1$
         }
-        else if (XAdESUtil.isSignatureElementExternallyDetached(dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList)) {
         	return SimpleAfirmaMessages.getString("ValidationInfoDialog.22"); //$NON-NLS-1$
         }
-        else if (XAdESUtil.isSignatureElementInternallyDetached(rootSig, dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isInternallyDetached(rootSig, dataReferenceList)) {
         	return SimpleAfirmaMessages.getString("ValidationInfoDialog.14"); //$NON-NLS-1$
         }
-        else if (XAdESUtil.isSignatureElementEnveloping(signatureElement, dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList)) {
         	return SimpleAfirmaMessages.getString("ValidationInfoDialog.21"); //$NON-NLS-1$
         }
 

@@ -436,7 +436,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
-    	return XAdESUtil.isSignatureElementInternallyDetached(element, dataReferenceList);
+    	return XAdESSignatureTypeDetector.isInternallyDetached(element, dataReferenceList);
     }
 
 	/** Comprueba si la firma es <i>externally detached</i>. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -467,7 +467,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
-    	return XAdESUtil.isSignatureElementExternallyDetached(dataReferenceList);
+    	return XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList);
     }
 
     /** Comprueba si una firma de manifest. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -494,7 +494,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
-    	return XAdESUtil.isSignatureWithManifest(dataReferenceList);
+    	return XAdESSignatureTypeDetector.usesManifest(dataReferenceList);
     }
 
 	/** Comprueba si la firma es <i>enveloped</i>. Seg&uacute;n la definici&oacute;n del est&aacute;ndar:<br>
@@ -529,7 +529,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
-    	return XAdESUtil.isSignatureElementEnveloped(signatureElement, dataReferenceList);
+    	return XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList);
     }
 
 
@@ -559,7 +559,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
-    	return XAdESUtil.isSignatureElementEnveloping(signatureElement, dataReferenceList);
+    	return XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList);
     }
 
     /** {@inheritDoc} */
@@ -621,13 +621,13 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
             // Si la firma es externally detached o de tipo Manifest, consideramos que los datos
             // son externos y no se devolveran. Esto se hace asi por seguridad, incluso si se
             // pudiese acceder a los datos  traves de URLs externas
-            if (XAdESUtil.isSignatureElementExternallyDetached(dataReferenceList) ||
-            		XAdESUtil.isSignatureWithManifest(dataReferenceList)) {
+            if (XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList) ||
+            		XAdESSignatureTypeDetector.usesManifest(dataReferenceList)) {
             	elementRes = null;
             }
 
             // Si es enveloped
-            else if (XAdESUtil.isSignatureElementEnveloped(signatureElement, dataReferenceList)) {
+            else if (XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList)) {
 
             	// Obtenemos el nodo referenciado (si no se indica, sera todo el documento)
             	final Element referencedElement = getElementReferenced(docElement, dataReferenceList.get(0));
@@ -648,7 +648,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
             }
 
             // Si es internally detached
-            else if (XAdESUtil.isSignatureElementInternallyDetached(docElement, dataReferenceList)) {
+            else if (XAdESSignatureTypeDetector.isInternallyDetached(docElement, dataReferenceList)) {
 
                 final Element firstChild = (Element) docElement.getFirstChild();
 
@@ -664,7 +664,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
             }
 
             // Si es enveloping y no es manifest (porque de estas ultimas no podemos extraer los datos)
-            else if (XAdESUtil.isSignatureElementEnveloping(signatureElement, dataReferenceList)) {
+            else if (XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList)) {
 
                 // Obtiene el nodo Object de la primera firma
                 final Element object = (Element) docElement.getElementsByTagNameNS(XMLConstants.DSIGNNS, "Object").item(0); //$NON-NLS-1$
@@ -1293,16 +1293,16 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
 
         // Establecemos la variante de firma
-    	if (XAdESUtil.isSignatureElementEnveloped(signatureElement, dataReferenceList)) {
+    	if (XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList)) {
         	signInfo.setVariant(AOSignConstants.SIGN_FORMAT_XADES_ENVELOPED);
         }
-        else if (XAdESUtil.isSignatureElementExternallyDetached(dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList)) {
         	signInfo.setVariant(AOSignConstants.SIGN_FORMAT_XADES_EXTERNALLY_DETACHED);
         }
-        else if (XAdESUtil.isSignatureElementInternallyDetached(rootSig, dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isInternallyDetached(rootSig, dataReferenceList)) {
         	signInfo.setVariant(AOSignConstants.SIGN_FORMAT_XADES_DETACHED);
         }
-        else if (XAdESUtil.isSignatureElementEnveloping(signatureElement, dataReferenceList)) {
+        else if (XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList)) {
         	signInfo.setVariant(AOSignConstants.SIGN_FORMAT_XADES_ENVELOPING);
         }
 
