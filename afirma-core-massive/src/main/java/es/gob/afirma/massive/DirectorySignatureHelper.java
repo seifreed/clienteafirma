@@ -602,30 +602,7 @@ public class DirectorySignatureHelper {
                 continue;
             }
 
-            // Deteccion del MIMEType y Oid de los datos, solo para CAdES, XAdES y XMLDSig
-            if (SignerFamilies.supportsMultiSignature(signer)) {
-
-                // Forzamos que las firmas XAdES Explicitas se realicen sobre el hash de los datos
-            	// y que el mimetype sea el definido para hashes
-            	String mimeType;
-                if (SignerFamilies.isXmlBased(signer)
-                		&& AOSignConstants.SIGN_MODE_EXPLICIT.equalsIgnoreCase(this.mode)) {
-                	dataToSign = digest(dataToSign);
-                	mimeType = ("hash/" + DEFAULT_MESSAGE_DIGEST_ALGORITHM).toLowerCase(); //$NON-NLS-1$
-                }
-                else {
-                	final MimeHelper mimeHelper = new MimeHelper(dataToSign);
-                	mimeType = mimeHelper.getMimeType();
-                }
-
-                if (mimeType != null) {
-            		signConfig.setProperty("mimeType", mimeType); //$NON-NLS-1$
-            		final String dataOid = MimeHelper.transformMimeTypeToOid(mimeType);
-            		if (dataOid != null) {
-            			signConfig.setProperty("contentTypeOid", dataOid); //$NON-NLS-1$
-            		}
-            	}
-            }
+            dataToSign = applyMimeTypeAndOid(dataToSign, signer, signConfig);
 
             byte[] signData = null;
             try {
@@ -1033,6 +1010,54 @@ public class DirectorySignatureHelper {
      * @param inText Part&iacute;cula de texto intermedia (".signed", ".cosign" y
      *               ".countersign" habitualmente).
      * @return Devuelve la ruta del fichero de salida con la firma. */
+
+    /**
+     * Para formatos que soportan multisign (CAdES, XAdES, XMLDSig), detecta el MIME type
+     * de los datos y, si corresponde, aplica una transformaci&oacute;n previa (digest para
+     * XAdES Expl&iacute;cito) antes de incluir el MIME type y su OID en la configuraci&oacute;n
+     * de firma. Devuelve el array de datos que finalmente debe firmarse (puede ser el original
+     * o el digest).
+     *
+     * <p>Centraliza el bloque que aparec&iacute;a inline en {@code massiveSignOperation}; los
+     * dem&aacute;s flujos (cosign / countersign) lo invocar&aacute;n a medida que los unifiquemos.</p>
+     *
+     * @param data Datos originales le&iacute;dos del fichero.
+     * @param signer Manejador de firma (su familia determina si aplica MIME).
+     * @param signConfig Configuraci&oacute;n a la que se a&ntilde;aden las propiedades
+     *                   {@code mimeType} y {@code contentTypeOid} si se conocen.
+     * @return Datos a firmar (posiblemente sustituidos por su digest).
+     * @throws IOException Si {@link MimeHelper#getMimeType()} o
+     *                     {@link MimeHelper#transformMimeTypeToOid(String)} fallan al inspeccionar los datos.
+     */
+    private byte[] applyMimeTypeAndOid(final byte[] data, final AOSigner signer, final Properties signConfig) throws IOException {
+        if (!SignerFamilies.supportsMultiSignature(signer)) {
+            return data;
+        }
+
+        // Forzamos que las firmas XAdES Explicitas se realicen sobre el hash de los datos
+        // y que el mimetype sea el definido para hashes.
+        byte[] dataToSign = data;
+        String mimeType;
+        if (SignerFamilies.isXmlBased(signer)
+                && AOSignConstants.SIGN_MODE_EXPLICIT.equalsIgnoreCase(this.mode)) {
+            dataToSign = digest(dataToSign);
+            mimeType = ("hash/" + DEFAULT_MESSAGE_DIGEST_ALGORITHM).toLowerCase(); //$NON-NLS-1$
+        }
+        else {
+            final MimeHelper mimeHelper = new MimeHelper(dataToSign);
+            mimeType = mimeHelper.getMimeType();
+        }
+
+        if (mimeType != null) {
+            signConfig.setProperty("mimeType", mimeType); //$NON-NLS-1$
+            final String dataOid = MimeHelper.transformMimeTypeToOid(mimeType);
+            if (dataOid != null) {
+                signConfig.setProperty("contentTypeOid", dataOid); //$NON-NLS-1$
+            }
+        }
+        return dataToSign;
+    }
+
     private String saveSignToDirectory(final String filename, final byte[] signData, final File outDirectory, final AOSigner signer, final String inText) {
 
         final String relativePath = getRelativePath(filename);
