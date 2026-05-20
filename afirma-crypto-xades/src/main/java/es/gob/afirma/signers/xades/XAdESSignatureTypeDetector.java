@@ -19,6 +19,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import es.gob.afirma.signers.xml.XMLConstants;
+// XAdESDomLookup y XAdESConstants viven en el mismo paquete; no requieren import.
 
 /** Detector del tipo de firma XAdES (Enveloped, Enveloping, Internally/Externally
  * Detached, Manifest) a partir de la lista de referencias del nodo
@@ -160,6 +161,28 @@ public final class XAdESSignatureTypeDetector {
         for (int i = 0; i < references.size(); i++) {
             final String type = references.get(i).getAttribute("Type"); //$NON-NLS-1$
             if (type != null && type.equals(XAdESConstants.REFERENCE_TYPE_MANIFEST)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Indica si la firma contiene una referencia de tipo <i>Manifest</i>,
+     * partiendo del elemento {@code Signature} (resuelve internamente
+     * {@code SignedInfo} y sus {@code Reference}).
+     *
+     * @param signatureElement Elemento {@code Signature} XML de la firma.
+     * @return {@code true} si la firma tiene una referencia de tipo Manifest;
+     *         {@code false} en caso contrario. */
+    public static boolean hasManifestReference(final Element signatureElement) {
+        final Element signedInfoElement = XAdESDomLookup.getSignedInfo(signatureElement);
+        if (signedInfoElement == null) {
+            return false;
+        }
+        final NodeList references = signedInfoElement.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_REFERENCE);
+        for (int i = 0; i < references.getLength(); i++) {
+            final String type = ((Element) references.item(i)).getAttribute("Type"); //$NON-NLS-1$
+            if (XAdESConstants.REFERENCE_TYPE_MANIFEST.equals(type)) {
                 return true;
             }
         }

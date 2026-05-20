@@ -319,7 +319,7 @@ public final class XAdESCoSigner {
 		// Si se solicito realizar una cofirma XAdES baseline, pero el espacio de nombres
 		// de firma original no lo soporta, se ignora el perfil
 		if (AOSignConstants.SIGN_PROFILE_BASELINE.equals(profile) &&
-				!XAdESUtil.isBaselineCompatible(xadesNamespace)) {
+				!XAdESProfileChecks.isBaselineCompatible(xadesNamespace)) {
 			LOGGER.warning("La firma original utiliza un espacio de nombres no compatible con baseline (" //$NON-NLS-1$
 					+ xadesNamespace + "). No se generara una firma baseline"); //$NON-NLS-1$
 			profile = AOSignConstants.SIGN_PROFILE_ADVANCED;

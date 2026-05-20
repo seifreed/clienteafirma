@@ -55,6 +55,7 @@ import es.gob.afirma.core.signers.CounterSignTarget;
 import es.gob.afirma.signers.xades.XAdESCoSigner;
 import es.gob.afirma.signers.xades.XAdESCounterSigner;
 import es.gob.afirma.signers.xades.XAdESExtraParams;
+import es.gob.afirma.signers.xades.XAdESSignatureTypeDetector;
 import es.gob.afirma.signers.xades.XAdESSigner;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
@@ -218,7 +219,7 @@ public final class XAdESTriPhaseSignerServerSide {
 					&& !Boolean.parseBoolean(xParams.getProperty(XAdESExtraParams.USE_MANIFEST))) {
 				// Comprobamos los datos firmados de la primera firma
 				final Element signature = (Element) signatureNodeList.item(0);
-				if (XAdESUtil.hasHashManifestReference(signature)) {
+				if (XAdESSignatureTypeDetector.hasManifestReference(signature)) {
 					xParams.setProperty(XAdESExtraParams.USE_MANIFEST,  Boolean.TRUE.toString());
 				}
 			}

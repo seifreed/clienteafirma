@@ -69,13 +69,6 @@ public final class XAdESUtil {
 
 	private static final Logger LOGGER = Logger.getLogger("es.gob.afirma");	//$NON-NLS-1$
 
-	private static final String[] SUPPORTED_XADES_NAMESPACE_URIS = new String[] {
-		XAdESConstants.NAMESPACE_XADES_NO_VERSION,
-	    XAdESConstants.NAMESPACE_XADES_1_2_2,
-	    XAdESConstants.NAMESPACE_XADES_1_3_2,
-	    XAdESConstants.NAMESPACE_XADES_1_4_1
-	};
-
 	private static final String[] SIGNED_PROPERTIES_TYPES = new String[] {
 		XAdESConstants.NAMESPACE_XADES_NO_VERSION_SIGNED_PROPERTIES,
 		XAdESConstants.NAMESPACE_XADES_1_2_2_SIGNED_PROPERTIES,
@@ -89,84 +82,6 @@ public final class XAdESUtil {
 	private XAdESUtil() {
 		// No permitimos la instanciacion
 	}
-
-    /**
-     * Comprueba que los nodos de firma proporcionados sean firmas en formato XAdES.
-     * @param signNodes Listado de nodos de firma.
-     * @return {@code true} cuando todos los nodos sean firmas en este formato.
-     */
-    static boolean checkSignNodes(final List<Node> signNodes) {
-        for (final Node signNode : signNodes) {
-        	int lenCount = 0;
-        	for (final String xadesNamespace : SUPPORTED_XADES_NAMESPACE_URIS) {
-        		lenCount = lenCount + ((Element) signNode).getElementsByTagNameNS(xadesNamespace, XAdESConstants.TAG_QUALIFYING_PROPERTIES).getLength();
-        	}
-            if (lenCount == 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Comprueba que los nodos de firma proporcionados sean firmas en formato XAdES soportadas. Se
-     * considerar&aacute; que est&aacute;n soportadas si no hay mezcla de versiones de firmas
-     * XAdES y si la versi&oacute;n declarada est&aacute; soportada. Tambi&eacute;n se comprobara
-     * si es una firma de tipo Baseline EN para indicarlo mediante el valor de retorno.
-     * @param signNodes Listado de nodos de firma.
-     * @return {@code true} En caso de que sea una firma Baseline EN, false en caso contrario.
-     * @throws AOInvalidSignatureFormatException Se lanza en caso de que no se pueda identificar la versi&oacute;n
-     * de la firma o que esta use una versi&oacute;n de XAdES no v&aacute;lida o no compatible.
-     */
-    static boolean checkCompatibility(final List<Node> signNodes) throws AOInvalidSignatureFormatException {
-
-    	boolean isBaselineENSign = false;
-
-    	// Conjunto con los distintos espacios de nombre XAdES que se han encontrado
-    	// a lo largo del listado de nodos de firma
-    	final Set<String> xadesNamepaceUris = new HashSet<>();
-
-        for (final Node signNode : signNodes) {
-
-        	final NodeList qualifyingPropsList = ((Element) signNode).getElementsByTagNameNS("*", XAdESConstants.TAG_QUALIFYING_PROPERTIES); //$NON-NLS-1$
-
-        	for (int i = 0 ; i < qualifyingPropsList.getLength() ; i++) {
-        		final String namespaceUri = qualifyingPropsList.item(i).getNamespaceURI();
-
-        		boolean existingNamespace = false;
-
-        		for (final String xadesNameSpace : SUPPORTED_XADES_NAMESPACE_URIS) {
-        			if (xadesNameSpace.equals(namespaceUri)) {
-        				existingNamespace = true;
-        				xadesNamepaceUris.add(namespaceUri);
-        			}
-        		}
-
-            	if (!existingNamespace) {
-            		throw new AOInvalidSignatureFormatException("Una de las firmas encontradas en el documento contiene una version inexistente de XAdES"); //$NON-NLS-1$
-            	}
-
-            	try {
-                	final Node signingCertificateNode = qualifyingPropsList.item(i).getChildNodes().item(0).getChildNodes().item(0).getChildNodes().item(1);
-                	final String localName = signingCertificateNode.getLocalName();
-                	final String signingCertNamespaceUri = signingCertificateNode.getNamespaceURI();
-
-                	if (XAdESConstants.TAG_SIGNING_CERTIFICATE_V2.equals(localName) && namespaceUri.equals(signingCertNamespaceUri)) {
-                		isBaselineENSign = true;
-                	}
-            	} catch(final Exception e) {
-            		throw new AOInvalidSignatureFormatException("Error al intentar analizar el nodo SigningCertificateV2"); //$NON-NLS-1$
-            	}
-        	}
-
-
-        	if (xadesNamepaceUris.size() > 1) {
-        		throw new AOInvalidSignatureFormatException("El documento contiene firmas con distintas versiones de XAdES"); //$NON-NLS-1$
-        	}
-        }
-
-        return isBaselineENSign;
-    }
 
     /**
      * Indica si un tipo se corresponde con el que se debe declarar en la referencia a las
@@ -643,18 +558,6 @@ public final class XAdESUtil {
 	}
 
 	/**
-	 * Indica si un espacio de nombres de XAdES es compatible los perfiles baseline de firma.
-	 * Los espacios de nombres compatibles con baseline son los de XAdES 1.3.2 y 1.4.1.
-	 * @param xadesNamespace URL del espacio de nombres.
-	 * @return {@code true} si es un espacio de nombres compatibles con los perfiles baseline,
-	 * {@code false} en caso contrario.
-	 */
-	static boolean isBaselineCompatible(final String xadesNamespace) {
-		return XAdESConstants.NAMESPACE_XADES_1_3_2.equals(xadesNamespace) ||
-				XAdESConstants.NAMESPACE_XADES_1_4_1.equals(xadesNamespace);
-	}
-
-	/**
      * Obtiene un listado con las referencias a datos de la firma proporcionada.
      * Se considera referencia a datos toda aquella que no sea referencia al
      * SignedProperties ni a un objeto KeyInfo de la firma.
@@ -715,71 +618,6 @@ public final class XAdESUtil {
     }
 
 	/**
-     * Indica si la firma contiene una referencia a un manifest.
-     * @param signatureElement Elemento XML "Signature" de firma.
-     * @return Listado con las referencias a datos encontradas.
-     */
-    public static boolean hasHashManifestReference(final Element signatureElement) {
-
-    	// Obtemos el nodo SignedInfo
-    	final Element signedInfoElement = XAdESDomLookup.getSignedInfo(signatureElement);
-    	if (signedInfoElement == null) {
-    		return false;
-    	}
-
-    	// Obtenemos las referencias declaradas en la firma
-    	final NodeList references = signedInfoElement.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_REFERENCE);
-
-    	// Omitimos del listado la referencia a los atributos firmados
-    	for (int i = 0; i < references.getLength(); i++) {
-    		final Element reference = (Element) references.item(i);
-    		final String type = reference.getAttribute("Type"); //$NON-NLS-1$
-			if (XAdESConstants.REFERENCE_TYPE_MANIFEST.equals(type)) {
-				return true;
-			}
-    	}
-
-    	return false;
-    }
-
-    /**
-     * Comprueba que el perfil de una firma sea compatible con el perfil con el que se va a multifirmar.
-     * En caso de no serlo y haberse solicitado, se le consultar&aacute; si desea continuar o no.
-     * @param extraParams Par&aacute;metros de configuraci&oacute;n de la multifirma.
-     * @param signatureIsBaselineEN Indica si la firma que se va a multificar es una firma Baseline EN o no.
-     */
-    public static void checkSignProfile(final Properties extraParams, final boolean signatureIsBaselineEN) {
-
-    	if (Boolean.TRUE.equals(extraParams.get(XAdESExtraParams.CONFIRM_DIFFERENT_PROFILE))) {
-    		final String profile = extraParams.getProperty(XAdESExtraParams.PROFILE, AOSignConstants.DEFAULT_SIGN_PROFILE);
-    		final boolean baselineENRequested = AOSignConstants.SIGN_PROFILE_BASELINE.equals(profile);
-    		if (signatureIsBaselineEN != baselineENRequested){
-    			final int option = AOUIFactory.showConfirmDialog(
-						null,
-						XAdESMessages.getString("AOXAdESSigner.0"), //$NON-NLS-1$
-						XAdESMessages.getString("AOXAdESSigner.1"), //$NON-NLS-1$
-						AOUIFactory.YES_NO_OPTION,
-						AOUIFactory.WARNING_MESSAGE);
-
-    			if (option == 0) {
-    				if (signatureIsBaselineEN) {
-    					extraParams.put(XAdESExtraParams.PROFILE, AOSignConstants.SIGN_PROFILE_BASELINE);
-    				} else {
-    					extraParams.put(XAdESExtraParams.PROFILE, AOSignConstants.SIGN_PROFILE_ADVANCED);
-    				}
-    			}
-    		}
-    	}
-    	else {
-			if (signatureIsBaselineEN) {
-				extraParams.put(XAdESExtraParams.PROFILE, AOSignConstants.SIGN_PROFILE_BASELINE);
-			} else {
-				extraParams.put(XAdESExtraParams.PROFILE, AOSignConstants.SIGN_PROFILE_ADVANCED);
-			}
-    	}
-    }
-
-    /**
      * Indica si los datos a firmar son obligatorios para la operaci&oacute;n de firma con la
      * configuraci&oacute;n proporcionada.
      * @param cryptoOperation Operaci&oacute;n criptogr&aacute;fica (SIGN, COSIGN o COUNTERSIGN).

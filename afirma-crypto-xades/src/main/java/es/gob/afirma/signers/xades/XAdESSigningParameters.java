@@ -196,7 +196,7 @@ final class XAdESSigningParameters {
 			// Si se pide baseline con un namespace no compatible, descartamos
 			// el namespace y la URL del tipo de signedProperties.
 			if (extraParams.containsKey(XAdESExtraParams.XADES_NAMESPACE)
-					&& !XAdESUtil.isBaselineCompatible(extraParams.getProperty(XAdESExtraParams.XADES_NAMESPACE))) {
+					&& !XAdESProfileChecks.isBaselineCompatible(extraParams.getProperty(XAdESExtraParams.XADES_NAMESPACE))) {
 				LOGGER.warning(
 						"Se ha indicado realizar una firma baseline con un espacio de nombres que no lo soporta. " //$NON-NLS-1$
 								+ "Se ignorara el espacio de nombres indicado"); //$NON-NLS-1$

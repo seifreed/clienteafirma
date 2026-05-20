@@ -889,7 +889,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 		// Tambien devolvera true en caso de que se trate de una firma de tipo Baseline EN
 		final boolean isBaselineENSign = checkCompatibility(signDocument);
 
-		XAdESUtil.checkSignProfile(extraParams, isBaselineENSign);
+		XAdESProfileChecks.checkSignProfile(extraParams, isBaselineENSign);
 
 		return XAdESCoSigner.cosign(signDocument, algorithm, key, certChain, extraParams, dereferencer);
     }
@@ -942,7 +942,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 		// Tambien devolvera true en caso de que se trate de una firma de tipo Baseline EN
     	final boolean isBaselineENSign = checkCompatibility(signDocument);
 
-		XAdESUtil.checkSignProfile(newExtraParams, isBaselineENSign);
+		XAdESProfileChecks.checkSignProfile(newExtraParams, isBaselineENSign);
 
     	return countersign(signDocument, algorithm, targetType, targets, key, certChain, newExtraParams, this.uriDereferencer);
     }
@@ -1189,7 +1189,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 
             // Si no se encuentran firmas o si estas no son firmas XAdES, entonces este no sera
             // un documento de firma XAdES
-            if (signNodes.size() == 0 || !XAdESUtil.checkSignNodes(signNodes)) {
+            if (signNodes.size() == 0 || !XAdESProfileChecks.checkSignNodes(signNodes)) {
                 return false;
             }
         }
@@ -1360,7 +1360,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
             	}
             }
 
-            if (XAdESUtil.checkCompatibility(signNodes)) {
+            if (XAdESProfileChecks.checkCompatibility(signNodes)) {
             	isBaselineSign = true;
             }
         }
