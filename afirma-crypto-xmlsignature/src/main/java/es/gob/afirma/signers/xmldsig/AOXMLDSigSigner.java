@@ -307,57 +307,31 @@ public final class AOXMLDSigSigner implements AOSigner {
                        final Certificate[] certChain,
                        final Properties xParams) throws AOException {
 
-        final String algoUri = XMLConstants.SIGN_ALGOS_URI.get(algorithm);
-		if (algoUri == null) {
-			throw new AOException(
-				"Los formatos de firma XML no soportan el algoritmo de firma " + algorithm, ErrorCode.Request.UNSUPPORTED_SIGNATURE_ALGORITHM); //$NON-NLS-1$
-		}
+        final SignParams params = validateAndParseParams(data, algorithm, xParams);
 
-        final Properties extraParams = xParams != null ? xParams : new Properties();
+        // Desempaqueta los parámetros para preservar el código posterior sin
+        // tener que reescribir cada acceso como params.xxx().
+        final String algoUri = params.algoUri();
+        final Properties extraParams = params.extraParams();
+        final String format = params.format();
+        final String mode = params.mode();
+        final String digestMethodAlgorithm = params.digestMethodAlgorithm();
+        final String canonicalizationAlgorithm = params.canonicalizationAlgorithm();
+        final boolean ignoreStyleSheets = params.ignoreStyleSheets();
+        final boolean avoidBase64Transforms = params.avoidBase64Transforms();
+        final boolean headless = params.headless();
+        final boolean avoidXpathExtraTransformsOnEnveloped = params.avoidXpathExtraTransformsOnEnveloped();
+        final String xmlSignaturePrefix = params.xmlSignaturePrefix();
+        // uri es mutable porque el fallback a Base64 (IMPLICIT mode) lo resetea a null.
+        URI uri = params.uri();
+        final String precalculatedHashAlgorithm = params.precalculatedHashAlgorithm();
+        final String contentId = params.contentId();
+        final String styleId = params.styleId();
 
-        final String format = extraParams.getProperty(
-        		AOXMLDSigExtraParams.FORMAT, AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING);
-        final String mode = extraParams.getProperty(
-        		AOXMLDSigExtraParams.MODE, AOSignConstants.SIGN_MODE_IMPLICIT);
-        final String digestMethodAlgorithm = extraParams.getProperty(
-        		AOXMLDSigExtraParams.REFERENCES_DIGEST_METHOD, DIGEST_METHOD);
-        final String canonicalizationAlgorithm = extraParams.getProperty(
-        		AOXMLDSigExtraParams.CANONICALIZATION_ALGORITHM, CanonicalizationMethod.INCLUSIVE);
-		final boolean ignoreStyleSheets = Boolean.parseBoolean(extraParams.getProperty(
-		        AOXMLDSigExtraParams.IGNORE_STYLE_SHEETS, Boolean.FALSE.toString()));
-		final boolean avoidBase64Transforms = Boolean.parseBoolean(extraParams.getProperty(
-		        AOXMLDSigExtraParams.AVOID_BASE64_TRANSFORMS, Boolean.FALSE.toString()));
-		final boolean headless = Boolean.parseBoolean(extraParams.getProperty(
-		        AOXMLDSigExtraParams.HEADLESS, Boolean.TRUE.toString()));
-		final boolean avoidXpathExtraTransformsOnEnveloped = Boolean.parseBoolean(extraParams.getProperty(
-		        AOXMLDSigExtraParams.AVOID_XPATH_EXTRA_TRANSFORMS_ON_ENVELOPED, Boolean.FALSE.toString()));
-        final String xmlSignaturePrefix = extraParams.getProperty(
-        		AOXMLDSigExtraParams.XML_SIGNATURE_PREFIX, XML_SIGNATURE_PREFIX);
-
-        String mimeType = extraParams.getProperty(
-        		AOXMLDSigExtraParams.MIME_TYPE);
-        String encoding = extraParams.getProperty(
-        		AOXMLDSigExtraParams.ENCODING);
-        if ("base64".equalsIgnoreCase(encoding)) { //$NON-NLS-1$
-            encoding = XMLConstants.BASE64_ENCODING;
-        }
-
-        URI uri = null;
-        try {
-            uri = AOUtil.createURI(extraParams.getProperty(AOXMLDSigExtraParams.URI));
-        }
-        catch (final Exception e) {
-            // Se ignora, puede estar ausente
-        }
-
-        final String precalculatedHashAlgorithm = extraParams.getProperty(AOXMLDSigExtraParams.PRECALCULATED_HASH_ALGORITHM);
-
-        Utils.checkIllegalParams(format, mode, false, uri, precalculatedHashAlgorithm, false);
-
-        // Un externally detached con URL permite los datos nulos o vacios
-        if ((data == null || data.length == 0) && !(format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED) && uri != null)) {
-            throw new IllegalArgumentException("No se han indicado los datos a firmar"); //$NON-NLS-1$
-        }
+        // mimeType y encoding nacen del SignParams pero las fases IMPLICIT/
+        // EXPLICIT pueden sobrescribirlos según los datos detectados.
+        String mimeType = params.initialMimeType();
+        String encoding = params.initialEncoding();
 
         // Propiedades del documento XML original
         final Map<String, String> originalXMLProperties = new Hashtable<>();
@@ -365,8 +339,6 @@ public final class AOXMLDSigSigner implements AOSigner {
         // Elemento de datos
         Element dataElement;
 
-        final String contentId = DETACHED_CONTENT_ELEMENT_NAME + "-" + UUID.randomUUID().toString() + "-" + DETACHED_CONTENT_ELEMENT_NAME; //$NON-NLS-1$ //$NON-NLS-2$
-        final String styleId = DETACHED_STYLE_ELEMENT_NAME + "-" + UUID.randomUUID().toString() + "-" + DETACHED_STYLE_ELEMENT_NAME; //$NON-NLS-1$ //$NON-NLS-2$
         boolean isBase64 = false;
         boolean wasEncodedToBase64 = false;
 
@@ -939,6 +911,89 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         docSignature = postprocessEnvelopingDocument(docSignature, format, xmlSignaturePrefix);
         return serializeSignatureToBytes(docSignature, format, originalXMLProperties, xmlStyle);
+    }
+
+    /** Valida los parámetros de entrada de {@link #sign} y empaqueta los
+     * valores derivados de {@code xParams} en un {@link SignParams} inmutable.
+     *
+     * <p>Comprueba que el algoritmo de firma esté soportado (lanza
+     * {@link AOException} con {@code UNSUPPORTED_SIGNATURE_ALGORITHM} si no),
+     * que los datos no sean nulos o vacíos salvo en EXTERNALLY_DETACHED con
+     * URI externa, y delega en {@link Utils#checkIllegalParams} para las
+     * combinaciones inválidas de format/mode/URI/precalculatedHash.</p>
+     *
+     * @param data Bytes a firmar (puede ser nulo o vacío solo en
+     *             EXTERNALLY_DETACHED con URI externa).
+     * @param algorithm Algoritmo de firma (p. ej. SHA256withRSA).
+     * @param xParams Parámetros adicionales o {@code null}.
+     * @return {@link SignParams} con los valores parseados y validados.
+     * @throws AOException Si el algoritmo no está soportado o falla la
+     *                     validación cruzada de parámetros.
+     * @throws IllegalArgumentException Si no hay datos a firmar. */
+    private static SignParams validateAndParseParams(final byte[] data, final String algorithm,
+            final Properties xParams) throws AOException {
+        final String algoUri = XMLConstants.SIGN_ALGOS_URI.get(algorithm);
+        if (algoUri == null) {
+            throw new AOException(
+                "Los formatos de firma XML no soportan el algoritmo de firma " + algorithm, //$NON-NLS-1$
+                ErrorCode.Request.UNSUPPORTED_SIGNATURE_ALGORITHM);
+        }
+
+        final Properties extraParams = xParams != null ? xParams : new Properties();
+
+        final String format = extraParams.getProperty(
+                AOXMLDSigExtraParams.FORMAT, AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING);
+        final String mode = extraParams.getProperty(
+                AOXMLDSigExtraParams.MODE, AOSignConstants.SIGN_MODE_IMPLICIT);
+        final String digestMethodAlgorithm = extraParams.getProperty(
+                AOXMLDSigExtraParams.REFERENCES_DIGEST_METHOD, DIGEST_METHOD);
+        final String canonicalizationAlgorithm = extraParams.getProperty(
+                AOXMLDSigExtraParams.CANONICALIZATION_ALGORITHM, CanonicalizationMethod.INCLUSIVE);
+        final boolean ignoreStyleSheets = Boolean.parseBoolean(extraParams.getProperty(
+                AOXMLDSigExtraParams.IGNORE_STYLE_SHEETS, Boolean.FALSE.toString()));
+        final boolean avoidBase64Transforms = Boolean.parseBoolean(extraParams.getProperty(
+                AOXMLDSigExtraParams.AVOID_BASE64_TRANSFORMS, Boolean.FALSE.toString()));
+        final boolean headless = Boolean.parseBoolean(extraParams.getProperty(
+                AOXMLDSigExtraParams.HEADLESS, Boolean.TRUE.toString()));
+        final boolean avoidXpathExtraTransformsOnEnveloped = Boolean.parseBoolean(extraParams.getProperty(
+                AOXMLDSigExtraParams.AVOID_XPATH_EXTRA_TRANSFORMS_ON_ENVELOPED, Boolean.FALSE.toString()));
+        final String xmlSignaturePrefix = extraParams.getProperty(
+                AOXMLDSigExtraParams.XML_SIGNATURE_PREFIX, XML_SIGNATURE_PREFIX);
+
+        final String mimeTypeRaw = extraParams.getProperty(AOXMLDSigExtraParams.MIME_TYPE);
+        String encoding = extraParams.getProperty(AOXMLDSigExtraParams.ENCODING);
+        if ("base64".equalsIgnoreCase(encoding)) { //$NON-NLS-1$
+            encoding = XMLConstants.BASE64_ENCODING;
+        }
+
+        URI uri = null;
+        try {
+            uri = AOUtil.createURI(extraParams.getProperty(AOXMLDSigExtraParams.URI));
+        }
+        catch (final Exception e) {
+            // Se ignora, puede estar ausente
+        }
+
+        final String precalculatedHashAlgorithm = extraParams.getProperty(
+                AOXMLDSigExtraParams.PRECALCULATED_HASH_ALGORITHM);
+
+        Utils.checkIllegalParams(format, mode, false, uri, precalculatedHashAlgorithm, false);
+
+        // Un externally detached con URL permite los datos nulos o vacios
+        if ((data == null || data.length == 0)
+                && !(format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED) && uri != null)) {
+            throw new IllegalArgumentException("No se han indicado los datos a firmar"); //$NON-NLS-1$
+        }
+
+        final String contentId = DETACHED_CONTENT_ELEMENT_NAME + "-" + UUID.randomUUID().toString() //$NON-NLS-1$
+                + "-" + DETACHED_CONTENT_ELEMENT_NAME; //$NON-NLS-1$
+        final String styleId = DETACHED_STYLE_ELEMENT_NAME + "-" + UUID.randomUUID().toString() //$NON-NLS-1$
+                + "-" + DETACHED_STYLE_ELEMENT_NAME; //$NON-NLS-1$
+
+        return new SignParams(algoUri, format, mode, digestMethodAlgorithm, canonicalizationAlgorithm,
+                ignoreStyleSheets, avoidBase64Transforms, headless, avoidXpathExtraTransformsOnEnveloped,
+                xmlSignaturePrefix, mimeTypeRaw, encoding, uri, precalculatedHashAlgorithm,
+                contentId, styleId, extraParams);
     }
 
     /** Crea el {@link Document} contenedor de la firma. En modo <i>enveloped</i>
