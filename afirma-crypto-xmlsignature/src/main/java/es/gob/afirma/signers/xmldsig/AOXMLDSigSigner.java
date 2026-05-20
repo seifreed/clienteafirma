@@ -725,30 +725,8 @@ public final class AOXMLDSigSigner implements AOSigner {
                 throw new AOException("Error al generar la firma en formato enveloping", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
             }
 
-            // Hojas de estilo para enveloping en Externally Detached. Comprobamos si la referencia al estilo es externa
-            if (xmlStyle.getStyleHref() != null &&
-            	xmlStyle.getStyleElement() == null &&
-            		(xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) ||
-            		 xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-                try {
-                    referenceList.add(
-                		fac.newReference(
-            				xmlStyle.getStyleHref(),
-                            digestMethod,
-                            canonicalizationTransform != null ?
-                            		Collections.singletonList(canonicalizationTransform) :
-                            			null,
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-                catch (final Exception e) {
-                    LOGGER.severe(
-                		"No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Externally Detached, esta no se firmara: " + e //$NON-NLS-1$
-            		);
-                }
-            }
+            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                    canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
 
         }
 
@@ -959,28 +937,8 @@ public final class AOXMLDSigSigner implements AOSigner {
                 throw new AOException("Error al generar la firma en formato enveloped", e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
             }
 
-            // Hojas de estilo remotas para enveloped. Comprobamos si la referencia al estilo es externa
-            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null &&
-            		(xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-                try {
-                    referenceList.add(
-                		fac.newReference(
-            				xmlStyle.getStyleHref(),
-            				digestMethod,
-            				canonicalizationTransform != null ?
-                        		Collections.singletonList(canonicalizationTransform) :
-                        			null,
-            				XMLConstants.OBJURI,
-            				referenceStyleId
-        				)
-            		);
-                }
-                catch (final Exception e) {
-                    LOGGER.severe(
-                		"No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma Enveloped, esta no se firmara: " + e //$NON-NLS-1$
-            		);
-                }
-            }
+            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                    canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
 
         }
 
@@ -2074,5 +2032,58 @@ public final class AOXMLDSigSigner implements AOSigner {
 		}
     	return dataObjectElement;
     }
+
+	/**
+	 * A&ntilde;ade a {@code referenceList} la referencia a una hoja de estilo
+	 * remota (HTTP/HTTPS) cuando el estilo XML est&aacute; declarado externamente
+	 * y no se ha empotrado como elemento. Si la hoja no es remota o ya viene
+	 * empotrada, este m&eacute;todo no hace nada.
+	 *
+	 * <p>Centraliza un bloque que aparec&iacute;a duplicado en los branches
+	 * Enveloping y Enveloped del m&eacute;todo {@code sign()} (las dos copias
+	 * son sem&aacute;nticamente id&eacute;nticas salvo por el formato citado en
+	 * el mensaje de log).</p>
+	 *
+	 * @param xmlStyle Informaci&oacute;n de la hoja de estilo asociada al XML.
+	 * @param referenceList Lista de referencias de firma sobre la que se a&ntilde;ade.
+	 * @param fac Factor&iacute;a XMLSig usada para construir la referencia.
+	 * @param digestMethod Algoritmo de huella para la referencia.
+	 * @param canonicalizationTransform Transformaci&oacute;n de canonicalizaci&oacute;n a aplicar (puede ser {@code null}).
+	 * @param referenceStyleId Identificador a asignar a la referencia.
+	 * @param signatureFormat Nombre del formato (solo para mensajes de log: Enveloping / Enveloped).
+	 */
+	private static void addRemoteStyleSheetReference(final XmlStyle xmlStyle,
+			final java.util.List<javax.xml.crypto.dsig.Reference> referenceList,
+			final javax.xml.crypto.dsig.XMLSignatureFactory fac,
+			final javax.xml.crypto.dsig.DigestMethod digestMethod,
+			final javax.xml.crypto.dsig.Transform canonicalizationTransform,
+			final String referenceStyleId,
+			final String signatureFormat) {
+		if (xmlStyle.getStyleHref() == null
+				|| xmlStyle.getStyleElement() != null
+				|| !xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX)
+				&& !xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
+			return;
+		}
+		try {
+			referenceList.add(
+				fac.newReference(
+					xmlStyle.getStyleHref(),
+					digestMethod,
+					canonicalizationTransform != null
+						? Collections.singletonList(canonicalizationTransform)
+						: null,
+					XMLConstants.OBJURI,
+					referenceStyleId
+				)
+			);
+		}
+		catch (final Exception e) {
+			LOGGER.severe(
+				"No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma " //$NON-NLS-1$
+					+ signatureFormat + ", esta no se firmara: " + e //$NON-NLS-1$
+			);
+		}
+	}
 
 }
