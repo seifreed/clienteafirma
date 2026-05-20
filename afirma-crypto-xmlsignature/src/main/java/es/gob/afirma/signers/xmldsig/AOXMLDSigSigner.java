@@ -346,143 +346,15 @@ public final class AOXMLDSigSigner implements AOSigner {
 		XmlStyle xmlStyle = new XmlStyle();
 
         if (mode.equals(AOSignConstants.SIGN_MODE_IMPLICIT)) {
-            try {
-                // Obtenemos el objeto XML y su codificacion
-                final Document docum = Utils.getNewDocumentBuilder().parse(new ByteArrayInputStream(data));
-
-                // Obtenemos la hoja de estilo del XML. Resolución compartida
-                // con XAdES — ver XmlStyleResolver (Fase C plan Clean Code).
-                if (!ignoreStyleSheets) {
-                	xmlStyle = XmlStyleResolver.resolve(data, headless, true);
-                }
-
-                // Si no hay asignado un MimeType o es el por defecto
-                // establecemos el de XML
-                if (mimeType == null || MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
-                    mimeType = "text/xml"; //$NON-NLS-1$
-                }
-
-                if (encoding == null) {
-                    encoding = docum.getXmlEncoding();
-                }
-
-                // Ademas del encoding, sacamos otros datos del doc XML original
-
-                // Hacemos la comprobacion del base64 por si se establecido
-                // desde fuera
-                if (encoding != null && !XMLConstants.BASE64_ENCODING.equals(encoding)) {
-                    originalXMLProperties.put(OutputKeys.ENCODING, encoding);
-                }
-                String tmpXmlProp = docum.getXmlVersion();
-                if (tmpXmlProp != null) {
-                    originalXMLProperties.put(OutputKeys.VERSION, tmpXmlProp);
-                }
-                final DocumentType dt = docum.getDoctype();
-                if (dt != null) {
-                    tmpXmlProp = dt.getSystemId();
-                    if (tmpXmlProp != null) {
-                        originalXMLProperties.put(OutputKeys.DOCTYPE_SYSTEM, tmpXmlProp);
-                    }
-                }
-
-                if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_DETACHED)) {
-                    dataElement = docum.createElement(DETACHED_CONTENT_ELEMENT_NAME);
-                    dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
-                    dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
-                    dataElement.setAttributeNS(null, ENCODING_STR, encoding);
-                    dataElement.appendChild(docum.getDocumentElement());
-
-                    // Tambien el estilo
-                    if (xmlStyle.getStyleElement() != null) {
-                        try {
-                            final Element tmpStyleElement = docum.createElement(DETACHED_STYLE_ELEMENT_NAME);
-                            tmpStyleElement.setAttributeNS(null, ID_IDENTIFIER, styleId);
-                            if (xmlStyle.getStyleType() != null) {
-                                tmpStyleElement.setAttributeNS(null, MIMETYPE_STR, xmlStyle.getStyleType());
-                            }
-                            tmpStyleElement.setAttributeNS(null, ENCODING_STR, xmlStyle.getStyleEncoding());
-                            tmpStyleElement.appendChild(docum.adoptNode(xmlStyle.getStyleElement().cloneNode(true)));
-                            xmlStyle.setStyleElement(tmpStyleElement);
-                        }
-                        catch (final Exception e) {
-                            LOGGER.warning(
-                        		"No ha sido posible crear el elemento DOM para incluir la hoja de estilo del XML como Internally Detached: " + e //$NON-NLS-1$
-                    		);
-                            xmlStyle.setStyleElement(null);
-                        }
-                    }
-                }
-                else {
-                    dataElement = docum.getDocumentElement();
-                }
-
-            }
-            // captura de error en caso de no ser un documento xml
-            catch (final Exception e) {
-                if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
-                    throw new InvalidXMLException(e);
-                }
-                // para los formatos de firma internally detached y enveloping
-                // se trata de convertir el documento a base64
-                try {
-                    LOGGER.info("El documento no es un XML valido. Se convertira a Base64: " + e); //$NON-NLS-1$
-
-                    // crea un nuevo nodo xml para contener los datos en base 64
-                    final Document docFile = Utils.getNewDocumentBuilder().newDocument();
-                    dataElement = docFile.createElement(DETACHED_CONTENT_ELEMENT_NAME);
-                    uri = null;
-                    encoding = XMLConstants.BASE64_ENCODING;
-                    if (mimeType == null) {
-                        mimeType = MimeHelper.DEFAULT_MIMETYPE;
-                    }
-
-                    dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
-
-                    // Si es base 64, lo firmamos indicando como contenido el
-                    // dato pero, ya que puede
-                    // poseer un formato particular o caracteres valido pero
-                    // extranos para el XML,
-                    // realizamos una decodificacion y recodificacion para asi
-                    // homogenizar el formato.
-                    if (Base64.isBase64(data) && (XMLConstants.BASE64_ENCODING.equals(encoding) || encoding.toLowerCase().equals("base64"))) { //$NON-NLS-1$
-                        LOGGER.info("El documento se ha indicado como Base64, se insertara como tal en el XML"); //$NON-NLS-1$
-
-                        // Adicionalmente, si es un base 64 intentamos obtener
-                        // el tipo del contenido
-                        // decodificado para asi reestablecer el MimeType.
-                        final byte[] decodedData = Base64.decode(data, 0, data.length, false);
-                        final MimeHelper mimeTypeHelper = new MimeHelper(decodedData);
-                        final String tempMimeType = mimeTypeHelper.getMimeType();
-                        mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
-                        dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
-                        dataElement.setTextContent(new String(data));
-                    }
-                    else {
-                        if (XMLConstants.BASE64_ENCODING.equals(encoding)) {
-                            LOGGER.info("El documento se ha indicado como Base64, pero no es un Base64 valido. Se convertira a Base64 antes de insertarlo en el XML y se declarara la transformacion"); //$NON-NLS-1$
-                        }
-                        else {
-                            LOGGER.info("El documento se considera binario, se convertira a Base64 antes de insertarlo en el XML y se declarara la transformacion"); //$NON-NLS-1$
-                        }
-
-                        // Identificamos el MimeType
-                        if (MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
-                        	final MimeHelper mimeTypeHelper = new MimeHelper(data);
-                            final String tempMimeType = mimeTypeHelper.getMimeType();
-                            mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
-                        }
-                        dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
-                        dataElement.setTextContent(Base64.encode(data));
-                        wasEncodedToBase64 = true;
-                    }
-                    isBase64 = true;
-                    encoding = XMLConstants.BASE64_ENCODING;
-                    dataElement.setAttributeNS(null, ENCODING_STR, encoding);
-                }
-                catch (final Exception ex) {
-                    throw new AOException("Error al convertir los datos a base64", ex, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-                }
-            }
+            final PreparedDataElement prepared = prepareDataElementImplicit(
+                    data, params, originalXMLProperties, mimeType, encoding, uri);
+            dataElement = prepared.dataElement();
+            mimeType = prepared.mimeType();
+            encoding = prepared.encoding();
+            uri = prepared.uri();
+            isBase64 = prepared.isBase64();
+            wasEncodedToBase64 = prepared.wasEncodedToBase64();
+            xmlStyle = prepared.xmlStyle();
         }
 
         // Firma Explicita
@@ -638,6 +510,183 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         docSignature = postprocessEnvelopingDocument(docSignature, format, xmlSignaturePrefix);
         return serializeSignatureToBytes(docSignature, format, originalXMLProperties, xmlStyle);
+    }
+
+    /** Prepara el {@code dataElement} en modo IMPLICIT: parsea {@code data}
+     * como XML, resuelve la hoja de estilo (vía {@link XmlStyleResolver}),
+     * detecta encoding/version/DOCTYPE del XML original y construye el
+     * {@link Element} según el formato (DETACHED inserta los datos en un
+     * elemento contenedor; el resto usa la raíz del XML parseado).
+     *
+     * <p>Si el parseo falla y el formato no es ENVELOPED (que exige XML
+     * estricto), aplica el fallback a Base64: re-empaqueta {@code data}
+     * dentro de un {@code <CONTENT>} con encoding {@code base64}, detecta
+     * el {@code MimeType} y anula la {@code uri} externa.</p>
+     *
+     * <p>Muta {@code xmlStyle} y {@code originalXMLProperties} en el
+     * proceso. Los demás resultados se devuelven en el record retornado.</p>
+     *
+     * @throws AOException Si la conversión a Base64 falla.
+     * @throws InvalidXMLException Si el formato es ENVELOPED y los datos
+     *         no son XML válido. */
+    private static PreparedDataElement prepareDataElementImplicit(
+            final byte[] data,
+            final SignParams params,
+            final Map<String, String> originalXMLProperties,
+            final String initialMimeType,
+            final String initialEncoding,
+            final URI initialUri) throws AOException {
+
+        final String format = params.format();
+        final String contentId = params.contentId();
+        final String styleId = params.styleId();
+        final boolean ignoreStyleSheets = params.ignoreStyleSheets();
+        final boolean headless = params.headless();
+
+        String mimeType = initialMimeType;
+        String encoding = initialEncoding;
+        URI uri = initialUri;
+        Element dataElement;
+        boolean isBase64 = false;
+        boolean wasEncodedToBase64 = false;
+        XmlStyle xmlStyle = new XmlStyle();
+
+        try {
+            // Obtenemos el objeto XML y su codificacion
+            final Document docum = Utils.getNewDocumentBuilder().parse(new ByteArrayInputStream(data));
+
+            // Obtenemos la hoja de estilo del XML. Resolución compartida
+            // con XAdES — ver XmlStyleResolver (Fase C plan Clean Code).
+            if (!ignoreStyleSheets) {
+                xmlStyle = XmlStyleResolver.resolve(data, headless, true);
+            }
+
+            // Si no hay asignado un MimeType o es el por defecto
+            // establecemos el de XML
+            if (mimeType == null || MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
+                mimeType = "text/xml"; //$NON-NLS-1$
+            }
+
+            if (encoding == null) {
+                encoding = docum.getXmlEncoding();
+            }
+
+            // Ademas del encoding, sacamos otros datos del doc XML original
+            // Hacemos la comprobacion del base64 por si se establecido desde fuera
+            if (encoding != null && !XMLConstants.BASE64_ENCODING.equals(encoding)) {
+                originalXMLProperties.put(OutputKeys.ENCODING, encoding);
+            }
+            String tmpXmlProp = docum.getXmlVersion();
+            if (tmpXmlProp != null) {
+                originalXMLProperties.put(OutputKeys.VERSION, tmpXmlProp);
+            }
+            final DocumentType dt = docum.getDoctype();
+            if (dt != null) {
+                tmpXmlProp = dt.getSystemId();
+                if (tmpXmlProp != null) {
+                    originalXMLProperties.put(OutputKeys.DOCTYPE_SYSTEM, tmpXmlProp);
+                }
+            }
+
+            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_DETACHED)) {
+                dataElement = docum.createElement(DETACHED_CONTENT_ELEMENT_NAME);
+                dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
+                dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
+                dataElement.setAttributeNS(null, ENCODING_STR, encoding);
+                dataElement.appendChild(docum.getDocumentElement());
+
+                // Tambien el estilo
+                if (xmlStyle.getStyleElement() != null) {
+                    try {
+                        final Element tmpStyleElement = docum.createElement(DETACHED_STYLE_ELEMENT_NAME);
+                        tmpStyleElement.setAttributeNS(null, ID_IDENTIFIER, styleId);
+                        if (xmlStyle.getStyleType() != null) {
+                            tmpStyleElement.setAttributeNS(null, MIMETYPE_STR, xmlStyle.getStyleType());
+                        }
+                        tmpStyleElement.setAttributeNS(null, ENCODING_STR, xmlStyle.getStyleEncoding());
+                        tmpStyleElement.appendChild(docum.adoptNode(xmlStyle.getStyleElement().cloneNode(true)));
+                        xmlStyle.setStyleElement(tmpStyleElement);
+                    }
+                    catch (final Exception e) {
+                        LOGGER.warning(
+                            "No ha sido posible crear el elemento DOM para incluir la hoja de estilo del XML como Internally Detached: " + e //$NON-NLS-1$
+                        );
+                        xmlStyle.setStyleElement(null);
+                    }
+                }
+            }
+            else {
+                dataElement = docum.getDocumentElement();
+            }
+        }
+        // captura de error en caso de no ser un documento xml
+        catch (final Exception e) {
+            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
+                throw new InvalidXMLException(e);
+            }
+            // para los formatos de firma internally detached y enveloping
+            // se trata de convertir el documento a base64
+            try {
+                LOGGER.info("El documento no es un XML valido. Se convertira a Base64: " + e); //$NON-NLS-1$
+
+                // crea un nuevo nodo xml para contener los datos en base 64
+                final Document docFile = Utils.getNewDocumentBuilder().newDocument();
+                dataElement = docFile.createElement(DETACHED_CONTENT_ELEMENT_NAME);
+                uri = null;
+                encoding = XMLConstants.BASE64_ENCODING;
+                if (mimeType == null) {
+                    mimeType = MimeHelper.DEFAULT_MIMETYPE;
+                }
+
+                dataElement.setAttributeNS(null, ID_IDENTIFIER, contentId);
+
+                // Si es base 64, lo firmamos indicando como contenido el
+                // dato pero, ya que puede poseer un formato particular o
+                // caracteres valido pero extranos para el XML, realizamos
+                // una decodificacion y recodificacion para asi homogenizar
+                // el formato.
+                if (Base64.isBase64(data) && (XMLConstants.BASE64_ENCODING.equals(encoding) || encoding.toLowerCase().equals("base64"))) { //$NON-NLS-1$
+                    LOGGER.info("El documento se ha indicado como Base64, se insertara como tal en el XML"); //$NON-NLS-1$
+
+                    // Adicionalmente, si es un base 64 intentamos obtener
+                    // el tipo del contenido decodificado para asi
+                    // reestablecer el MimeType.
+                    final byte[] decodedData = Base64.decode(data, 0, data.length, false);
+                    final MimeHelper mimeTypeHelper = new MimeHelper(decodedData);
+                    final String tempMimeType = mimeTypeHelper.getMimeType();
+                    mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
+                    dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
+                    dataElement.setTextContent(new String(data));
+                }
+                else {
+                    if (XMLConstants.BASE64_ENCODING.equals(encoding)) {
+                        LOGGER.info("El documento se ha indicado como Base64, pero no es un Base64 valido. Se convertira a Base64 antes de insertarlo en el XML y se declarara la transformacion"); //$NON-NLS-1$
+                    }
+                    else {
+                        LOGGER.info("El documento se considera binario, se convertira a Base64 antes de insertarlo en el XML y se declarara la transformacion"); //$NON-NLS-1$
+                    }
+
+                    // Identificamos el MimeType
+                    if (MimeHelper.DEFAULT_MIMETYPE.equals(mimeType)) {
+                        final MimeHelper mimeTypeHelper = new MimeHelper(data);
+                        final String tempMimeType = mimeTypeHelper.getMimeType();
+                        mimeType = tempMimeType != null ? tempMimeType : MimeHelper.DEFAULT_MIMETYPE;
+                    }
+                    dataElement.setAttributeNS(null, MIMETYPE_STR, mimeType);
+                    dataElement.setTextContent(Base64.encode(data));
+                    wasEncodedToBase64 = true;
+                }
+                isBase64 = true;
+                encoding = XMLConstants.BASE64_ENCODING;
+                dataElement.setAttributeNS(null, ENCODING_STR, encoding);
+            }
+            catch (final Exception ex) {
+                throw new AOException("Error al convertir los datos a base64", ex, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+            }
+        }
+
+        return new PreparedDataElement(dataElement, isBase64, wasEncodedToBase64,
+                mimeType, encoding, uri, xmlStyle);
     }
 
     /** Valida los parámetros de entrada de {@link #sign} y empaqueta los
