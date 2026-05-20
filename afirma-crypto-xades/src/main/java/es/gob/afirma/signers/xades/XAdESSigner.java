@@ -647,36 +647,8 @@ public final class XAdESSigner {
 				);
 			}
 
-			// ******************************************************************
-			// *********** Hojas de estilo externas para enveloping *************
-			// ******************************************************************
-			if (xmlStyle.getStyleHref() != null
-					&&  xmlStyle.getStyleElement() == null
-					&& (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) ||
-						xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-				// Comprobamos Si la referencia al estilo es externa
-				try {
-					referenceList.add(
-						fac.newReference(
-							xmlStyle.getStyleHref(),
-							digestMethod,
-							canonicalizationTransform != null ?
-								Collections.singletonList(canonicalizationTransform) :
-									new ArrayList<Transform>(0),
-							null,
-							referenceStyleId
-						)
-					);
-				}
-				catch (final Exception e) {
-					LOGGER.severe(
-						"No ha sido posible anadir la referencia a la hoja de estilo externa del XML para Enveloping, esta no se firmara: " + e //$NON-NLS-1$
-					);
-				}
-			}
-			// ******************************************************************
-			// ********** Fin hojas de estilo externas para enveloping **********
-			// ******************************************************************
+			addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+					canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
 
 		}
 
@@ -741,36 +713,8 @@ public final class XAdESSigner {
 				);
 			}
 
-			// ******************************************************************
-			// ************* Hojas de estilo remotas para Detached **************
-			// ******************************************************************
-			if (xmlStyle.getStyleHref() != null
-					&&  xmlStyle.getStyleElement() == null
-					&& (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) ||
-						xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-				// Comprobamos si la referencia al estilo es externa
-				try {
-					referenceList.add(
-						fac.newReference(
-							xmlStyle.getStyleHref(),
-							digestMethod,
-							canonicalizationTransform != null ?
-								Collections.singletonList(canonicalizationTransform) :
-									new ArrayList<Transform>(0),
-							null,	// Nodo de tipo STYLE
-							referenceStyleId
-						)
-					);
-				}
-				catch (final Exception e) {
-					LOGGER.severe(
-						"No ha sido posible anadir la referencia a la hoja remota de estilo del XML para firma Detached, esta no se firmara: " + e //$NON-NLS-1$
-					);
-				}
-			}
-			// ******************************************************************
-			// *********** Fin hojas de estilo remotas para Detached ************
-			// ******************************************************************
+			addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+					canonicalizationTransform, referenceStyleId, "Detached"); //$NON-NLS-1$
 
 		}
 
@@ -948,36 +892,8 @@ public final class XAdESSigner {
 				);
 			}
 
-			// *******************************************************
-			// ******** Hojas de estilo remotas en Enveloped *********
-			// *******************************************************
-			if (xmlStyle.getStyleHref() != null
-					&&  xmlStyle.getStyleElement() == null
-					&& (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX)
-					||  xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-				// Comprobamos si la referencia al estilo es externa
-				try {
-					referenceList.add(
-						fac.newReference(
-							xmlStyle.getStyleHref(),
-							digestMethod,
-							canonicalizationTransform != null ?
-								Collections.singletonList(canonicalizationTransform) :
-									new ArrayList<Transform>(0),
-							null, // Las referencias externas no tienen tipo
-							referenceStyleId
-						)
-					);
-				}
-				catch (final Exception e) {
-					LOGGER.severe(
-						"No ha sido posible anadir la referencia a la hoja de estilo remota del XML para firma Enveloped, esta no se firmara: " + e //$NON-NLS-1$
-					);
-				}
-			}
-			// *******************************************************
-			// ****** Fin hojas de estilo remotas en Enveloped *******
-			// *******************************************************
+			addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+					canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
 		}
 
 		// Nodo donde insertar la firma
@@ -1057,41 +973,10 @@ public final class XAdESSigner {
 			}
 		}
 
-		// *******************************************************
-		// *********** Hojas de estilo en Enveloped **************
-		// *******************************************************
 		if (AOSignConstants.SIGN_FORMAT_XADES_ENVELOPED.equals(format) && xmlStyle.getStyleElement() != null) {
-
-			// Si es enveloped hay que anadir la hoja de estilo dentro de la firma y
-			// referenciarla
-
-			xmlSignature.addStyleSheetEnvelopingOntoSignature(
-				xmlStyle,
-				styleId
-			);
-
-			try {
-				referenceList.add(
-					fac.newReference(
-						tmpStyleUri,
-						digestMethod,
-						canonicalizationTransform != null ?
-							Collections.singletonList(canonicalizationTransform) :
-								new ArrayList<Transform>(0),
-						XMLConstants.OBJURI, // Es un nodo Object que se firma
-						referenceStyleId
-					)
-				);
-			}
-			catch (final Exception e) {
-				LOGGER.severe(
-					"No se ha podido anadir una referencia a la hoja de estilo, esta se incluira dentro de la firma, pero no estara firmada: " + e //$NON-NLS-1$
-				);
-			}
+			addEnvelopedStyleSheetReference(xmlStyle, styleId, xmlSignature, referenceList,
+					fac, digestMethod, canonicalizationTransform, tmpStyleUri, referenceStyleId);
 		}
-		// *******************************************************
-		// ********* Fin hojas de estilo en Enveloped ************
-		// *******************************************************
 
 		// *************************************************************************************
 		// ********************************* GESTION MANIFEST **********************************
@@ -1110,60 +995,14 @@ public final class XAdESSigner {
 		// ********************************* FIN GESTION MANIFEST ******************************
 		// *************************************************************************************
 
-		// Genera la firma
-		try {
-
-			xmlSignature.sign(
-				onlySignningCert ?
-					Arrays.asList(certChain[0]) :
-						Arrays.asList(certChain),
-				pk,
-				algoUri,
-				referenceList,
-				"Signature-" + generateUUID(), //$NON-NLS-1$
-				addKeyInfoKeyValue,
-				addKeyInfoKeyName,
-				addKeyInfoX509IssuerSerial,
-				keepKeyInfoUnsigned,
-				validatePkcs1
-			);
-
-		}
-		catch (final NoSuchAlgorithmException e) {
-			throw new IllegalArgumentException(
-				"Los formatos de firma XML no soportan el algoritmo de firma '" + algorithm + "':" + e, e //$NON-NLS-1$ //$NON-NLS-2$
-			);
-		}
-		catch (final AOException e) {
-			throw e;
-		}
-		catch (final Exception e) {
-			throw new AOException("Error al generar la firma XAdES: " + e, e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-		}
+		performSignature(xmlSignature, certChain, pk, algoUri, referenceList,
+				onlySignningCert, addKeyInfoKeyValue, addKeyInfoKeyName,
+				addKeyInfoX509IssuerSerial, keepKeyInfoUnsigned, validatePkcs1, algorithm);
 
 		// Si se esta realizando una firma enveloping simple no tiene sentido el nodo raiz,
 		// asi que sacamos el nodo de firma a un documento aparte
 		if (AOSignConstants.SIGN_FORMAT_XADES_ENVELOPING.equals(format)) {
-			try {
-				if (docSignature.getElementsByTagNameNS(XMLConstants.DSIGNNS,
-						XMLConstants.TAG_SIGNATURE).getLength() == 1) {
-					final Document newdoc = docBuilder.newDocument();
-					newdoc.appendChild(
-						newdoc.adoptNode(
-							docSignature.getElementsByTagNameNS(
-								XMLConstants.DSIGNNS,
-								XMLConstants.TAG_SIGNATURE
-							).item(0)
-						)
-					);
-					docSignature = newdoc;
-				}
-			}
-			catch (final Exception e) {
-				LOGGER.info(
-					"No se ha eliminado el nodo padre '<AFIRMA>': " + e //$NON-NLS-1$
-				);
-			}
+			docSignature = unwrapEnvelopingSignature(docSignature, docBuilder);
 		}
 
 		// Si no es enveloped quito los valores del estilo para que no se inserte la
@@ -1181,15 +1020,6 @@ public final class XAdESSigner {
 
 	}
 
-	/**
-	 * Comprueba que no existan incompatibilidades entre los par&aacute;metros proporcionados
-	 * y elimina aquellos que se vayan a ignorar. Tambi&eacute;n muestra advertencias sobre
-	 * opciones de configuraci&oacute;n no recomendadas.
-	 * @param algorithm Algoritmo de firma.
-	 * @param extraParams Par&aacute;metros de configuraci&oacute;n.
-	 * @throws IllegalArgumentException Cuando se proporciona una configuraci&oacute;n de firma
-	 *                                  no v&aacute;lida e incorregible.
-	 */
 	/**
 	 * Crea un elemento DataObjectFormat para una referencia.
 	 * @param referenceId Identificador de la referencia a la que corresponde.
@@ -1267,6 +1097,171 @@ public final class XAdESSigner {
 	 * Genera un identificador aleatorio.
 	 * @return Identificador aleatorio.
 	 */
+	/**
+	 * Empotra la hoja de estilo dentro de la firma <i>enveloped</i> y a&ntilde;ade
+	 * la referencia que la incluye en la firma. Solo se invoca cuando ya se ha
+	 * comprobado que el formato es enveloped y existe un elemento de estilo.
+	 */
+	private static void addEnvelopedStyleSheetReference(final XmlStyle xmlStyle,
+			final String styleId,
+			final AOXMLAdvancedSignature xmlSignature,
+			final List<Reference> referenceList,
+			final XMLSignatureFactory fac,
+			final DigestMethod digestMethod,
+			final Transform canonicalizationTransform,
+			final String tmpStyleUri,
+			final String referenceStyleId) {
+		// Si es enveloped hay que anadir la hoja de estilo dentro de la firma y referenciarla.
+		xmlSignature.addStyleSheetEnvelopingOntoSignature(xmlStyle, styleId);
+		try {
+			referenceList.add(
+				fac.newReference(
+					tmpStyleUri,
+					digestMethod,
+					canonicalizationTransform != null
+						? Collections.singletonList(canonicalizationTransform)
+						: new ArrayList<Transform>(0),
+					XMLConstants.OBJURI,
+					referenceStyleId
+				)
+			);
+		}
+		catch (final Exception e) {
+			LOGGER.severe(
+				"No se ha podido anadir una referencia a la hoja de estilo, esta se incluira dentro de la firma, pero no estara firmada: " + e //$NON-NLS-1$
+			);
+		}
+	}
+
+	/**
+	 * Realiza la firma criptogr&aacute;fica sobre la estructura
+	 * {@link AOXMLAdvancedSignature} ya construida y traduce las excepciones a la
+	 * jerarqu&iacute;a {@link AOException} esperada por el cliente.
+	 */
+	private static void performSignature(final AOXMLAdvancedSignature xmlSignature,
+			final Certificate[] certChain,
+			final PrivateKey pk,
+			final String algoUri,
+			final List<Reference> referenceList,
+			final boolean onlySignningCert,
+			final boolean addKeyInfoKeyValue,
+			final boolean addKeyInfoKeyName,
+			final boolean addKeyInfoX509IssuerSerial,
+			final boolean keepKeyInfoUnsigned,
+			final boolean validatePkcs1,
+			final String algorithm) throws AOException {
+		try {
+			xmlSignature.sign(
+				onlySignningCert
+					? Arrays.asList(certChain[0])
+					: Arrays.asList(certChain),
+				pk,
+				algoUri,
+				referenceList,
+				"Signature-" + generateUUID(), //$NON-NLS-1$
+				addKeyInfoKeyValue,
+				addKeyInfoKeyName,
+				addKeyInfoX509IssuerSerial,
+				keepKeyInfoUnsigned,
+				validatePkcs1
+			);
+		}
+		catch (final NoSuchAlgorithmException e) {
+			throw new IllegalArgumentException(
+				"Los formatos de firma XML no soportan el algoritmo de firma '" + algorithm + "':" + e, e //$NON-NLS-1$ //$NON-NLS-2$
+			);
+		}
+		catch (final AOException e) {
+			throw e;
+		}
+		catch (final Exception e) {
+			throw new AOException("Error al generar la firma XAdES: " + e, e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
+		}
+	}
+
+	/**
+	 * Para firmas <i>enveloping</i> simples, extrae el nodo {@code Signature} a un
+	 * documento independiente para eliminar el envoltorio {@code <AFIRMA>}.
+	 * Si la firma ya viene sin envoltorio o hay m&aacute;s de una firma, devuelve
+	 * el documento original sin cambios.
+	 */
+	private static Document unwrapEnvelopingSignature(final Document docSignature,
+			final DocumentBuilder docBuilder) {
+		try {
+			if (docSignature.getElementsByTagNameNS(XMLConstants.DSIGNNS,
+					XMLConstants.TAG_SIGNATURE).getLength() == 1) {
+				final Document newdoc = docBuilder.newDocument();
+				newdoc.appendChild(
+					newdoc.adoptNode(
+						docSignature.getElementsByTagNameNS(
+							XMLConstants.DSIGNNS,
+							XMLConstants.TAG_SIGNATURE
+						).item(0)
+					)
+				);
+				return newdoc;
+			}
+		}
+		catch (final Exception e) {
+			LOGGER.info(
+				"No se ha eliminado el nodo padre '<AFIRMA>': " + e //$NON-NLS-1$
+			);
+		}
+		return docSignature;
+	}
+
+	/**
+	 * A&ntilde;ade a {@code referenceList} la referencia a una hoja de estilo
+	 * remota (HTTP/HTTPS) si el estilo XML est&aacute; declarado como tal y no
+	 * se ha podido empotrar. Si la hoja no es remota o ya fue empotrada como
+	 * elemento, este m&eacute;todo no hace nada.
+	 *
+	 * <p>Centraliza el bloque que aparec&iacute;a duplicado para los formatos
+	 * Enveloping / Detached / Enveloped (los tres compart&iacute;an la misma
+	 * l&oacute;gica salvo el mensaje de log).</p>
+	 *
+	 * @param xmlStyle Informaci&oacute;n de la hoja de estilo asociada al XML.
+	 * @param referenceList Lista de referencias de firma sobre la que se a&ntilde;ade.
+	 * @param fac Factor&iacute;a XMLSig usada para construir la referencia.
+	 * @param digestMethod Algoritmo de huella para la referencia.
+	 * @param canonicalizationTransform Transformaci&oacute;n de canonicalizaci&oacute;n a aplicar (puede ser {@code null}).
+	 * @param referenceStyleId Identificador a asignar a la referencia.
+	 * @param signatureFormat Nombre del formato (solo para mensajes de log: Enveloping / Detached / Enveloped).
+	 */
+	private static void addRemoteStyleSheetReference(final XmlStyle xmlStyle,
+			final List<Reference> referenceList,
+			final XMLSignatureFactory fac,
+			final DigestMethod digestMethod,
+			final Transform canonicalizationTransform,
+			final String referenceStyleId,
+			final String signatureFormat) {
+		if (xmlStyle.getStyleHref() == null
+				|| xmlStyle.getStyleElement() != null
+				|| !xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX)
+				&& !xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
+			return;
+		}
+		try {
+			referenceList.add(
+				fac.newReference(
+					xmlStyle.getStyleHref(),
+					digestMethod,
+					canonicalizationTransform != null
+						? Collections.singletonList(canonicalizationTransform)
+						: new ArrayList<Transform>(0),
+					null,
+					referenceStyleId
+				)
+			);
+		}
+		catch (final Exception e) {
+			LOGGER.severe(
+				"No ha sido posible anadir la referencia a la hoja de estilo remota del XML para firma " //$NON-NLS-1$
+					+ signatureFormat + ", esta no se firmara: " + e //$NON-NLS-1$
+			);
+		}
+	}
+
 	private static String generateUUID() {
 		return UUID.randomUUID().toString();
 	}
