@@ -6,7 +6,7 @@ import java.security.KeyStore.PrivateKeyEntry;
 import java.util.Properties;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.signers.AOSignConstants;
@@ -24,8 +24,9 @@ public final class TestJMulticardSignature {
 	 * almac&eacute;n de Mozilla Firefox.
 	 * @throws Exception Cuando ocurre cualquier error. */
 	@Test
-	@Ignore // Necesita DNIe
 	public void testFirmaXAdESJMulticardSignature() throws Exception {
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.dnie=true (DNIe insertado + Firefox NSS unificado)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.dnie")); //$NON-NLS-1$
 
 		final AOKeyStore ks = AOKeyStore.MOZ_UNI;
 		final AOKeyStoreManager ksm = AOKeyStoreManagerFactory.getAOKeyStoreManager(
