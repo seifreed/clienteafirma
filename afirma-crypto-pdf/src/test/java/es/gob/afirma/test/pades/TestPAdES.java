@@ -21,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -134,8 +134,9 @@ public class TestPAdES {
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
     public void testTimestampedSignatureAndDocument() throws Exception {
+        Assume.assumeTrue("Test omitido: requiere -Dafirma.it.tsa.catcert=true (necesita TSA de CATCert en " + CATCERT_TSP + ")", //$NON-NLS-1$ //$NON-NLS-2$
+                Boolean.getBoolean("afirma.it.tsa.catcert")); //$NON-NLS-1$
 
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 
@@ -221,8 +222,10 @@ public class TestPAdES {
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
     public void testTimestampedDocument() throws Exception {
+        Assume.assumeTrue("Test omitido: requiere -Dafirma.it.tsa.catcert=true (necesita TSA de CATCert en " + CATCERT_TSP + ")", //$NON-NLS-1$ //$NON-NLS-2$
+                Boolean.getBoolean("afirma.it.tsa.catcert")); //$NON-NLS-1$
+
 
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 
@@ -284,8 +287,10 @@ public class TestPAdES {
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
     public void testTimestampedDocumentWithoutSignature() throws Exception {
+        Assume.assumeTrue("Test omitido: requiere -Dafirma.it.tsa.catcert=true (necesita TSA de CATCert en " + CATCERT_TSP + ")", //$NON-NLS-1$ //$NON-NLS-2$
+                Boolean.getBoolean("afirma.it.tsa.catcert")); //$NON-NLS-1$
+
 
         final byte[] testPdf;
         try (
@@ -328,8 +333,10 @@ public class TestPAdES {
     /** Prueba de PDF con sello de tiempo contra la TSA de CATCert.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
     public void testTimestampedSignature() throws Exception {
+        Assume.assumeTrue("Test omitido: requiere -Dafirma.it.tsa.catcert=true (necesita TSA de CATCert en " + CATCERT_TSP + ")", //$NON-NLS-1$ //$NON-NLS-2$
+                Boolean.getBoolean("afirma.it.tsa.catcert")); //$NON-NLS-1$
+
 
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 
