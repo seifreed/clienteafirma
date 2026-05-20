@@ -97,6 +97,20 @@
 		<pitest-junit5-plugin.version>1.2.2</pitest-junit5-plugin.version>
 		<jazzer.version>0.24.0</jazzer.version>
 
+		<!-- M3.6 lint gates (Oleada 10, 2026-05-20). Wired in <pluginManagement>
+		     and activated only under `-Plint-report` with failOnError/failOnViolation
+		     = false. The four tools generate per-module reports under target/site/
+		     so a baseline can be measured before any rule is escalated to a build
+		     gate (planned for M3.7+). Configuration files live at the repo root:
+		     checkstyle-rules.xml, pmd-ruleset.xml, spotbugs-exclude.xml. -->
+		<spotless-maven-plugin.version>2.46.1</spotless-maven-plugin.version>
+		<maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+		<checkstyle.version>10.21.4</checkstyle.version>
+		<maven-pmd-plugin.version>3.27.0</maven-pmd-plugin.version>
+		<pmd.version>7.14.0</pmd.version>
+		<spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
+		<spotbugs.version>4.9.3</spotbugs.version>
+
 		<!-- Reproducible build timestamp (CRA art. 13). Bump on each release. -->
 		<project.build.outputTimestamp>2026-05-07T00:00:00Z</project.build.outputTimestamp>
 
@@ -351,6 +365,115 @@
 						</dependency>
 					</dependencies>
 				</plugin>
+
+				<!-- M3.6 Oleada 10 (2026-05-20): lint baseline. The four plugins below
+				     are declared in <pluginManagement> with their soft-baseline configs
+				     and only get *executed* under the `lint-report` profile, where they
+				     run with failOnError/failOnViolation = false. The default build is
+				     unaffected. Configuration files at the repo root. -->
+				<plugin>
+					<groupId>com.diffplug.spotless</groupId>
+					<artifactId>spotless-maven-plugin</artifactId>
+					<version>${spotless-maven-plugin.version}</version>
+					<configuration>
+						<java>
+							<includes>
+								<include>src/main/java/**/*.java</include>
+								<include>src/test/java/**/*.java</include>
+							</includes>
+							<!-- Tabs (4-wide) match the repo style. removeUnusedImports
+							     is non-destructive given the existing import discipline. -->
+							<removeUnusedImports/>
+							<trimTrailingWhitespace/>
+							<endWithNewline/>
+							<importOrder>
+								<order>java,javax,jakarta,org,com,es</order>
+							</importOrder>
+						</java>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>${maven-checkstyle-plugin.version}</version>
+					<dependencies>
+						<dependency>
+							<groupId>com.puppycrawl.tools</groupId>
+							<artifactId>checkstyle</artifactId>
+							<version>${checkstyle.version}</version>
+						</dependency>
+					</dependencies>
+					<configuration>
+						<configLocation>${maven.multiModuleProjectDirectory}/checkstyle-rules.xml</configLocation>
+						<consoleOutput>true</consoleOutput>
+						<failOnViolation>false</failOnViolation>
+						<failsOnError>false</failsOnError>
+						<includeTestSourceDirectory>false</includeTestSourceDirectory>
+						<linkXRef>false</linkXRef>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-pmd-plugin</artifactId>
+					<version>${maven-pmd-plugin.version}</version>
+					<dependencies>
+						<dependency>
+							<groupId>net.sourceforge.pmd</groupId>
+							<artifactId>pmd-core</artifactId>
+							<version>${pmd.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>net.sourceforge.pmd</groupId>
+							<artifactId>pmd-java</artifactId>
+							<version>${pmd.version}</version>
+						</dependency>
+					</dependencies>
+					<configuration>
+						<rulesets>
+							<ruleset>${maven.multiModuleProjectDirectory}/pmd-ruleset.xml</ruleset>
+						</rulesets>
+						<failOnViolation>false</failOnViolation>
+						<printFailingErrors>true</printFailingErrors>
+						<includeTests>false</includeTests>
+						<linkXRef>false</linkXRef>
+						<targetJdk>${jdk.version}</targetJdk>
+						<!-- threads=1 forces single-threaded execution. PMD 7.x worker
+						     threads do not inherit MAVEN_OPTS -Xss, so deep generics in
+						     this codebase trigger StackOverflowError on the worker
+						     threads but not on the main thread. -->
+						<threads>1</threads>
+						<!-- skipPmdError keeps the build green when PMD encounters
+						     analysis errors (StackOverflow, type-resolution glitches
+						     in PMD 7.x on legacy code). Errors still appear in target/
+						     pmd.xml for diagnosis; the rest of the lint pipeline keeps
+						     running. -->
+						<skipPmdError>true</skipPmdError>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>com.github.spotbugs</groupId>
+					<artifactId>spotbugs-maven-plugin</artifactId>
+					<version>${spotbugs-maven-plugin.version}</version>
+					<dependencies>
+						<dependency>
+							<groupId>com.github.spotbugs</groupId>
+							<artifactId>spotbugs</artifactId>
+							<version>${spotbugs.version}</version>
+						</dependency>
+					</dependencies>
+					<configuration>
+						<effort>Default</effort>
+						<threshold>Medium</threshold>
+						<failOnError>false</failOnError>
+						<includeTests>false</includeTests>
+						<excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
+						<xmlOutput>true</xmlOutput>
+						<htmlOutput>true</htmlOutput>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -440,6 +563,60 @@
 			<modules>
 				<module>afirma-fuzz</module>
 			</modules>
+		</profile>
+
+		<!-- ===== M3.6 Oleada 10: lint baseline on demand =====
+		     Activate with `-Plint-report`. Binds Checkstyle to the `verify`
+		     phase with failOnViolation=false so the build does not break
+		     while the baseline is being measured. Reports land under
+		     <module>/target/checkstyle-result.xml. The default build
+		     (without this profile) does *not* run any lint tool.
+
+		     Spotless, PMD and SpotBugs are declared in <pluginManagement>
+		     but intentionally NOT bound here. Each has a different reason
+		     and a different ad-hoc invocation path:
+
+		     - Spotless `check` fails by design on any deviation (no
+		       warn-only mode), and the tree mixes CRLF/LF line endings +
+		       import orderings. Ad-hoc: `mvn spotless:check` (report) /
+		       `mvn spotless:apply` (rewrite).
+
+		     - PMD 7.14 has incomplete JDK 21+ compatibility: it cannot
+		       parse newer JDK core class files (`ClassStub:java/lang/String`
+		       fails) and triggers StackOverflowError in symbol resolution
+		       on this codebase under JDK 26. Ad-hoc on a JDK 21 host:
+		       `mvn pmd:pmd`. Re-binding deferred until PMD 7.x stabilizes
+		       JDK 21+ support.
+
+		     - SpotBugs 4.9.x relies on ASM bytecode parsing that does not
+		       yet support JDK 26 class file format. On a JDK 21 host it
+		       works correctly; on JDK 26 (the current dev machine) it
+		       errors on `java/lang/Object` and exits 1, breaking the
+		       build. Ad-hoc on a JDK 21 host: `mvn spotbugs:spotbugs`.
+		       Re-binding deferred until SpotBugs upgrades ASM to support
+		       JDK 26 or until CI standardizes on JDK 21.
+
+		     Checkstyle parses source code (not bytecode), so it is JDK-
+		     version-agnostic and stays as the always-on gate. -->
+		<profile>
+			<id>lint-report</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>checkstyle-report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 
 		<!-- ===== Construccion por defecto ===== -->

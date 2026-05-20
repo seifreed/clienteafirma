@@ -129,6 +129,12 @@ mvn -pl afirma-simple org.cyclonedx:cyclonedx-maven-plugin:makeBom
 
 # Sólo el escaneo de vulnerabilidades
 mvn -DnvdApiKey="$NVD_API_KEY" org.owasp:dependency-check-maven:aggregate
+
+# Lint baseline (modo solo-reporte; ver tabla "Roadmap gates" en CLAUDE.md)
+mvn -Plint-report verify           # Checkstyle → target/checkstyle-result.xml
+mvn spotless:check                 # Formato (ad-hoc, no rompe build)
+mvn pmd:pmd                        # PMD (ad-hoc; requiere JDK 21)
+mvn spotbugs:spotbugs              # SpotBugs (ad-hoc; requiere JDK 21)
 ```
 
 ### Trabajar en un solo módulo

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="afirma-baseline-minimal"
+		xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+	<description>
+		Cliente @firma — baseline minimal de PMD (M3.6 Oleada 10, 2026-05-20).
+
+		Una sola regla de prueba para verificar si PMD 7.14 puede analizar
+		este codebase sin StackOverflow. Si pasa, se irán añadiendo reglas.
+	</description>
+
+	<rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace"/>
+
+</ruleset>

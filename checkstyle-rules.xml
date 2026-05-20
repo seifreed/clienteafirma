@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+		"-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+		"https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+	Cliente @firma — baseline blando de Checkstyle.
+
+	Activado solo bajo `mvn -Plint-report verify` con failOnViolation=false.
+	El objetivo de esta fase (M3.6 Oleada 10) es medir, no bloquear: estas
+	reglas detectan errores reales pero ninguna debe romper el build hasta
+	que la baseline por módulo se consolide en M3.7+.
+
+	Reglas seleccionadas para evitar ruido en un codebase con estilo
+	heredado: se omiten Javadoc, LineLength, FileTabCharacter (el repo usa
+	tabuladores), MethodLength y similares.
+-->
+<module name="Checker">
+
+	<property name="charset" value="UTF-8"/>
+	<property name="severity" value="warning"/>
+	<property name="fileExtensions" value="java"/>
+
+	<!-- Long lines son frecuentes en código heredado: solo informativo. -->
+	<module name="FileLength">
+		<property name="max" value="5000"/>
+	</module>
+
+	<module name="TreeWalker">
+
+		<!-- Imports: solo detectar imports duplicados o no usados (Spotless
+		     ya elimina los no usados, pero esto detecta los que cruzan
+		     paquetes en runtime). -->
+		<module name="RedundantImport"/>
+		<module name="UnusedImports">
+			<property name="processJavadoc" value="true"/>
+		</module>
+		<module name="AvoidStarImport"/>
+
+		<!-- Coding: errores comunes. -->
+		<module name="EmptyBlock">
+			<property name="option" value="text"/>
+			<property name="tokens" value="LITERAL_CATCH"/>
+		</module>
+		<module name="EmptyStatement"/>
+		<module name="EqualsHashCode"/>
+		<module name="MissingSwitchDefault"/>
+		<module name="FallThrough"/>
+		<module name="SimplifyBooleanExpression"/>
+		<module name="SimplifyBooleanReturn"/>
+		<module name="StringLiteralEquality"/>
+		<module name="OneStatementPerLine"/>
+
+		<!-- Modificadores. -->
+		<module name="ModifierOrder"/>
+
+		<!-- Bloques. -->
+		<module name="NeedBraces">
+			<property name="tokens" value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO"/>
+			<property name="allowSingleLineStatement" value="false"/>
+		</module>
+		<module name="LeftCurly"/>
+		<module name="RightCurly"/>
+
+		<!-- Espacios en blanco. -->
+		<module name="GenericWhitespace"/>
+		<module name="ParenPad"/>
+		<module name="TypecastParenPad"/>
+
+		<!-- Convenciones de nombres. -->
+		<module name="PackageName">
+			<property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+		</module>
+		<module name="ConstantName">
+			<property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|^log(ger)?$"/>
+		</module>
+		<module name="LocalFinalVariableName"/>
+		<module name="StaticVariableName"/>
+		<module name="TypeName"/>
+
+	</module>
+
+</module>
