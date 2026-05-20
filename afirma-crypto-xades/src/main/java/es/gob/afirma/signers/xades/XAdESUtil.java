@@ -98,40 +98,6 @@ public final class XAdESUtil {
     	return false;
     }
 
-	static AOXMLAdvancedSignature getXmlAdvancedSignature(final XAdESBase xades,
-			                                              final String signedPropertiesTypeUrl,
-			                                              final String digestMethodAlgorithm,
-			                                              final String canonicalizationAlgorithm,
-			                                              final URIDereferencer uriDereferencer) throws AOException {
-		final AOXMLAdvancedSignature xmlSignature;
-		try {
-			xmlSignature = AOXMLAdvancedSignature.newInstance(xades);
-		}
-		catch (final Exception e) {
-			throw new AOMalformedSignatureException(
-				"No se ha podido instanciar la firma XML Avanzada de JXAdES: " + e, e //$NON-NLS-1$
-			);
-		}
-
-		// Establecemos el tipo de propiedades firmadas
-		xmlSignature.setSignedPropertiesTypeUrl(signedPropertiesTypeUrl);
-
-		try {
-			xmlSignature.setDigestMethod(digestMethodAlgorithm);
-		}
-		catch (final Exception e) {
-			throw new AOException(
-				"No se ha podido establecer el algoritmo de huella digital: " + e, e, XMLErrorCode.Request.INVALID_REFERENCES_HASH_ALGORITHM_URI //$NON-NLS-1$
-			);
-		}
-
-		xmlSignature.setCanonicalizationMethod(canonicalizationAlgorithm);
-
-		xmlSignature.setUriDereferencer(uriDereferencer);
-
-		return xmlSignature;
-	}
-
 	static Element getFirstElementFromXPath(final String xpathExpression, final Element sourceElement) throws AOException {
 		final NodeList nodeList;
 		try {
@@ -477,85 +443,6 @@ public final class XAdESUtil {
 //    	// Obtenemos el prefijo del nodo
 //    	return signedPropertiesElement.getPrefix();
 //    }
-
-    /**
-     * Crea una nueva instancia para firmar.
-     * @param profile Perfil de firma XAdES que se quiere generar.
-     * @param xadesNamespace Espacio de nombres XAdES.
-     * @param xadesSignaturePrefix Prefijo de los elementos XAdES.
-     * @param xmlSignaturePrefix Prefijo de los elementos XML.
-     * @param digestMethodAlgorithm Algoritmo de huella para la firma firma.
-     * @param ownerDocument Documento a firmar.
-     * @param rootSig Nodo que se firma.
-     * @param signingCertificate Certificado que se va a utilizar si ya se conoce.
-     * @return Estructura XAdES en base a la que componer la firma.
-     * @throws AOException Cuando ocurre un error durante la composici&oacute;n de los atributos.
-     */
-	public static XAdESBase newInstance(final String profile, final String xadesNamespace, final String xadesSignaturePrefix,
-			final String xmlSignaturePrefix, final String digestMethodAlgorithm, final Document ownerDocument, final Element rootSig,
-			final X509Certificate signingCertificate) throws AOException {
-
-		XAdES xadesProfile = XAdES.EPES;
-		if (AOSignConstants.SIGN_PROFILE_BASELINE.equalsIgnoreCase(profile)) {
-			xadesProfile = XAdES.B_LEVEL;
-		}
-
-		final XAdESBase xades = XAdES.newInstance(
-				xadesProfile,
-				xadesNamespace,
-				xadesSignaturePrefix,
-				xmlSignaturePrefix,
-				digestMethodAlgorithm,
-				ownerDocument,
-				rootSig);
-
-		// establece el certificado
-		if (signingCertificate != null) {
-			if (xades instanceof XadesWithBaselineAttributes) {
-
-				// El las firmas B-Level el signingCertificateV2 incluira solo el
-				// certificado de firma y no el IssuerSerialV2. Esta es la recomendacion
-				// dada en el ETSI EN 319 132-1 V1.1.1, apartado 6.3, anotacion j). Sin
-				// embargo, esto hace que algunos validadores conocidos den avisos,
-				// cuando no lo hacen si se incluye este atributo
-				final SigningCertificateV2Info issuerInfo = null;
-
-
-
-				//TODO: Aun no se soporta la generacion del IssuerSerialV2. Habria que calcular
-				// el valor Base64 del campo y crear el ussuerInfo con el
-//		        final GeneralNames gns = new GeneralNames(new GeneralName(
-//		        		X500Name.getInstance(signingCertificate.getIssuerX500Principal().getEncoded())));
-//		        final IssuerSerial issuerSerial = new IssuerSerial(gns, signingCertificate.getSerialNumber());
-//		        String issuerSerialB64;
-//		        try {
-//		        	issuerSerialB64 = Base64.encode(issuerSerial.getEncoded());
-//		        }
-//		        catch (final IOException e) {
-//		        	LOGGER.log(Level.WARNING,
-//		        			"No se pudo codificar la informacion del IssuerSerial del certificado de firma. Se omitira este campo",  //$NON-NLS-1$
-//		        			e);
-//		        	issuerSerialB64 = null;
-//				}
-//				issuerInfo = issuerSerialB64 != null ? new SigningCertificateV2Info(issuerSerialB64) : null;
-
-
-
-
-				((XadesWithBaselineAttributes) xades).setSigningCertificateV2(
-						signingCertificate,
-						issuerInfo);
-			}
-			else if (xades instanceof XadesWithBasicAttributes) {
-				// El las firmas BES/EPES el signingCertificate incluira el certificado de firma
-				// y la referencia al certificado del emisor (IssuerSerial), que sera creada por
-				// el propio JXAdES
-				((XadesWithBasicAttributes) xades).setSigningCertificate(signingCertificate);
-			}
-		}
-
-		return xades;
-	}
 
 	/**
      * Obtiene un listado con las referencias a datos de la firma proporcionada.

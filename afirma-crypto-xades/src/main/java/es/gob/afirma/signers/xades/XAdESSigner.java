@@ -991,7 +991,7 @@ public final class XAdESSigner {
 		}
 
 		// Instancia XAdES
-		final XAdESBase xades = XAdESUtil.newInstance(
+		final XAdESBase xades = XAdESBaseFactory.newInstance(
 			profile,                           	  			// Perfil XAdES
 			xadesNamespace,                       			// XAdES NameSpace
 			XAdESConstants.DEFAULT_XADES_SIGNATURE_PREFIX,	// XAdES Prefix
@@ -1040,7 +1040,7 @@ public final class XAdESSigner {
 			xades.setCommitmentTypeIndications(ctis);
 		}
 
-		final AOXMLAdvancedSignature xmlSignature = XAdESUtil.getXmlAdvancedSignature(
+		final AOXMLAdvancedSignature xmlSignature = XAdESBaseFactory.getXmlAdvancedSignature(
 			xades,
 			signedPropertiesTypeUrl,
 			digestMethodAlgorithm,

@@ -753,7 +753,7 @@ public final class XAdESCounterSigner {
 		}
 
 		// Instancia XAdES
-		final XAdESBase xades = XAdESUtil.newInstance(
+		final XAdESBase xades = XAdESBaseFactory.newInstance(
                 profile,
 				xadesNamespace,
 				xadesPrefix,
@@ -779,7 +779,7 @@ public final class XAdESCounterSigner {
 		}
 
 		// crea la firma
-		final AOXMLAdvancedSignature xmlSignature = XAdESUtil.getXmlAdvancedSignature(
+		final AOXMLAdvancedSignature xmlSignature = XAdESBaseFactory.getXmlAdvancedSignature(
 			xades,
 			signedPropertiesTypeUrl,
 			digestMethodAlgorithm,

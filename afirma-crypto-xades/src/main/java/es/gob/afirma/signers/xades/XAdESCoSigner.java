@@ -614,7 +614,7 @@ public final class XAdESCoSigner {
 		}
 
 		// Instancia XAdES
-		final XAdESBase xades = XAdESUtil.newInstance(
+		final XAdESBase xades = XAdESBaseFactory.newInstance(
 				profile,
 				xadesNamespace,
 				XAdESConstants.DEFAULT_XADES_SIGNATURE_PREFIX,
@@ -634,7 +634,7 @@ public final class XAdESCoSigner {
 		}
 
 		// crea la firma
-		final AOXMLAdvancedSignature xmlSignature = XAdESUtil.getXmlAdvancedSignature(
+		final AOXMLAdvancedSignature xmlSignature = XAdESBaseFactory.getXmlAdvancedSignature(
 			xades,
 			signedPropertiesType,
 			digestMethodAlgorithm,
