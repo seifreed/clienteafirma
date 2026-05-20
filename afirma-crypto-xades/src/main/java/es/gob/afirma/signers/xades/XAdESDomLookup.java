@@ -9,6 +9,9 @@
 
 package es.gob.afirma.signers.xades;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -126,6 +129,50 @@ public final class XAdESDomLookup {
             return null;
         }
         return getSignedPropertiesElement(signatureElement, referenceNode);
+    }
+
+    /** Obtiene el listado de elementos {@code Reference} de {@code SignedInfo}
+     * que apuntan a datos firmados (excluye la referencia al
+     * {@code SignedProperties} y al {@code KeyInfo}).
+     *
+     * @param signatureElement Elemento {@code Signature} XML.
+     * @return Lista de referencias a datos, o {@code null} si no se encontr&oacute;
+     *         {@code SignedInfo}. */
+    public static List<Element> getSignatureDataReferenceList(final Element signatureElement) {
+        final Element signedInfoElement = getSignedInfo(signatureElement);
+        if (signedInfoElement == null) {
+            return null;
+        }
+        final NodeList references = signedInfoElement.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_REFERENCE);
+        final List<Element> dataReferences = new ArrayList<>();
+        for (int i = 0; i < references.getLength(); i++) {
+            final Element reference = (Element) references.item(i);
+            if (referencesData(reference, signatureElement)) {
+                dataReferences.add(reference);
+            }
+        }
+        return dataReferences;
+    }
+
+    private static boolean referencesData(final Element reference, final Element signatureElement) {
+        final String type = reference.getAttribute("Type"); //$NON-NLS-1$
+        if (type != null && !type.isEmpty()) {
+            return !XAdESUtil.isSignedPropertiesType(type);
+        }
+        // Sin Type declarado: clasificamos por URI
+        final String uri = reference.getAttribute("URI"); //$NON-NLS-1$
+        if (uri == null || !uri.startsWith("#")) { //$NON-NLS-1$
+            // Referencia externa: siempre es un dato firmado
+            return true;
+        }
+        final Node referencedNode = XAdESUtil.findElementById(uri.substring(1), signatureElement, false);
+        if (referencedNode == null) {
+            // Referencia interna a un nodo fuera de la firma → datos
+            return true;
+        }
+        // Referencia interna a un nodo dentro de la firma → datos sólo si no es KeyInfo ni SignedProperties
+        final String nodeName = referencedNode.getLocalName();
+        return !"KeyInfo".equals(nodeName) && !"SignedProperties".equals(nodeName); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Obtiene el elemento {@code UnsignedProperties} de una firma XAdES.

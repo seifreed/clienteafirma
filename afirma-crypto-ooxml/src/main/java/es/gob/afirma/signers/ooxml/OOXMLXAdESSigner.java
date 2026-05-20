@@ -41,6 +41,7 @@ import org.xml.sax.SAXException;
 
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.misc.SecureXmlBuilder;
+import es.gob.afirma.signers.xades.XAdESCommitmentTypeParser;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.XMLConstants;
@@ -141,7 +142,7 @@ final class OOXMLXAdESSigner {
 		// CommitmentTypeIndications:
 		//  - http://www.w3.org/TR/XAdES/#Syntax_for_XAdES_The_CommitmentTypeIndication_element
 		//  - http://uri.etsi.org/01903/v1.2.2/ts_101903v010202p.pdf
-		final List<CommitmentTypeIndication> ctis = XAdESUtil.parseCommitmentTypeIndications(extraParams, null);
+		final List<CommitmentTypeIndication> ctis = XAdESCommitmentTypeParser.parseCommitmentTypeIndications(extraParams, null);
 		if (ctis != null && ctis.size() > 0) {
 			xades.setCommitmentTypeIndications(ctis);
 		}

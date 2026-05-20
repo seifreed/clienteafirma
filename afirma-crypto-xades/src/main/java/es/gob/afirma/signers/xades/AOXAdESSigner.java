@@ -434,7 +434,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
     	return XAdESSignatureTypeDetector.isInternallyDetached(element, dataReferenceList);
     }
@@ -465,7 +465,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
     	return XAdESSignatureTypeDetector.isExternallyDetached(dataReferenceList);
     }
@@ -492,7 +492,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
     	return XAdESSignatureTypeDetector.usesManifest(dataReferenceList);
     }
@@ -527,7 +527,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
     	return XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList);
     }
@@ -557,7 +557,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
     	return XAdESSignatureTypeDetector.isEnveloping(signatureElement, dataReferenceList);
     }
@@ -611,7 +611,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	}
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
         Element elementRes;
         try {
@@ -1290,7 +1290,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(signDocument.getDocumentElement());
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
         // Establecemos la variante de firma
     	if (XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList)) {

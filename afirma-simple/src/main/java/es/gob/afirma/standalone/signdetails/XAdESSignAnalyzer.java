@@ -394,7 +394,7 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
     	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(this.signDocument.getDocumentElement());
 
     	// Obtenemos el listado de referencias a datos de la firma
-    	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+    	final List<Element> dataReferenceList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 
         // Establecemos la variante de firma
     	if (XAdESSignatureTypeDetector.isEnveloped(signatureElement, dataReferenceList)) {

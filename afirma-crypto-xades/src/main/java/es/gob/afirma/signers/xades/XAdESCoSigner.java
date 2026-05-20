@@ -336,7 +336,7 @@ public final class XAdESCoSigner {
 		XMLObject newInternalObject = null;
 		boolean isEnveloping = false;
 		String referenceId = null;
-		final List<Element> dataReferencesList = XAdESUtil.getSignatureDataReferenceList(signatureElement);
+		final List<Element> dataReferencesList = XAdESDomLookup.getSignatureDataReferenceList(signatureElement);
 		// Obtenemos el prefijo del elemento de la primera firma para copiarlo en la nueva
 		final String xmlsigPrefix = signaturesList.item(0).getPrefix();
 		for (final Element currentReference : dataReferencesList) {
