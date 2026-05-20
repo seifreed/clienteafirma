@@ -313,7 +313,7 @@ public final class XAdESCounterSigner {
 		final String allowSignLts = extraParams.getProperty(XAdESExtraParams.ALLOW_SIGN_LTS_SIGNATURES);
 		if (allowSignLts == null || !Boolean.parseBoolean(allowSignLts)) {
 			try {
-				XAdESUtil.checkArchiveSignatures(signaturesList);
+				XAdESArchiveTimestampValidator.checkArchiveSignatures(signaturesList);
 			}
 			catch (final SigningLTSException e) {
 				// Si se indico expresamente que no se debia permitir la contrafirma de

@@ -522,46 +522,4 @@ public final class XAdESUtil {
     					&& !Boolean.parseBoolean(config.getProperty(XAdESExtraParams.USE_MANIFEST));
     }
 
-    /**
-     * Comprueba si alguna de las firmas proporcionadas incluye un sello de archivo.
-     * @param signatures Listado de firmas que verificar.
-     * @throws SigningLTSException Cuando alguna de las firmas incluye sello de archivo.
-     */
-    public static void checkArchiveSignatures(final NodeList signatures) throws SigningLTSException {
-    	for (int i = 0; i < signatures.getLength(); i++) {
-    		final Element signature = (Element) signatures.item(i);
-    		checkArchiveSignatures(signature);
-    	}
-    }
-
-    /**
-     * Comprueba si el elemento de firma proporcionado incluye un sello de archivo.
-     * @param signature Elemento de firma XML.
-     * @throws SigningLTSException Cuando alguna de las firmas incluye sello de archivo.
-     */
-    public static void checkArchiveSignatures(final Element signature) throws SigningLTSException {
-    	final Element unsignedProperties = XAdESDomLookup.getUnSignedPropertiesElement(signature);
-    	if (unsignedProperties != null) {
-    		final Element unsignedSignatureProperties = XMLUtils.getChildElementByTagNameNS(unsignedProperties,
-    				XAdESConstants.TAG_UNSIGNED_SIGNATURE_PROPERTIES, XAdESConstants.NAMESPACE_XADES_1_3_2);
-    		if (unsignedSignatureProperties != null) {
-    			Element archiveTimeStamp = XMLUtils.getChildElementByTagNameNS(unsignedSignatureProperties,
-    					XAdESConstants.TAG_ARCHIVE_TIMESTAMP, XAdESConstants.NAMESPACE_XADES_1_4_1);
-    			if (archiveTimeStamp != null) {
-    				throw new SigningLTSException("Se han encontrado firmas de sello de archivo"); //$NON-NLS-1$
-    			}
-    			archiveTimeStamp = XMLUtils.getChildElementByTagNameNS(unsignedSignatureProperties,
-    					XAdESConstants.TAG_ARCHIVE_TIMESTAMP, XAdESConstants.NAMESPACE_XADES_1_3_2);
-    			if (archiveTimeStamp != null) {
-    				throw new SigningLTSException("Se han encontrado firmas de sello de archivo"); //$NON-NLS-1$
-    			}
-    			archiveTimeStamp = XMLUtils.getChildElementByTagNameNS(unsignedSignatureProperties,
-    					XAdESConstants.TAG_ARCHIVE_TIMESTAMP, XAdESConstants.NAMESPACE_XADES_1_2_2);
-    			if (archiveTimeStamp != null) {
-    				throw new SigningLTSException("Se han encontrado firmas de sello de archivo"); //$NON-NLS-1$
-    			}
-    		}
-    	}
-    }
-
 }
