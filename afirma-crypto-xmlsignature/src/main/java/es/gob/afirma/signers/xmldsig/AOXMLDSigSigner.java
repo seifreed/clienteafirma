@@ -930,129 +930,12 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         }
 
-        // definicion de identificadores
-        final String id = UUID.randomUUID().toString();
-        final String keyInfoId = "KeyInfo-" + id; //$NON-NLS-1$
-
-        try {
-
-            // se anade una referencia a KeyInfo
-            referenceList.add(fac.newReference("#" + keyInfoId, digestMethod, transformList, null, null)); //$NON-NLS-1$
-
-            // KeyInfo
-            final KeyInfoFactory kif = fac.getKeyInfoFactory();
-            final List<XMLStructure> content = new ArrayList<>();
-            final X509Certificate cert = (X509Certificate) certChain[0];
-            content.add(kif.newKeyValue(cert.getPublicKey()));
-
-            // Si se nos ha pedido expresamente que no insertemos la cadena de certificacion,
-            // insertamos unicamente el certificado firmante. Tambien lo haremos cuando al
-            // recuperar la cadena nos devuelva null
-            Certificate[] certs = null;
-            final boolean onlySignningCert = Boolean.parseBoolean(
-            		extraParams.getProperty(
-            		        AOXMLDSigExtraParams.INCLUDE_ONLY_SIGNNING_CERTIFICATE, Boolean.FALSE.toString()));
-			if (!onlySignningCert) {
-				certs = certChain;
-			}
-            if (certs == null) {
-                certs = new Certificate[] {
-                    cert
-                };
-            }
-            content.add(kif.newX509Data(Arrays.asList(certs)));
-
-            // Object
-            final List<XMLObject> objectList = new ArrayList<>();
-
-            // en el caso de formato enveloping se inserta el elemento Object
-            // con el documento a firmar
-            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING) && envelopingObject != null) {
-                objectList.add(envelopingObject);
-                if (envelopingStyleObject != null) {
-                    objectList.add(envelopingStyleObject);
-                }
-            }
-
-            // Si es enveloped hay que anadir la hoja de estilo dentro de la
-            // firma y referenciarla
-            if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED) && xmlStyle.getStyleElement() != null) {
-                objectList.add(
-            		fac.newXMLObject(
-        				Collections.singletonList(new DOMStructure(xmlStyle.getStyleElement())),
-        				styleId,
-        				xmlStyle.getStyleType(),
-        				xmlStyle.getStyleEncoding()
-    				)
-				);
-                try {
-                    referenceList.add(
-                		fac.newReference(
-            				tmpStyleUri,
-                            digestMethod,
-                            canonicalizationTransform != null ?
-                        		Collections.singletonList(canonicalizationTransform) :
-                        			null,
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-                catch (final Exception e) {
-                    LOGGER
-                          .severe("No se ha podido anadir una referencia a la hoja de estilo, esta se incluira dentro de la firma, pero no estara firmada: " + e); //$NON-NLS-1$
-                }
-            }
-
-            CanonicalizationMethod cm;
-            try {
-            	cm = fac.newCanonicalizationMethod(canonicalizationTransform != null ? canonicalizationAlgorithm : CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null);
-            }
-            catch (final NoSuchAlgorithmException e) {
-				throw new AOException("No se ha podido crear la transformacion de canonicalizacion para el algoritmo " + canonicalizationAlgorithm, //$NON-NLS-1$
-						e, XMLErrorCode.Request.INVALID_CANONICALIZATION_URI);
-			}
-
-            // genera la firma
-            final XMLSignature signature = fac.newXMLSignature(
-            		fac.newSignedInfo(
-            				cm,
-            				fac.newSignatureMethod(algoUri, null),
-            				XmlDSigUtil.cleanReferencesList(referenceList)),
-            		kif.newKeyInfo(content, keyInfoId),
-            		objectList,
-            		"Signature-" + id, //$NON-NLS-1$
-            		"SignatureValue-" + id //$NON-NLS-1$
-            		);
-
-            final DOMSignContext signContext = new DOMSignContext(
-        		key, docSignature.getDocumentElement()
-    		);
-            signContext.putNamespacePrefix(XMLConstants.DSIGNNS, xmlSignaturePrefix);
-
-            try {
-            	// Instalamos un dereferenciador nuevo que solo actua cuando falla el por defecto
-            	signContext.setURIDereferencer(
-        			new CustomUriDereferencer(CustomUriDereferencer.getDefaultDereferencer())
-    			);
-            }
-            catch (final Exception e) {
-            	LOGGER.warning("No se ha podido instalar un dereferenciador a medida, es posible que fallen las firmas de nodos concretos: " + e); //$NON-NLS-1$
-            }
-
-            signature.sign(signContext);
-        }
-        catch (final NoSuchAlgorithmException e) {
-            throw new UnsupportedOperationException(
-        		"Hay al menos un algoritmo no soportado: " + e, e //$NON-NLS-1$
-    		);
-        }
-        catch (final AOException e) {
-            throw e;
-        }
-        catch (final Exception e) {
-            throw new AOException("Error al generar la firma XMLdSig: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-        }
+        buildAndExecuteSignature(
+            referenceList, envelopingObject, envelopingStyleObject, docSignature,
+            new SignatureBuildContext(fac, digestMethod, transformList, canonicalizationTransform,
+                canonicalizationAlgorithm, algoUri, xmlSignaturePrefix, format,
+                xmlStyle, styleId, tmpStyleUri, referenceStyleId,
+                key, certChain, extraParams));
 
         docSignature = postprocessEnvelopingDocument(docSignature, format, xmlSignaturePrefix);
         return serializeSignatureToBytes(docSignature, format, originalXMLProperties, xmlStyle);
@@ -1083,6 +966,178 @@ public final class AOXMLDSigSigner implements AOSigner {
             throw new AOException(
                 "Error al crear la firma en formato " + format + ", modo " + mode, //$NON-NLS-1$ //$NON-NLS-2$
                 e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR);
+        }
+    }
+
+    /** Contexto inmutable con todos los datos de configuración que necesita
+     * {@link #buildAndExecuteSignature} para construir la firma XML. Agrupa
+     * los 15 parámetros que de otro modo tendría que recibir el método y los
+     * mantiene ocultos al ojo externo (el record es {@code private static}).
+     */
+    private static record SignatureBuildContext(
+            XMLSignatureFactory fac,
+            DigestMethod digestMethod,
+            List<Transform> transformList,
+            Transform canonicalizationTransform,
+            String canonicalizationAlgorithm,
+            String algoUri,
+            String xmlSignaturePrefix,
+            String format,
+            XmlStyle xmlStyle,
+            String styleId,
+            String tmpStyleUri,
+            String referenceStyleId,
+            PrivateKey key,
+            Certificate[] certChain,
+            Properties extraParams) { }
+
+    /** Construye el {@link XMLSignature} y ejecuta la firma. Engloba la
+     * preparación del {@code KeyInfo} (con la cadena de certificados o solo
+     * el firmante, según {@code includeOnlySignningCertificate}), la
+     * construcción del {@code objectList} (con el {@code envelopingObject} en
+     * formato ENVELOPING o la hoja de estilo en formato ENVELOPED), la
+     * {@code CanonicalizationMethod}, el {@link XMLSignature} y el
+     * {@link DOMSignContext} con el {@link CustomUriDereferencer}, y la
+     * llamada final a {@code signature.sign()}.
+     *
+     * @param referenceList Lista mutable de referencias a la que se añade la
+     *                      referencia al {@code KeyInfo} (y opcionalmente a la
+     *                      hoja de estilo en ENVELOPED).
+     * @param envelopingObject {@link XMLObject} con los datos a firmar en
+     *                         formato ENVELOPING (o {@code null}).
+     * @param envelopingStyleObject {@link XMLObject} con la hoja de estilo en
+     *                              formato ENVELOPING (o {@code null}).
+     * @param docSignature Documento donde se va a insertar la firma.
+     * @param ctx Contexto inmutable con el resto de parámetros de configuración.
+     * @throws AOException Si falla la canonicalización, el algoritmo no está
+     *                     soportado o cualquier error durante el firmado. */
+    private static void buildAndExecuteSignature(
+            final List<Reference> referenceList,
+            final XMLObject envelopingObject,
+            final XMLObject envelopingStyleObject,
+            final Document docSignature,
+            final SignatureBuildContext ctx) throws AOException {
+
+        // definicion de identificadores
+        final String id = UUID.randomUUID().toString();
+        final String keyInfoId = "KeyInfo-" + id; //$NON-NLS-1$
+
+        try {
+            // se anade una referencia a KeyInfo
+            referenceList.add(ctx.fac().newReference("#" + keyInfoId, ctx.digestMethod(), ctx.transformList(), null, null)); //$NON-NLS-1$
+
+            // KeyInfo
+            final KeyInfoFactory kif = ctx.fac().getKeyInfoFactory();
+            final List<XMLStructure> content = new ArrayList<>();
+            final X509Certificate cert = (X509Certificate) ctx.certChain()[0];
+            content.add(kif.newKeyValue(cert.getPublicKey()));
+
+            // Si se nos ha pedido expresamente que no insertemos la cadena de certificacion,
+            // insertamos unicamente el certificado firmante. Tambien lo haremos cuando al
+            // recuperar la cadena nos devuelva null
+            Certificate[] certs = null;
+            final boolean onlySignningCert = Boolean.parseBoolean(
+                    ctx.extraParams().getProperty(
+                            AOXMLDSigExtraParams.INCLUDE_ONLY_SIGNNING_CERTIFICATE, Boolean.FALSE.toString()));
+            if (!onlySignningCert) {
+                certs = ctx.certChain();
+            }
+            if (certs == null) {
+                certs = new Certificate[] { cert };
+            }
+            content.add(kif.newX509Data(Arrays.asList(certs)));
+
+            // Object
+            final List<XMLObject> objectList = new ArrayList<>();
+
+            // en el caso de formato enveloping se inserta el elemento Object
+            // con el documento a firmar
+            if (ctx.format().equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING) && envelopingObject != null) {
+                objectList.add(envelopingObject);
+                if (envelopingStyleObject != null) {
+                    objectList.add(envelopingStyleObject);
+                }
+            }
+
+            // Si es enveloped hay que anadir la hoja de estilo dentro de la
+            // firma y referenciarla
+            if (ctx.format().equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED) && ctx.xmlStyle().getStyleElement() != null) {
+                objectList.add(
+                    ctx.fac().newXMLObject(
+                        Collections.singletonList(new DOMStructure(ctx.xmlStyle().getStyleElement())),
+                        ctx.styleId(),
+                        ctx.xmlStyle().getStyleType(),
+                        ctx.xmlStyle().getStyleEncoding()
+                    )
+                );
+                try {
+                    referenceList.add(
+                        ctx.fac().newReference(
+                            ctx.tmpStyleUri(),
+                            ctx.digestMethod(),
+                            ctx.canonicalizationTransform() != null
+                                ? Collections.singletonList(ctx.canonicalizationTransform())
+                                : null,
+                            XMLConstants.OBJURI,
+                            ctx.referenceStyleId()
+                        )
+                    );
+                }
+                catch (final Exception e) {
+                    LOGGER.severe("No se ha podido anadir una referencia a la hoja de estilo, esta se incluira dentro de la firma, pero no estara firmada: " + e); //$NON-NLS-1$
+                }
+            }
+
+            final CanonicalizationMethod cm;
+            try {
+                cm = ctx.fac().newCanonicalizationMethod(
+                    ctx.canonicalizationTransform() != null
+                        ? ctx.canonicalizationAlgorithm()
+                        : CanonicalizationMethod.INCLUSIVE,
+                    (C14NMethodParameterSpec) null);
+            }
+            catch (final NoSuchAlgorithmException e) {
+                throw new AOException(
+                    "No se ha podido crear la transformacion de canonicalizacion para el algoritmo " + ctx.canonicalizationAlgorithm(), //$NON-NLS-1$
+                    e, XMLErrorCode.Request.INVALID_CANONICALIZATION_URI);
+            }
+
+            // genera la firma
+            final XMLSignature signature = ctx.fac().newXMLSignature(
+                ctx.fac().newSignedInfo(
+                    cm,
+                    ctx.fac().newSignatureMethod(ctx.algoUri(), null),
+                    XmlDSigUtil.cleanReferencesList(referenceList)),
+                kif.newKeyInfo(content, keyInfoId),
+                objectList,
+                "Signature-" + id, //$NON-NLS-1$
+                "SignatureValue-" + id //$NON-NLS-1$
+            );
+
+            final DOMSignContext signContext = new DOMSignContext(
+                ctx.key(), docSignature.getDocumentElement());
+            signContext.putNamespacePrefix(XMLConstants.DSIGNNS, ctx.xmlSignaturePrefix());
+
+            try {
+                // Instalamos un dereferenciador nuevo que solo actua cuando falla el por defecto
+                signContext.setURIDereferencer(
+                    new CustomUriDereferencer(CustomUriDereferencer.getDefaultDereferencer()));
+            }
+            catch (final Exception e) {
+                LOGGER.warning("No se ha podido instalar un dereferenciador a medida, es posible que fallen las firmas de nodos concretos: " + e); //$NON-NLS-1$
+            }
+
+            signature.sign(signContext);
+        }
+        catch (final NoSuchAlgorithmException e) {
+            throw new UnsupportedOperationException(
+                "Hay al menos un algoritmo no soportado: " + e, e); //$NON-NLS-1$
+        }
+        catch (final AOException e) {
+            throw e;
+        }
+        catch (final Exception e) {
+            throw new AOException("Error al generar la firma XMLdSig: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
         }
     }
 
