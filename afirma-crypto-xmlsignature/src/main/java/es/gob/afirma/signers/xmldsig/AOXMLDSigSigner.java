@@ -853,41 +853,10 @@ public final class AOXMLDSigSigner implements AOSigner {
 
         // crea una referencia indicando que se trata de una firma enveloped
         else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
-            try {
-                // Transformacion enveloped
-                // La enveloped siempre la primera, para que no se quede sin
-                // nodos Signature por haber
-                // ejecutado antes otra transformacion
-                transformList.add(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null));
-
-                if (!avoidXpathExtraTransformsOnEnveloped) {
-                    // Transformacion XPATH para eliminar el resto de firmas del documento
-                    transformList.add(
-                        fac.newTransform(
-                            Transform.XPATH,
-                            new XPathFilterParameterSpec("not(ancestor-or-self::" + xmlSignaturePrefix + ":Signature)", //$NON-NLS-1$ //$NON-NLS-2$
-                            Collections.singletonMap(xmlSignaturePrefix, XMLSignature.XMLNS))
-                        )
-                    );
-                }
-
-                // crea la referencia
-                referenceList.add(
-                    fac.newReference(
-                        "", //$NON-NLS-1$
-                        digestMethod,
-                        transformList,
-                        XMLConstants.OBJURI, // Aunque sea Enveloped, es un nodo a firmar
-                        referenceId
-                    )
-                );
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato enveloped", e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
-                    canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
+            buildReferencesForEnveloped(fac, digestMethod, transformList,
+                    canonicalizationTransform, xmlStyle,
+                    avoidXpathExtraTransformsOnEnveloped, xmlSignaturePrefix,
+                    referenceList, referenceId, referenceStyleId);
         }
 
         return new Phase4Result(envelopingObject, envelopingStyleObject);
@@ -1174,6 +1143,61 @@ public final class AOXMLDSigSigner implements AOSigner {
                 LOGGER.warning("Se necesita una referencia externa HTTP o HTTPS a la hoja de estilo para referenciarla en firmas XML Externally Detached"); //$NON-NLS-1$
             }
         }
+    }
+
+    /** Construye la referencia específica del formato XMLDSig ENVELOPED.
+     * Añade a {@code transformList} la transformación ENVELOPED (siempre
+     * la primera para evitar firmar nodos Signature previos) y,
+     * opcionalmente, una transformación XPATH que excluye cualquier nodo
+     * {@code Signature} ya presente en el documento. La referencia apunta
+     * al elemento raíz (URI {@code ""}). Si hay hoja de estilo remota,
+     * añade una referencia adicional vía {@link #addRemoteStyleSheetReference}. */
+    private static void buildReferencesForEnveloped(
+            final XMLSignatureFactory fac,
+            final DigestMethod digestMethod,
+            final List<Transform> transformList,
+            final Transform canonicalizationTransform,
+            final XmlStyle xmlStyle,
+            final boolean avoidXpathExtraTransformsOnEnveloped,
+            final String xmlSignaturePrefix,
+            final List<Reference> referenceList,
+            final String referenceId,
+            final String referenceStyleId) throws AOException {
+
+        try {
+            // Transformacion enveloped: siempre la primera, para que no se
+            // quede sin nodos Signature por haber ejecutado antes otra
+            // transformacion
+            transformList.add(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null));
+
+            if (!avoidXpathExtraTransformsOnEnveloped) {
+                // Transformacion XPATH para eliminar el resto de firmas del documento
+                transformList.add(
+                    fac.newTransform(
+                        Transform.XPATH,
+                        new XPathFilterParameterSpec("not(ancestor-or-self::" + xmlSignaturePrefix + ":Signature)", //$NON-NLS-1$ //$NON-NLS-2$
+                        Collections.singletonMap(xmlSignaturePrefix, XMLSignature.XMLNS))
+                    )
+                );
+            }
+
+            // crea la referencia
+            referenceList.add(
+                fac.newReference(
+                    "", //$NON-NLS-1$
+                    digestMethod,
+                    transformList,
+                    XMLConstants.OBJURI, // Aunque sea Enveloped, es un nodo a firmar
+                    referenceId
+                )
+            );
+        }
+        catch (final Exception e) {
+            throw new AOException("Error al generar la firma en formato enveloped", e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+        }
+
+        addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
     }
 
     /** Contexto inmutable con todos los datos de configuración que necesita
