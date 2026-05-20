@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -97,8 +97,9 @@ public final class TestCAdES {
 	/** Prueba de firma convencional.
 	 * @throws Exception en cualquier error. */
 	@Test
-	@Ignore("Necesita el servidor")
 	public void testSignature() throws Exception {
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.triphase.cades=true (servidor triphase en " + SERVER_URL + ")", //$NON-NLS-1$ //$NON-NLS-2$
+				Boolean.getBoolean("afirma.it.triphase.cades")); //$NON-NLS-1$
 
 		Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 		final PrivateKeyEntry pke;
@@ -149,8 +150,9 @@ public final class TestCAdES {
 	 * @throws Exception en cualquier error
 	 */
 	@Test
-	@Ignore("Necesita el servidor")
 	public void testCoSignature() throws Exception {
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.triphase.cades=true (servidor triphase en " + SERVER_URL + ")", //$NON-NLS-1$ //$NON-NLS-2$
+				Boolean.getBoolean("afirma.it.triphase.cades")); //$NON-NLS-1$
 
 		Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 		final PrivateKeyEntry pke1 = loadKeyEntry(CERT_PATH, CERT_ALIAS, CERT_PASS);

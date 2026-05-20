@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import javax.security.auth.callback.PasswordCallback;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -36,18 +36,14 @@ import es.gob.afirma.keystores.AOKeyStoreManagerFactory;
  */
 public class TestAOKeystoreFactory {
 
-	/** Prueba directa.
-	 * @param args No se usa.
-	 * @throws Exception En cualquier error. */
-	public static void main(final String args[]) throws Exception {
-		new TestAOKeystoreFactory().testAOKeystoreFactoryCAPI();
-	}
-
-    /** Pruebas de AOKeyStoreFactory de los tipos sin dependencias de otros m&oacute;dulos
+    /** Pruebas de AOKeyStoreFactory contra el almac&eacute;n CAPI de Windows.
+     * Requiere {@code -Dafirma.it.windows.cert=true} y Windows con
+     * certificados importados en el almac&eacute;n personal.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore // Solo para Windows
     public void testAOKeystoreFactoryCAPI() throws Exception {
+    	Assume.assumeTrue("Test omitido: requiere -Dafirma.it.windows.cert=true (Windows + CAPI con certificados importados)", //$NON-NLS-1$
+    			Boolean.getBoolean("afirma.it.windows.cert")); //$NON-NLS-1$
     	Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
     	final AOKeyStoreManager ksm = AOKeyStoreManagerFactory.getAOKeyStoreManager(
 			AOKeyStore.WINDOWS, // Store
@@ -74,11 +70,14 @@ public class TestAOKeystoreFactory {
 
     }
 
-    /** Pruebas de AOKeyStoreFactory de los tipos sin dependencias de otros m&oacute;dulos
+    /** Pruebas de AOKeyStoreFactory contra PKCS#12 (fixture local) y, en macOS,
+     * contra el Keychain del sistema. La rama macOS requiere
+     * {@code -Dafirma.it.macos.keychain=true}.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
     public void testAOKeystoreFactory() throws Exception {
+    	Assume.assumeTrue("Test omitido: requiere -Dafirma.it.keystore=true (acceso a fixtures PKCS12 + Keychain en macOS si aplica)", //$NON-NLS-1$
+    			Boolean.getBoolean("afirma.it.keystore")); //$NON-NLS-1$
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
         AOKeyStoreManager ksm;
         if (Platform.OS.MACOSX.equals(Platform.getOS())) {
