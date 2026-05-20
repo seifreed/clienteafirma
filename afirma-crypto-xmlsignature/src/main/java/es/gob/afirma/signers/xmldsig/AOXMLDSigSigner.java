@@ -1066,35 +1066,55 @@ public final class AOXMLDSigSigner implements AOSigner {
             throw new AOException("Error al generar la firma XMLdSig: " + e, e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
         }
 
-        final String signatureNodeName = (xmlSignaturePrefix == null || xmlSignaturePrefix.isEmpty() ? "" : xmlSignaturePrefix + ":") + XMLConstants.TAG_SIGNATURE; //$NON-NLS-1$ //$NON-NLS-2$
-        // Si se esta realizando una firma enveloping simple no tiene sentido el
-        // nodo raiz,
-        // asi que sacamos el nodo de firma a un documento aparte
-        if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING)) {
-            try {
-                if (docSignature.getElementsByTagName(signatureNodeName).getLength() == 1) {
-                    final Document newdoc = Utils.getNewDocumentBuilder().newDocument();
-                    newdoc.appendChild(newdoc.adoptNode(docSignature.getElementsByTagName(signatureNodeName).item(0)));
-                    docSignature = newdoc;
-                }
-            }
-            catch (final Exception e) {
-                LOGGER.info("No se ha eliminado el nodo padre '<AFIRMA>': " + e); //$NON-NLS-1$
+        docSignature = postprocessEnvelopingDocument(docSignature, format, xmlSignaturePrefix);
+        return serializeSignatureToBytes(docSignature, format, originalXMLProperties, xmlStyle);
+    }
+
+    /** Extrae el nodo {@code <Signature>} a un Document nuevo cuando la firma es
+     * <i>enveloping</i>, eliminando el envoltorio {@code <AFIRMA>} que no aporta
+     * valor estructural. Para los demás formatos devuelve el documento sin
+     * modificar.
+     * @param docSignature Documento con la firma generada.
+     * @param format Formato XMLDSig (ENVELOPING/ENVELOPED/DETACHED/EXTERNALLY_DETACHED).
+     * @param xmlSignaturePrefix Prefijo XML del elemento {@code Signature} (puede ser vacío).
+     * @return El documento listo para serializar. */
+    private static Document postprocessEnvelopingDocument(final Document docSignature,
+            final String format, final String xmlSignaturePrefix) {
+        if (!format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING)) {
+            return docSignature;
+        }
+        final String signatureNodeName = (xmlSignaturePrefix == null || xmlSignaturePrefix.isEmpty()
+                ? "" : xmlSignaturePrefix + ":") + XMLConstants.TAG_SIGNATURE; //$NON-NLS-1$ //$NON-NLS-2$
+        try {
+            if (docSignature.getElementsByTagName(signatureNodeName).getLength() == 1) {
+                final Document newdoc = Utils.getNewDocumentBuilder().newDocument();
+                newdoc.appendChild(newdoc.adoptNode(docSignature.getElementsByTagName(signatureNodeName).item(0)));
+                return newdoc;
             }
         }
+        catch (final Exception e) {
+            LOGGER.info("No se ha eliminado el nodo padre '<AFIRMA>': " + e); //$NON-NLS-1$
+        }
+        return docSignature;
+    }
 
-        // Si no es enveloped quito los valores para que no se inserte la
-        // cabecera de hoja de estilo
+    /** Serializa el documento de firma a bytes. Si el formato es <i>enveloped</i>
+     * propaga la cabecera de hoja de estilo del XML original; en cualquier otro
+     * formato se omite para no contaminar la salida.
+     * @param docSignature Documento con la firma.
+     * @param format Formato XMLDSig.
+     * @param originalXMLProperties Propiedades XML del documento original (encoding, version, doctype).
+     * @param xmlStyle Hoja de estilo asociada al XML original (puede estar vacía).
+     * @return La firma serializada como {@code byte[]}. */
+    private static byte[] serializeSignatureToBytes(final Document docSignature, final String format,
+            final Map<String, String> originalXMLProperties, final XmlStyle xmlStyle) {
+        final boolean isEnveloped = format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED);
         return Utils.writeXML(
-    		docSignature.getDocumentElement(),
-    		originalXMLProperties,
-    		format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED) ?
-				xmlStyle.getStyleHref() :
-					null,
-			format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED) ?
-				xmlStyle.getStyleType() :
-					null
-		);
+            docSignature.getDocumentElement(),
+            originalXMLProperties,
+            isEnveloped ? xmlStyle.getStyleHref() : null,
+            isEnveloped ? xmlStyle.getStyleType() : null
+        );
     }
 
     /** Comprueba si la firma es detached.
