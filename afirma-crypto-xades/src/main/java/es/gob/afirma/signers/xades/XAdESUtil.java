@@ -564,164 +564,6 @@ public final class XAdESUtil {
 //    }
 
     /**
-     * Obtiene la primera firma encontrada en el elemento XML.
-     * @param element Elemento XML.
-     * @return Primera firma encontrada o nulo si no se encuentra ninguna.
-     */
-   public static Element getFirstSignatureElement(final Element element) {
-
-    	if (element == null) {
-    		return null;
-    	}
-
-    	// Localizamos el primer nodo de firma
-    	Element signatureElement = null;
-    	if (XMLConstants.TAG_SIGNATURE.equals(element.getLocalName())) {
-    		signatureElement = element;
-    	}
-    	else {
-    		final NodeList signatures = element.getElementsByTagNameNS(XMLConstants.DSIGNNS, XMLConstants.TAG_SIGNATURE);
-    		if (signatures.getLength() > 0) {
-    			signatureElement = (Element) signatures.item(0);
-    		}
-    	}
-    	return signatureElement;
-    }
-
-    /**
-     * Obtiene el elemento con la referencia a los atributos firmados de la firma
-     * XAdES indicado.
-     * @param signatureElement Elemento "Signature" de una firma XAdES.
-     * @return Elemento con la referencia a los atributos firmados o nulo si no se
-     * encontr&oacute;.
-     */
-    static Element getSignedPropertiesReference(final Element signatureElement) {
-
-    	// Obtemos el nodo SignedInfo
-    	final Element signedInfoElement = getSignedInfo(signatureElement);
-    	if (signedInfoElement == null) {
-    		return null;
-    	}
-
-    	// Obtenemos las referencias declaradas en la firma
-    	final NodeList references = signedInfoElement.getElementsByTagNameNS(
-    			XMLConstants.DSIGNNS, XMLConstants.TAG_REFERENCE);
-
-    	// Buscamos entre las referencias hasta encontrar la que declare el tipo
-    	// correspondiente a los atributos firmados
-    	for (int i = 0; i < references.getLength(); i++) {
-    		final Element reference = (Element) references.item(i);
-    		final String type = reference.getAttribute("Type"); //$NON-NLS-1$
-			if (type != null && !type.isEmpty() && isSignedPropertiesType(type)) {
-				return reference;
-			}
-    	}
-    	// Si no se encontro la referencia, se devuelve nulo
-    	return null;
-    }
-
-	/**
-	 * Obtiene el nodo SignedInfo de un elemento de firma individual.
-	 * @param signature Elemento de firma.
-	 * @return Elemento SignedInfo o {@code null} si no se encuentra.
-	 */
-    public static Element getSignedInfo(final Element signature) {
-
-    	Element signedInfoElement = null;
-    	final NodeList childs = signature.getChildNodes();
-    	for (int i = 0; i < childs.getLength() && signedInfoElement == null; i++) {
-    		if (childs.item(i).getNodeType() == Node.ELEMENT_NODE
-    				&& XMLConstants.DSIGNNS.equals(childs.item(i).getNamespaceURI())
-    				&& XMLConstants.TAG_SIGNEDINFO.equals(childs.item(i).getLocalName())) {
-    			signedInfoElement = (Element) childs.item(i);
-    		}
-    	}
-    	return signedInfoElement;
-    }
-
-    /**
-     * Obtiene el elemento SignedProperties de una firma XAdES.
-     * @param signatureElement Elemento "Signature" de una firma XAdES.
-     * @param signedPropertiesReference Elemento "Reference" que contiene
-     * la referencia a los atributos firmados de la firma indicada.
-     * @return Elemento "SignedProperties" de una firma XAdES.
-     */
-    static Element getSignedPropertiesElement(final Element signatureElement, final Element signedPropertiesReference) {
-
-    	// Recuperamos el identificador del elementos con los atributos firmados
-    	final String uri = signedPropertiesReference.getAttribute("URI"); //$NON-NLS-1$
-    	if (uri == null || !uri.startsWith("#")) { //$NON-NLS-1$
-    		return null;
-    	}
-
-    	// Recuperamos el nodo con los elemento firmados
-    	final String signedPropertiesId = uri.substring(1);
-
-    	return findElementById(signedPropertiesId, signatureElement, false);
-    }
-
-    /**
-     * Obtiene el elemento SignedProperties de una firma XAdES.
-     * @param signatureElement Elemento "Signature" de una firma XAdES.
-     * @return Elemento "SignedProperties" de una firma XAdES.
-     */
-    static Element getSignedPropertiesElement(final Element signatureElement) {
-
-    	// Obtenemos la referencia a los atributos firmados de la firma
-    	final Element referenceNode = getSignedPropertiesReference(signatureElement);
-    	if (referenceNode == null) {
-    		return null;
-    	}
-
-    	// Recuperamos el identificador del elementos con los atributos firmados
-    	final String uri = referenceNode.getAttribute("URI"); //$NON-NLS-1$
-    	if (uri == null || !uri.startsWith("#")) { //$NON-NLS-1$
-    		return null;
-    	}
-
-    	// Recuperamos el nodo con los elementos firmados
-    	final String signedPropertiesId = uri.substring(1);
-
-    	return findElementById(signedPropertiesId, signatureElement, false);
-    }
-
-    /**
-     * Obtiene el elemento UnsignedProperties de una firma XAdES.
-     * @param signatureElement Elemento "Signature" de una firma XAdES.
-     * @return Elemento "UnsignedProperties" de una firma XAdES.
-     */
-    static Element getUnSignedPropertiesElement(final Element signatureElement) {
-
-    	// Obtenemos el elemento de propiedades firmadas
-    	final Element signedPropertiesElement = getSignedPropertiesElement(signatureElement);
-    	if (signedPropertiesElement == null) {
-    		return null;
-    	}
-
-    	// El elemento de propiedades sin firmar sera un nodo hermano de este
-    	final Element qualifingPropertiesElement = (Element) signedPropertiesElement.getParentNode();
-    	return XMLUtils.getChildElementByTagNameNS(
-    			qualifingPropertiesElement,
-    			XAdESConstants.TAG_UNSIGNED_PROPERTIES,
-    			XAdESConstants.NAMESPACE_XADES_1_3_2);
-    }
-
-    /**
-     * Se obtiene el elemento SignatureMethod de una firma XAdES.
-     * @param signatureElement Elemento "Signature" de una firma XAdES.
-     * @return Elemento "SignatureMethod" de una firma XAdES.
-     */
-    public static Element getSignatureMethodElement(final Element signatureElement) {
-		final Element signedInfoElement = XAdESUtil.getSignedInfo(signatureElement);
-		if (signedInfoElement == null) {
-			return null;
-		}
-		final NodeList signatureMethodList = signedInfoElement.getElementsByTagNameNS(XMLConstants.DSIGNNS, XAdESConstants.TAG_SIGNATURE_METHOD);
-		return (Element)signatureMethodList.item(0);
-    }
-
-
-    /**
      * Crea una nueva instancia para firmar.
      * @param profile Perfil de firma XAdES que se quiere generar.
      * @param xadesNamespace Espacio de nombres XAdES.
@@ -822,7 +664,7 @@ public final class XAdESUtil {
     public static List<Element> getSignatureDataReferenceList(final Element signatureElement) {
 
     	// Obtemos el nodo SignedInfo
-    	final Element signedInfoElement = getSignedInfo(signatureElement);
+    	final Element signedInfoElement = XAdESDomLookup.getSignedInfo(signatureElement);
     	if (signedInfoElement == null) {
     		return null;
     	}
@@ -880,7 +722,7 @@ public final class XAdESUtil {
     public static boolean hasHashManifestReference(final Element signatureElement) {
 
     	// Obtemos el nodo SignedInfo
-    	final Element signedInfoElement = getSignedInfo(signatureElement);
+    	final Element signedInfoElement = XAdESDomLookup.getSignedInfo(signatureElement);
     	if (signedInfoElement == null) {
     		return false;
     	}
@@ -973,7 +815,7 @@ public final class XAdESUtil {
      * @throws SigningLTSException Cuando alguna de las firmas incluye sello de archivo.
      */
     public static void checkArchiveSignatures(final Element signature) throws SigningLTSException {
-    	final Element unsignedProperties = getUnSignedPropertiesElement(signature);
+    	final Element unsignedProperties = XAdESDomLookup.getUnSignedPropertiesElement(signature);
     	if (unsignedProperties != null) {
     		final Element unsignedSignatureProperties = XMLUtils.getChildElementByTagNameNS(unsignedProperties,
     				XAdESConstants.TAG_UNSIGNED_SIGNATURE_PROPERTIES, XAdESConstants.NAMESPACE_XADES_1_3_2);

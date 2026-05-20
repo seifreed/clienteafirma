@@ -831,7 +831,7 @@ public final class TestXAdES {
 
         String xadesPrefix = namespacePrefix;
         if (xadesPrefix == null) {
-        	final Element signedPropertiesElement = XAdESUtil.getSignedPropertiesElement(XAdESUtil.getFirstSignatureElement(document.getDocumentElement()));
+        	final Element signedPropertiesElement = XAdESDomLookup.getSignedPropertiesElement(XAdESDomLookup.getFirstSignatureElement(document.getDocumentElement()));
         	xadesPrefix = signedPropertiesElement.getPrefix();
         }
 

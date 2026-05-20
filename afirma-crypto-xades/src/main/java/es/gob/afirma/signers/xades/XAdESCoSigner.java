@@ -301,8 +301,8 @@ public final class XAdESCoSigner {
 		// Buscamos dentro de la firma la refencia a los atributos firmados y, mediante esta referencia
 		// y el propio nodo de atributos, obtenemos la URL del tipo que declara y el espacio de nombres
 		// de XAdES que se debe utilizar
-		final Element signatureElement = XAdESUtil.getFirstSignatureElement(docSig.getDocumentElement());
-		final Element signedPropertiesReference = XAdESUtil.getSignedPropertiesReference(signatureElement);
+		final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(docSig.getDocumentElement());
+		final Element signedPropertiesReference = XAdESDomLookup.getSignedPropertiesReference(signatureElement);
 
 		// Identificamos el Almacenaremos ademas, el tipo con el que se declara la referencia de los SignedPropeties y el
 		// Id del propio nodo SignedPropeties para poder generar la nueva firma con los mismos datos.
@@ -310,7 +310,7 @@ public final class XAdESCoSigner {
 		if (signedPropertiesType == null || signedPropertiesType.isEmpty()) {
 			signedPropertiesType = XAdESConstants.REFERENCE_TYPE_SIGNED_PROPERTIES;
 		}
-		final Element signedPropertiesElement = XAdESUtil.getSignedPropertiesElement(signatureElement, signedPropertiesReference);
+		final Element signedPropertiesElement = XAdESDomLookup.getSignedPropertiesElement(signatureElement, signedPropertiesReference);
 		String xadesNamespace = signedPropertiesElement.getNamespaceURI();
 		if (xadesNamespace == null) {
 			xadesNamespace = XAdESConstants.DEFAULT_NAMESPACE_XADES;

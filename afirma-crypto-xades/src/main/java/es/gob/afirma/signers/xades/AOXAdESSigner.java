@@ -426,7 +426,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     public static boolean isDetached(final Element element) {
 
     	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(element);
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
 
     	// Si no se encuentran firmas, no es una firma
     	if (signatureElement == null) {
@@ -457,7 +457,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      * en caso contrario. */
     public static boolean isExternallyDetached(final Element element) {
     	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(element);
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
 
     	// Si no se encuentran firmas, no es una firma
     	if (signatureElement == null) {
@@ -484,7 +484,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      * @return {@code true} si es una firma con <i>manifest</i>, {@code false} en caso contrario. */
     public static boolean isManifestSignature(final Element element) {
     	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(element);
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
 
     	// Si no se encuentran firmas, no es una firma
     	if (signatureElement == null) {
@@ -519,7 +519,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
      *         contrario. */
     public static boolean isEnveloped(final Element element) {
     	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(element);
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
 
     	// Si no se encuentran firmas, no es una firma
     	if (signatureElement == null) {
@@ -549,7 +549,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
     public static boolean isEnveloping(final Element element) {
 
     	// Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(element);
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(element);
 
     	// Si no se encuentran firmas, no es una firma
     	if (signatureElement == null) {
@@ -603,7 +603,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
         }
 
         // Obtenemos la primera firma encontrada en el elemento XML
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(signDocument.getDocumentElement());
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(signDocument.getDocumentElement());
 
     	// Si no se encuentran firmas, no se recuperan los datos
     	if (signatureElement == null) {
@@ -1062,8 +1062,8 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 	    		// Recogemos los objetos que identificaran a los nodos de firma
 	    		if (asSimpleSignInfo) {
 	    			String xadesNamespace = null;
-	    			final Element signatureElement = XAdESUtil.getFirstSignatureElement(signDocument.getDocumentElement());
-	    			final Element signedProperties = XAdESUtil.getSignedPropertiesElement(signatureElement);
+	    			final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(signDocument.getDocumentElement());
+	    			final Element signedProperties = XAdESDomLookup.getSignedPropertiesElement(signatureElement);
 	    			if (signedProperties != null) {
 	    				xadesNamespace = signedProperties.getNamespaceURI();
 	    			}
@@ -1287,7 +1287,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
         final AOSignInfo signInfo = new AOSignInfo(AOSignConstants.SIGN_FORMAT_XADES);
 
         // Identificamos el tipo de la firma por medio de las referencias de la primera de ellas
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(signDocument.getDocumentElement());
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(signDocument.getDocumentElement());
 
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);

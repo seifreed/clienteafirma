@@ -21,6 +21,7 @@ import es.gob.afirma.core.signers.AdESPolicy;
 import es.gob.afirma.core.util.tree.AOTreeModel;
 import es.gob.afirma.signers.xades.AOXAdESSigner;
 import es.gob.afirma.signers.xades.XAdESConstants;
+import es.gob.afirma.signers.xades.XAdESDomLookup;
 import es.gob.afirma.signers.xades.XAdESSignatureTypeDetector;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
@@ -152,7 +153,7 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
 		final SignDetails xadesSignDetails = new SignDetails();
 
 		xadesSignDetails.setSignProfile(signProfile);
-		final Element signatureMethodElement = XAdESUtil.getSignatureMethodElement(signElement);
+		final Element signatureMethodElement = XAdESDomLookup.getSignatureMethodElement(signElement);
 		if (signatureMethodElement != null) {
 			String algorithm = SIGN_ALGOS_URI.get(signatureMethodElement.getAttribute("Algorithm")); //$NON-NLS-1$
 			if (algorithm == null) {
@@ -390,7 +391,7 @@ public class XAdESSignAnalyzer implements SignAnalyzer {
         final Element rootSig = this.signDocument.getDocumentElement();
 
         // Identificamos el tipo de la firma por medio de las referencias de la primera de ellas
-    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(this.signDocument.getDocumentElement());
+    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(this.signDocument.getDocumentElement());
 
     	// Obtenemos el listado de referencias a datos de la firma
     	final List<Element> dataReferenceList = XAdESUtil.getSignatureDataReferenceList(signatureElement);

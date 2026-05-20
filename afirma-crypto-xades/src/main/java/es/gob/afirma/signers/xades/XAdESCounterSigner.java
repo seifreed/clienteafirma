@@ -636,8 +636,8 @@ public final class XAdESCounterSigner {
 				XAdESExtraParams.INTERNAL_VALIDATE_PKCS1, Boolean.TRUE.toString()));
 
 		// Identificamos el prefijo y el espacio de nombre que debemos usar para incluir la contrafirma
-		final Element signedPropertiesReference = XAdESUtil.getSignedPropertiesReference(signature);
-		final Element signedPropertiesElement = XAdESUtil.getSignedPropertiesElement(signature, signedPropertiesReference);
+		final Element signedPropertiesReference = XAdESDomLookup.getSignedPropertiesReference(signature);
+		final Element signedPropertiesElement = XAdESDomLookup.getSignedPropertiesElement(signature, signedPropertiesReference);
 		if (signedPropertiesElement == null) {
 			throw new AOMalformedSignatureException("No se han encontrado los atributos firmados de la firma original"); //$NON-NLS-1$
 		}

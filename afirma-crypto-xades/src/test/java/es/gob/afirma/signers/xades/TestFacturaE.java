@@ -174,8 +174,8 @@ public final class TestFacturaE {
 
         String xadesPrefix = namespacePrefix;
         if (xadesPrefix == null) {
-        	final Element signatureElement = XAdESUtil.getFirstSignatureElement(document.getDocumentElement());
-        	final Element signedPropertiesElement = XAdESUtil.getSignedPropertiesElement(signatureElement);
+        	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(document.getDocumentElement());
+        	final Element signedPropertiesElement = XAdESDomLookup.getSignedPropertiesElement(signatureElement);
         	xadesPrefix = signedPropertiesElement.getPrefix();
         }
 

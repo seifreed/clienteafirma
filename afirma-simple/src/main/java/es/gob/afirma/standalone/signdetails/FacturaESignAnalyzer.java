@@ -21,6 +21,7 @@ import es.gob.afirma.core.signers.AdESPolicy;
 import es.gob.afirma.core.util.tree.AOTreeModel;
 import es.gob.afirma.signers.xades.AOFacturaESigner;
 import es.gob.afirma.signers.xades.XAdESConstants;
+import es.gob.afirma.signers.xades.XAdESDomLookup;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.XMLConstants;
@@ -150,7 +151,7 @@ public class FacturaESignAnalyzer implements SignAnalyzer {
 
 		final SignDetails xadesSignDetails = new SignDetails();
 		xadesSignDetails.setSignProfile(signProfile);
-		final Element signatureMethodElement = XAdESUtil.getSignatureMethodElement(signElement);
+		final Element signatureMethodElement = XAdESDomLookup.getSignatureMethodElement(signElement);
 		if (signatureMethodElement == null) {
 			throw new AOInvalidSignatureFormatException("El elemento SignatureMethod no existe"); //$NON-NLS-1$
 		}

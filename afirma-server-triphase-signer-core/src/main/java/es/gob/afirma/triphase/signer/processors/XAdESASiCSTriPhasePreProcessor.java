@@ -236,7 +236,7 @@ public final class XAdESASiCSTriPhasePreProcessor extends XAdESTriPhasePreProces
 //    	}
 //
 //    	// Identificamos alguna de las firmas
-//    	final Element signatureElement = XAdESUtil.getFirstSignatureElement(signDocument.getDocumentElement());
+//    	final Element signatureElement = XAdESDomLookup.getFirstSignatureElement(signDocument.getDocumentElement());
 //    	if (signature == null) {
 //    		throw new AOException("No se han encontrado firmas en el documento"); //$NON-NLS-1$
 //    	}

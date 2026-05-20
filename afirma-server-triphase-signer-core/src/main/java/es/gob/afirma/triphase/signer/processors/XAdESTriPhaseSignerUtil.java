@@ -28,6 +28,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import es.gob.afirma.core.signers.AOSignConstants;
+import es.gob.afirma.signers.xades.XAdESDomLookup;
 import es.gob.afirma.signers.xades.XAdESUtil;
 import es.gob.afirma.signers.xml.Utils;
 import es.gob.afirma.signers.xml.dereference.CustomUriDereferencer;
@@ -440,7 +441,7 @@ final class XAdESTriPhaseSignerUtil {
         	// Buscamos la referencias solo dentro del SignedInfo para evitar problemas con las
         	// referencias de los manifest. Si no encontramos el elemento, omitimos las
         	// referencias de la firma
-        	final Element signedInfo = XAdESUtil.getSignedInfo((Element) sigs);
+        	final Element signedInfo = XAdESDomLookup.getSignedInfo((Element) sigs);
         	if (signedInfo == null) {
         		continue;
         	}
