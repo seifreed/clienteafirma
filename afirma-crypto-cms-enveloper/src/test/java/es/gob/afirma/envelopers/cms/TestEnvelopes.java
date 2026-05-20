@@ -9,7 +9,6 @@ import java.util.Enumeration;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import es.gob.afirma.core.ciphers.AOCipherConfig;
@@ -112,7 +111,6 @@ public final class TestEnvelopes {
 	/** Prueba de creaci&oacute;n de sobre con curva el&iacute;ptica.
 	 * @throws Exception En cualquier error. */
 	@Test
-	@Ignore	// Se ignora por problemas al encontrar proveedor de curva eliptica
 	public void createAndOpenEnvelopeEc() throws Exception {
 
 		final byte[] content ="Hola mundo".getBytes(); //$NON-NLS-1$

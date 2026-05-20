@@ -1,7 +1,6 @@
 package es.gob.afirma.core.misc;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import es.gob.afirma.core.signers.AOSignConstants;
@@ -12,10 +11,8 @@ public final class TestConstants {
 
 	/** Prueba de obtenci&oacute;n de nombre de algoritmo de huella <i>NONE</i>. */
 	@Test
-	@Ignore
 	public void testDigestNone() {
 		final String digestAlgo = AOSignConstants.getDigestAlgorithmName("NONEwithRSA"); //$NON-NLS-1$
-		System.out.println(digestAlgo);
 		Assert.assertEquals("NONE", digestAlgo); //$NON-NLS-1$
 	}
 

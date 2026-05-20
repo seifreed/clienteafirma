@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -153,22 +153,19 @@ public final class TestNssSharedDb {
 	 * Carga el almacen NSS del sistema.
 	 */
 	@Test
-	@Ignore
 	public void testLoadSystemSharedNSS() {
+
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.nss.shared=true (NSS instalado en el sistema)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.nss.shared")); //$NON-NLS-1$
 
 		final SharedNssKeyStoreManager ksm = new SharedNssKeyStoreManager();
 		try {
 			ksm.init(AOKeyStore.SHARED_NSS, null, null, null, false);
 		}
 		catch (final Exception e) {
-			e.printStackTrace();
-			Assert.fail("No se ha podido cargar el almacen NSS del sistema"); //$NON-NLS-1$
+			Assert.fail("No se ha podido cargar el almacen NSS del sistema: " + e.getMessage()); //$NON-NLS-1$
 		}
 
-		System.out.println(" --- Alias del almacen NSS del sistema ---"); //$NON-NLS-1$
-		for (final String alias : ksm.getAliases()) {
-			System.out.println(alias);
-		}
-		System.out.println(" ------ "); //$NON-NLS-1$
+		Assert.assertNotNull("El almacen NSS compartido debe exponer algun alias", ksm.getAliases()); //$NON-NLS-1$
 	}
 }

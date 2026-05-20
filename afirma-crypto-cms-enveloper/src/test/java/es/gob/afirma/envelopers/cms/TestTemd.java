@@ -14,7 +14,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.ciphers.AOCipherConfig;
@@ -32,8 +32,10 @@ public final class TestTemd {
 	/** Prueba de creaci&oacute;n de sobre con PKCS#11 FNMT.
 	 * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
 	public void createEnvelopePkcs11Fnmt() throws Exception {
+
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.fnmt.pkcs11=true (tarjeta FNMT + DLL PKCS#11 Windows)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.fnmt.pkcs11")); //$NON-NLS-1$
 
 		final byte[] content ="Hola mundo".getBytes(); //$NON-NLS-1$
 		final File f = new File(
@@ -111,8 +113,10 @@ public final class TestTemd {
 	/** Prueba de creaci&oacute;n de sobre con CAPI.
 	 * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
 	public void createEnvelopeCapi() throws Exception {
+
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.capi=true (Windows + tarjeta MDEF en almacen CAPI)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.capi")); //$NON-NLS-1$
 
 		final byte[] content ="Hola mundo".getBytes(); //$NON-NLS-1$
 

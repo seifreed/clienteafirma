@@ -11,8 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -80,9 +80,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error
      */
     @Test
-    @Ignore
     public void testSignatureXAdES122Tri() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = generateXAdES122Tri();
 
     	validate(signature);
@@ -111,9 +111,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error
      */
     @Test
-    @Ignore
     public void testSignatureXAdESTri() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = generateXAdESTri();
 
     	validate(signature);
@@ -144,9 +144,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error
      */
     @Test
-    @Ignore
     public void testCounterSignTriXAdES122() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = generateXAdES122();
 
     	final byte[] counterSignature = countersignTri(signature);
@@ -179,9 +179,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error
      */
     @Test
-    @Ignore
     public void testCoSignTriXAdES122() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = generateXAdES122Tri();
 
     	final byte[] coSignature = cosignTri(signature);
@@ -217,9 +217,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error.
      */
     @Test
-    @Ignore
     public void testCounterSignTriXAdES122Igae() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = loadTestFile(TEST_FILE_XADES_1_2_2_IGAE);
 
     	validate(signature);
@@ -237,9 +237,9 @@ public class TestXAdES {
      * @throws Exception en cualquier error.
      */
     @Test
-    @Ignore
     public void testCounterSignTriCosignatureXAdES() throws Exception {
 
+    	assumeTriphaseServer();
     	final byte[] signature = loadTestFile(TEST_FILE_XADES_COSIGNATURE);
 
     	validate(signature);
@@ -414,6 +414,11 @@ public class TestXAdES {
     			config);
 
     	return cosignature;
+    }
+
+    private static void assumeTriphaseServer() {
+    	Assume.assumeTrue("Test omitido: requiere -Dafirma.it.triphase.server=true (servidor trifasico en localhost:8080)", //$NON-NLS-1$
+    			Boolean.getBoolean("afirma.it.triphase.server")); //$NON-NLS-1$
     }
 
     private static Properties newConfig() {

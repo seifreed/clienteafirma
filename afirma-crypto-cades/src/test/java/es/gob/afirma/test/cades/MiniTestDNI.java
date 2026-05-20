@@ -20,7 +20,7 @@ import java.security.Security;
 import java.util.Date;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.signers.cades.CAdESParameters;
@@ -40,9 +40,11 @@ public final class MiniTestDNI {
 
     /** Mini-prueba CAdES especifica para DNIe.
      * @throws Exception en caso de cualquier tipo de problema. */
-    @Ignore // Necesita un DNIe
 	@Test
     public void testCAdESDNIe() throws Exception {
+
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.dnie=true (DNIe + driver SunPKCS11 en c:/windows/system32/UsrPkcs11.dll)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.dnie")); //$NON-NLS-1$
 
         final Constructor<?> sunPKCS11Contructor = Class.forName("sun.security.pkcs11.SunPKCS11").getConstructor(InputStream.class); //$NON-NLS-1$
 
@@ -56,7 +58,7 @@ public final class MiniTestDNI {
 
         final CAdESParameters parameters = new CAdESParameters();
         parameters.setContentData(TEXTO_FIRMAR.getBytes(StandardCharsets.UTF_8));
-        parameters.setDataDigest(null);// Se calcula internamente el digest de los datos a firmar.
+        parameters.setDataDigest(null);
         parameters.setDigestAlgorithm("SHA-512"); //$NON-NLS-1$
         parameters.setSigningCertificateV2(true);
         parameters.setIncludedIssuerSerial(true);
@@ -71,12 +73,7 @@ public final class MiniTestDNI {
 		);
 
         Assert.assertNotNull(firma);
-        try (
-    		final java.io.FileOutputStream fos = new java.io.FileOutputStream("C:/pruebas/salida/MiniTestCadesNuevo.csig"); //$NON-NLS-1$
-		) {
-            fos.write(firma);
-        }
-
+        Assert.assertTrue("La firma CAdES con DNIe debe tener contenido", firma.length > 0); //$NON-NLS-1$
     }
 
 }

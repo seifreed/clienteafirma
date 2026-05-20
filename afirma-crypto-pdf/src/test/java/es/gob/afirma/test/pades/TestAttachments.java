@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.AOUtil;
@@ -53,11 +53,14 @@ public class TestAttachments {
 
     }
 
-    /** Prueba de la firma con adjuntos (incompleta).
+    /** Prueba de la firma con adjuntos. Incluye sello de tiempo CATCERT, por lo que requiere
+     * acceso a la TSA externa.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore
 	public void testAttachmentSignature() throws Exception {
+
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.tsa=true (conectividad a TSA CATCERT psis.catcert.net)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.tsa")); //$NON-NLS-1$
 
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
         final PrivateKeyEntry pke;

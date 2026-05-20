@@ -572,7 +572,6 @@ public final class TestXAdES {
      * <b>Necesita GUI</b>
      * @throws Exception Cuando ocurre un error. */
 	@Test
-    //@Ignore // Necesita GUI
     public void testSignExternalStyle() throws Exception {
 
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
