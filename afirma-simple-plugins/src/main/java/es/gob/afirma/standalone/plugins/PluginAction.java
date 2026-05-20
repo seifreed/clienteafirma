@@ -39,7 +39,9 @@ public abstract class PluginAction {
 		}
 	}
 
-	@SuppressWarnings("unused")
+	/** Punto de extensi&oacute;n para implementaciones de plugin. La implementaci&oacute;n por defecto no hace nada;
+	 * las subclases reciben la ventana padre para enraizar di&aacute;logos modales o widgets propios.
+	 * @param parent Ventana padre. Las subclases que renderizan UI propio deben usarla como owner. */
 	public void start(final Window parent) {
 		// Por defecto, no se hace nada
 	}

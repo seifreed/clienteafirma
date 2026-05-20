@@ -56,7 +56,6 @@ public final class CAdESValidator {
      * @return <code>true</code> si los datos proporcionados se corresponden con una estructura de tipo <i>Data</i>,
      * <code>false</code> en caso contrario.
      * @throws IOException En caso de problemas leyendo el fichero */
-	@SuppressWarnings("unused")
 	static boolean isCAdESData(final byte[] data) throws IOException {
 
         // LEEMOS EL FICHERO QUE NOS INTRODUCEN
@@ -72,18 +71,15 @@ public final class CAdESValidator {
         final ASN1TaggedObject doj = (ASN1TaggedObject) e.nextElement();
 
         try {
-            /* Los valores de retorno no se usan, solo es para verificar que la
-             * conversion ha sido correcta. De no ser asi, se pasaria al manejo
-             * de la excepcion. */
-            new DEROctetString(doj.getBaseObject().toASN1Primitive());
-
+            // Validacion: el constructor lanza si el ASN1Primitive no es convertible a octet string.
+            final DEROctetString validation = new DEROctetString(doj.getBaseObject().toASN1Primitive());
+            java.util.Objects.requireNonNull(validation);
+            return true;
         }
         catch (final Exception ex) {
         	LOGGER.fine("Los datos proporcionados no son de tipo Data: " + ex); //$NON-NLS-1$
             return false;
         }
-
-        return true;
     }
 
     /** Verifica si los datos proporcionados se corresponden con una estructura de tipo <i>SignedData</i>.
@@ -165,7 +161,6 @@ public final class CAdESValidator {
      * @return <code>true</code> si los datos proporcionados se corresponden con una estructura de tipo <i>DigestedData</i>,
      * <code>false</code> en caso contrario.
      * @throws IOException Si ocurren problemas relacionados con la lectura de los datos */
-    @SuppressWarnings("unused")
 	static boolean isCAdESDigestedData(final byte[] data) throws IOException {
         boolean isValid = false;
 
@@ -181,11 +176,9 @@ public final class CAdESValidator {
         final ASN1TaggedObject doj = (ASN1TaggedObject) e.nextElement();
 
         try {
-            /* Los resultados no se usan, solo es para verificar que la
-             * conversion ha sido correcta. De no ser asi, se pasaria al manejo
-             * de la excepcion. */
-            new DigestedData((ASN1Sequence) doj.getBaseObject().toASN1Primitive());
-
+            // Validacion: el constructor lanza si la secuencia ASN.1 no es un DigestedData valido.
+            final DigestedData validation = new DigestedData((ASN1Sequence) doj.getBaseObject().toASN1Primitive());
+            java.util.Objects.requireNonNull(validation);
         }
         catch (final Exception ex) {
         	LOGGER.fine("Los datos proporcionados no son de tipo DigestedData: " + ex); //$NON-NLS-1$

@@ -56,7 +56,6 @@ final class ValidateCMS {
     /** Verifica si una firma es de tipo <i>Data</i>.
      * @param data Datos CMS.
      * @return si es de este tipo. */
-    @SuppressWarnings("unused")
 	static
     boolean isCMSData(final byte[] data) {
         boolean isValid = true;
@@ -75,12 +74,9 @@ final class ValidateCMS {
             else {
                 // Contenido de Data
                 final ASN1TaggedObject doj = (ASN1TaggedObject) e.nextElement();
-
-                /*
-                 * Si no es un objeto de tipo Dara se pasa al manejo de la
-                 * excepcion
-                 */
-                new DEROctetString(doj.getBaseObject().toASN1Primitive());
+                // Validacion: el constructor lanza si los datos no son un octet string codificable.
+                final DEROctetString validation = new DEROctetString(doj.getBaseObject().toASN1Primitive());
+                java.util.Objects.requireNonNull(validation);
             }
         }
         catch (final Exception ex) {
@@ -149,7 +145,6 @@ final class ValidateCMS {
     /** Verifica si una firma es de tipo <i>Digested Data</i>.
      * @param data Datos CMS.
      * @return Si es de este tipo. */
-    @SuppressWarnings("unused")
 	static
     boolean isCMSDigestedData(final byte[] data) {
         boolean isValid = true;
@@ -167,13 +162,9 @@ final class ValidateCMS {
             else {
                 // Contenido de Data
                 final ASN1TaggedObject doj = (ASN1TaggedObject) e.nextElement();
-
-                /*
-                 * Estas variables no se usan, solo es para verificar que la
-                 * conversion ha sido correcta. De no ser asi, se pasaria al
-                 * manejo de la excepcion.
-                 */
-                new DigestedData((ASN1Sequence) doj.getBaseObject().toASN1Primitive());
+                // Validacion: el constructor lanza si la secuencia ASN.1 no es un DigestedData valido.
+                final DigestedData validation = new DigestedData((ASN1Sequence) doj.getBaseObject().toASN1Primitive());
+                java.util.Objects.requireNonNull(validation);
             }
         }
         catch (final Exception ex) {

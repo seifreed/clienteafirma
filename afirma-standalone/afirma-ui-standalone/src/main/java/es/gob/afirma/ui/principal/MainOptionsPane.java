@@ -267,11 +267,12 @@ public class MainOptionsPane {
 
     				/** Ajusta la introducci&oacute;n del prefijo "urn:oid" de forma autom&aacute;tica
     				 * para evitar confusiones por parte del usuario. */
-    				@SuppressWarnings("unused")
     				@Override
     				public void focusLost(final FocusEvent e) {
 						try {
-							new Oid(MainOptionsPane.this.textPolicyIdentifier.getText());
+							// Validacion: si el texto introducido no es un OID el constructor lanzara.
+							final Oid validation = new Oid(MainOptionsPane.this.textPolicyIdentifier.getText());
+							java.util.Objects.requireNonNull(validation);
 						}
 						catch(final Exception ex) {
 							return;
@@ -519,15 +520,18 @@ public class MainOptionsPane {
      * y advierte al usuario en caso contrario.
      * @return <code>true</code> si el identificador del la pol&iacute;tica de firma es un OID o un URN de tipo OID,
      *         <code>false</code> en caso contrario */
-    @SuppressWarnings("unused")
 	public boolean checkAboutBadPolicyId() {
     	if (this.checkAddPolicy.isSelected()) {
 			try {
-				new Oid(this.textPolicyIdentifier.getText().trim().replace("urn:oid:", "")); //$NON-NLS-1$ //$NON-NLS-2$
+				// Validacion: el constructor lanzara si el texto no es un OID valido.
+				final Oid validation = new Oid(this.textPolicyIdentifier.getText().trim().replace("urn:oid:", "")); //$NON-NLS-1$ //$NON-NLS-2$
+				java.util.Objects.requireNonNull(validation);
 			}
 			catch(final Exception e) {
 				try {
-					new URL(this.textPolicyIdentifier.getText().trim());
+					// Si no es OID, intentamos parsearlo como URL.
+					final URL validationUrl = new URL(this.textPolicyIdentifier.getText().trim());
+					java.util.Objects.requireNonNull(validationUrl);
 				}
 				catch (final Exception e2) {
 					CustomDialog.showMessageDialog(
@@ -553,7 +557,6 @@ public class MainOptionsPane {
      * @return {@code true} si el qualificador es una URL, {@code false} en caso
      * contrario.
      */
-	@SuppressWarnings("unused")
 	public boolean checkSignaturePolicyQualifier() {
 
 		// Se permiten calificadores nulos
@@ -562,7 +565,9 @@ public class MainOptionsPane {
 		}
 
     	try {
-    		new URL(this.textPolicyQualifier.getText());
+    		// Validacion: el constructor lanzara si el texto no es una URL valida.
+    		final URL validationUrl = new URL(this.textPolicyQualifier.getText());
+    		java.util.Objects.requireNonNull(validationUrl);
     	}
     	catch (final Exception e) {
     		// Si se obtiene una excepcion es que la URL estaba mal formada

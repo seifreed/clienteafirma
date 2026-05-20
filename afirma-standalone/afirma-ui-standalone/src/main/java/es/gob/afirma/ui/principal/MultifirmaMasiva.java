@@ -65,7 +65,6 @@ final class MultifirmaMasiva extends JPanel {
     /** Firma masivamente haciendo uso del almacen / repositorio
      * @param comboAlmacen Combo con los almacenes / repositorios de certificados
      * @param alerta1 Checkbox para emitir un pitido al finalizar la operacion */
-    @SuppressWarnings("unused")
     void firmarActionPerformed(final JComboBox<KeyStoreConfiguration> comboAlmacen, final JCheckBox alerta1) {
 
         // Mensaje que indica que se va a realizar el proceso de firma y que puede llevar un tiempo
@@ -79,8 +78,10 @@ final class MultifirmaMasiva extends JPanel {
 
         final KeyStoreConfiguration kssc = (KeyStoreConfiguration) comboAlmacen.getSelectedItem();
 
-        // Se muestra el asistente
-        new AsistenteMultifirmaMasiva(kssc, alerta1.isSelected());
+        // Se muestra el asistente (su constructor lo hace visible; mantenemos la referencia para
+        // evitar el warning de "allocated object never used" y para que el GC no lo recoja antes de tiempo).
+        final AsistenteMultifirmaMasiva asistente = new AsistenteMultifirmaMasiva(kssc, alerta1.isSelected());
+        java.util.Objects.requireNonNull(asistente);
     }
 
     /** Inicializacion de los componentes */

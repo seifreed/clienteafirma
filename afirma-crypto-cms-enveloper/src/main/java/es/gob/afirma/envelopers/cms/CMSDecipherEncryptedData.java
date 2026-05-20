@@ -62,7 +62,6 @@ final class CMSDecipherEncryptedData {
      * @throws NoSuchAlgorithmException Si el JRE no soporta alg&uacute;n algoritmo necesario
      * @throws IOException En caso de error en la lectura o tratamiento de datos
      * @throws InvalidKeySpecException Cuando ocurren problemas relacionados con la estructura interna de las claves */
-    @SuppressWarnings("unused")
     byte[] dechiperEncryptedData(final byte[] encryptedData, final String pass) throws AOException,
                                                                                        InvalidKeyException,
                                                                                        NoSuchAlgorithmException,
@@ -92,11 +91,9 @@ final class CMSDecipherEncryptedData {
             // Obtenemos el agoritmo de cifrado
             alg = eci.getContentEncryptionAlgorithm();
 
-            // Se intenta obtener el encrypted data.
-            // Si no puede convertirse, dara error.
-            // "EncryptedData EncryptedData" no se usara. solo es para verificar
-            // que es de este tipo.
-            new EncryptedData(eci);
+            // Validacion: el constructor lanza si los datos no son un EncryptedData.
+            final EncryptedData validation = new EncryptedData(eci);
+            java.util.Objects.requireNonNull(validation);
         }
         catch (final Exception ex) {
             throw new AOException("El fichero no contiene un tipo EncryptedData", ex); //$NON-NLS-1$

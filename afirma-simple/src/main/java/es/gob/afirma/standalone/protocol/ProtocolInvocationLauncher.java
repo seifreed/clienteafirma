@@ -186,7 +186,10 @@ public final class ProtocolInvocationLauncher {
 		SESSION.stickyKeyEntry(stickyKeyEntry);
 	}
 
-    @SuppressWarnings("unused")
+    /** Invocado por reflexi&oacute;n (v&eacute;ase {@link Class#getDeclaredMethod(String, Class[])} m&aacute;s abajo)
+     * cuando se solicita el di&aacute;logo "Acerca de" desde el integrador del SO.
+     * @param event Evento que dispar&oacute; la invocaci&oacute;n; no se usa, solo cumple la firma esperada
+     *              por el delegado de menu de aplicaci&oacute;n. */
 	void showAbout(final EventObject event) {
     	AboutDialog.showAbout(null);
     }

@@ -19,7 +19,6 @@ import es.gob.afirma.core.signers.CounterSignTarget;
 import es.gob.afirma.signers.cades.AOCAdESSigner;
 
 /** Prueba asociada a la incidencia #189027 de contrafirma de una firma CAdES-T. */
-@SuppressWarnings("unused")
 public class TestINC189027 {
 
 	private static final String FILE_CADES_T = "189027_CAdES-T.csig"; //$NON-NLS-1$
@@ -56,9 +55,8 @@ public class TestINC189027 {
 		final Properties config = new Properties();
 		final AOCAdESSigner signer = new AOCAdESSigner();
 
-		final byte[] countersign;
 		try {
-			countersign = signer.countersign(
+			final byte[] countersign = signer.countersign(
 				signature,
 				AOSignConstants.SIGN_ALGORITHM_SHA512WITHRSA,
 				CounterSignTarget.TREE,
@@ -67,16 +65,12 @@ public class TestINC189027 {
 				pke.getCertificateChain(),
 				config
 			);
+			Assert.assertNotNull("La contrafirma CAdES-T no debe ser nula", countersign); //$NON-NLS-1$
+			Assert.assertTrue("La contrafirma CAdES-T debe tener contenido", countersign.length > 0); //$NON-NLS-1$
 		}
 		catch(final AOFormatFileException e) {
 			Assert.fail("La contrafirmas de firmas CAdES-T debe estar soportada: " + e); //$NON-NLS-1$
 		}
-
-//		final File tempFile = File.createTempFile("CAdES-T-Countersign", ".csig"); //$NON-NLS-1$ //$NON-NLS-2$
-//		System.out.println("El resultado de la contrafirma de CAdES-T se almacena en: " + tempFile.getAbsolutePath()); //$NON-NLS-1$
-//		final FileOutputStream fos = new FileOutputStream(tempFile);
-//		fos.write(countersign);
-//		fos.close();
 	}
 
 	/** Prueba de cofirma de una firma CAdES-T.
@@ -95,9 +89,8 @@ public class TestINC189027 {
 		final Properties config = new Properties();
 		final AOCAdESSigner signer = new AOCAdESSigner();
 
-		final byte[] countersign;
 		try {
-			countersign = signer.cosign(
+			final byte[] cosign = signer.cosign(
 				AOUtil.getDataFromInputStream(TestINC189027.class.getResourceAsStream("/Original.pdf")), //$NON-NLS-1$
 				signature,
 				AOSignConstants.SIGN_ALGORITHM_SHA512WITHRSA,
@@ -105,17 +98,12 @@ public class TestINC189027 {
 				pke.getCertificateChain(),
 				config
 			);
+			Assert.assertNotNull("La cofirma CAdES-T no debe ser nula", cosign); //$NON-NLS-1$
+			Assert.assertTrue("La cofirma CAdES-T debe tener contenido", cosign.length > 0); //$NON-NLS-1$
 		}
 		catch(final AOFormatFileException e) {
 			Assert.fail("Deberia haber cofirmado correctamente la firmas CAdES-T: " + e); //$NON-NLS-1$
-			return;
 		}
-
-//		final File tempFile = File.createTempFile("CAdES-T-Cosign", ".csig"); //$NON-NLS-1$ //$NON-NLS-2$
-//		System.out.println("El resultado de la cofirma de CAdES-T se almacena en: " + tempFile.getAbsolutePath()); //$NON-NLS-1$
-//		final FileOutputStream fos = new FileOutputStream(tempFile);
-//		fos.write(countersign);
-//		fos.close();
 	}
 
 	/** Cierra el flujo de lectura del almac&eacute;n de certificados.
@@ -141,10 +129,8 @@ public class TestINC189027 {
 		final Properties config = new Properties();
 		final AOCAdESSigner signer = new AOCAdESSigner();
 
-
-		final byte[] countersign;
 		try {
-			countersign = signer.countersign(
+			signer.countersign(
 				signature,
 				AOSignConstants.SIGN_ALGORITHM_SHA512WITHRSA,
 				CounterSignTarget.TREE,
@@ -158,7 +144,7 @@ public class TestINC189027 {
 			return;
 		}
 
-		Assert.fail("Deberia haber saltado un AOFormatFileException"); //$NON-NLS-1$
+		Assert.fail("Deberia haber saltado un SigningLTSException al contrafirmar CAdES-A"); //$NON-NLS-1$
 	}
 
 	/** Prueba de cofirma de una firma CAdES-A.
@@ -177,10 +163,8 @@ public class TestINC189027 {
 		final Properties config = new Properties();
 		final AOCAdESSigner signer = new AOCAdESSigner();
 
-
-		final byte[] countersign;
 		try {
-			countersign = signer.cosign(
+			signer.cosign(
 				signature,
 				AOSignConstants.SIGN_ALGORITHM_SHA512WITHRSA,
 				pke.getPrivateKey(),
@@ -192,6 +176,6 @@ public class TestINC189027 {
 			return;
 		}
 
-		Assert.fail("Deberia haber saltado un AOFormatFileException"); //$NON-NLS-1$
+		Assert.fail("Deberia haber saltado un SigningLTSException al cofirmar CAdES-A"); //$NON-NLS-1$
 	}
 }
