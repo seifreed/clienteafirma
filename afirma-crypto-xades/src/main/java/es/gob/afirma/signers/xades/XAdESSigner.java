@@ -1097,7 +1097,7 @@ public final class XAdESSigner {
 		// ********************************* GESTION MANIFEST **********************************
 
 		if (useManifest) {
-			XAdESUtil.createManifest(
+			XAdESManifestBuilder.createManifest(
 				referenceList,
 				fac,
 				xmlSignature,

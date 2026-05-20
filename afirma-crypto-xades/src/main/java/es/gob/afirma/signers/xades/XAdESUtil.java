@@ -202,54 +202,6 @@ public final class XAdESUtil {
 		return afirmaRoot;
 	}
 
-	static List<Reference> createManifest(final List<Reference> referenceList,
-			                              final XMLSignatureFactory fac,
-			                              final AOXMLAdvancedSignature xmlSignature,
-			                              final DigestMethod digestMethod,
-			                              final Transform canonicalizationTransform,
-			                              final String referenceId) {
-
-		// Incluimos las referencias de "referencesList" en el Manifest y luego modificamos el listado
-		// para que solo haya una referencia, que sera la del propio manifest. Asi, lo que se firma es
-		// el manifest. De no haber usado manifest, lo que se hubiese firmado son las referencias
-		// proporcionadas.
-
-		// Creamos un nodo padre donde insertar el Manifest
-		final List<XMLStructure> objectContent = new LinkedList<>();
-
-		final String manifestId = "Manifest-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-		objectContent.add(
-			fac.newManifest(
-				new ArrayList<>(referenceList),
-				manifestId
-			)
-		);
-
-		final String manifestObjectId = "ManifestObject-" + UUID.nameUUIDFromBytes(referenceId.getBytes()).toString(); //$NON-NLS-1$
-		xmlSignature.addXMLObject(
-			fac.newXMLObject(
-				objectContent, manifestObjectId, null, null
-			)
-		);
-
-		// Si usamos un manifest las referencias no van en la firma, sino en el Manifest, y se
-		// usa entonces en la firma una unica referencia a este Manifest
-		referenceList.clear();
-		referenceList.add(
-			fac.newReference(
-				"#" + manifestId, //$NON-NLS-1$
-				digestMethod,
-				canonicalizationTransform != null ?
-					Collections.singletonList(canonicalizationTransform) :
-						new ArrayList<Transform>(0),
-						XAdESConstants.REFERENCE_TYPE_MANIFEST,
-				"Manifest" + referenceId //$NON-NLS-1$
-			)
-		);
-
-		return referenceList;
-	}
-
 	static Map<String, String> getOriginalXMLProperties(final Document docum,
 			                                            final String outputXmlEncoding) {
 
