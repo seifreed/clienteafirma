@@ -824,62 +824,12 @@ public final class AOXMLDSigSigner implements AOSigner {
         XMLObject envelopingStyleObject = null;
 
         if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING)) {
-            try {
-                // crea el nuevo elemento Object que contiene el documento a
-                // firmar
-                final List<XMLStructure> structures = new ArrayList<>(1);
-
-                // Si los datos se han convertido a base64, bien por ser
-                // binarios o explicitos
-                if (isBase64) {
-                    structures.add(new DOMStructure(dataElement.getFirstChild()));
-                }
-                else {
-                    structures.add(new DOMStructure(dataElement));
-                }
-
-                final String objectId = "Object-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-                envelopingObject = fac.newXMLObject(structures, objectId, mimeType, encoding);
-
-                // crea la referencia al nuevo elemento Object
-                referenceList.add(
-                    fac.newReference(
-                        "#" + objectId, //$NON-NLS-1$
-                        digestMethod,
-                        transformList,
-                        XMLConstants.OBJURI,
-                        referenceId
-                    )
-                );
-
-                // Vamos con la hoja de estilo
-                if (xmlStyle.getStyleElement() != null) {
-                    final String objectStyleId = "StyleObject-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-                    envelopingStyleObject = fac.newXMLObject(
-                        Collections.singletonList(new DOMStructure(xmlStyle.getStyleElement())),
-                        objectStyleId,
-                        xmlStyle.getStyleType(),
-                        xmlStyle.getStyleEncoding()
-                    );
-                    referenceList.add(
-                        fac.newReference(
-                            "#" + objectStyleId, //$NON-NLS-1$
-                            digestMethod,
-                            canonicalizationTransform != null
-                                ? Collections.singletonList(canonicalizationTransform)
-                                : null,
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato enveloping", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
-                    canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
+            final Phase4Result envelopingResult = buildReferencesForEnveloping(
+                    dataElement, isBase64, mimeType, encoding,
+                    fac, digestMethod, transformList, canonicalizationTransform,
+                    xmlStyle, referenceList, referenceId, referenceStyleId);
+            envelopingObject = envelopingResult.envelopingObject();
+            envelopingStyleObject = envelopingResult.envelopingStyleObject();
         }
 
         // crea una referencia al documento mediante la URI hacia el
@@ -1090,6 +1040,88 @@ public final class AOXMLDSigSigner implements AOSigner {
             addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
                     canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
         }
+
+        return new Phase4Result(envelopingObject, envelopingStyleObject);
+    }
+
+    /** Construye las referencias y los {@link XMLObject}s específicos del
+     * formato XMLDSig ENVELOPING. Empaqueta los datos a firmar en un
+     * {@code <Object>} (con la hoja de estilo opcional en un segundo
+     * {@code <Object>}) y añade las referencias correspondientes.
+     * @return Los dos {@link XMLObject}s construidos (el de estilo es
+     *         {@code null} si no hay hoja de estilo). */
+    private static Phase4Result buildReferencesForEnveloping(
+            final Element dataElement,
+            final boolean isBase64,
+            final String mimeType,
+            final String encoding,
+            final XMLSignatureFactory fac,
+            final DigestMethod digestMethod,
+            final List<Transform> transformList,
+            final Transform canonicalizationTransform,
+            final XmlStyle xmlStyle,
+            final List<Reference> referenceList,
+            final String referenceId,
+            final String referenceStyleId) throws AOException {
+
+        XMLObject envelopingObject = null;
+        XMLObject envelopingStyleObject = null;
+
+        try {
+            // crea el nuevo elemento Object que contiene el documento a firmar
+            final List<XMLStructure> structures = new ArrayList<>(1);
+
+            // Si los datos se han convertido a base64, bien por ser
+            // binarios o explicitos
+            if (isBase64) {
+                structures.add(new DOMStructure(dataElement.getFirstChild()));
+            }
+            else {
+                structures.add(new DOMStructure(dataElement));
+            }
+
+            final String objectId = "Object-" + UUID.randomUUID().toString(); //$NON-NLS-1$
+            envelopingObject = fac.newXMLObject(structures, objectId, mimeType, encoding);
+
+            // crea la referencia al nuevo elemento Object
+            referenceList.add(
+                fac.newReference(
+                    "#" + objectId, //$NON-NLS-1$
+                    digestMethod,
+                    transformList,
+                    XMLConstants.OBJURI,
+                    referenceId
+                )
+            );
+
+            // Vamos con la hoja de estilo
+            if (xmlStyle.getStyleElement() != null) {
+                final String objectStyleId = "StyleObject-" + UUID.randomUUID().toString(); //$NON-NLS-1$
+                envelopingStyleObject = fac.newXMLObject(
+                    Collections.singletonList(new DOMStructure(xmlStyle.getStyleElement())),
+                    objectStyleId,
+                    xmlStyle.getStyleType(),
+                    xmlStyle.getStyleEncoding()
+                );
+                referenceList.add(
+                    fac.newReference(
+                        "#" + objectStyleId, //$NON-NLS-1$
+                        digestMethod,
+                        canonicalizationTransform != null
+                            ? Collections.singletonList(canonicalizationTransform)
+                            : null,
+                        XMLConstants.OBJURI,
+                        referenceStyleId
+                    )
+                );
+            }
+        }
+        catch (final Exception e) {
+            throw new AOException("Error al generar la firma en formato enveloping", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
+        }
+
+        addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
 
         return new Phase4Result(envelopingObject, envelopingStyleObject);
     }
