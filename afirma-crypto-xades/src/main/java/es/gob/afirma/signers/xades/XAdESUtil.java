@@ -69,34 +69,12 @@ public final class XAdESUtil {
 
 	private static final Logger LOGGER = Logger.getLogger("es.gob.afirma");	//$NON-NLS-1$
 
-	private static final String[] SIGNED_PROPERTIES_TYPES = new String[] {
-		XAdESConstants.NAMESPACE_XADES_NO_VERSION_SIGNED_PROPERTIES,
-		XAdESConstants.NAMESPACE_XADES_1_2_2_SIGNED_PROPERTIES,
-		XAdESConstants.NAMESPACE_XADES_1_3_2_SIGNED_PROPERTIES,
-		XAdESConstants.NAMESPACE_XADES_1_4_1_SIGNED_PROPERTIES
-	};
-
     private static final String CRYPTO_OPERATION_SIGN = "SIGN"; //$NON-NLS-1$
 
 
 	private XAdESUtil() {
 		// No permitimos la instanciacion
 	}
-
-    /**
-     * Indica si un tipo se corresponde con el que se debe declarar en la referencia a las
-     * propiedades firmadas de una firma.
-     * @param type Tipo declarado.
-     * @return {@code true} si es un tipo SignedProperties, {@code false} en caso contrario.
-     */
-    static boolean isSignedPropertiesType(final String type) {
-    	for (final String signedPropertiesType : SIGNED_PROPERTIES_TYPES) {
-    		if (signedPropertiesType.equals(type)) {
-    			return true;
-    		}
-    	}
-    	return false;
-    }
 
 	static Element getFirstElementFromXPath(final String xpathExpression, final Element sourceElement) throws AOException {
 		final NodeList nodeList;
@@ -121,46 +99,6 @@ public final class XAdESUtil {
 			);
 		}
 		return (Element) nodeList.item(0);
-	}
-
-	/**
-	 * Busca un nodo con el atributo 'Id' indicado.
-	 * @param nodeId Identificador del nodo que queremos encontrar.
-	 * @param currentElement Elemento en el que queremos buscar.
-	 * @param omitSignatures Si es {@code true}, se omite la b&uacute;squeda dentro de cualquier
-	 * nodo de nombre "Signature", aunque podr&iacute;a referenciarse al propio nodo, {@code false}
-	 * en caso contrario.
-	 * @return Nodo con el identificador indicado o {@code null} si no
-	 * se encuentra el nodo.
-	 */
-	static Element findElementById(final String nodeId, final Element currentElement, final boolean omitSignatures) {
-
-		// Si es este el nodo, lo devolvemos
-		if (nodeId.equals(currentElement.getAttribute(XAdESConstants.ID_IDENTIFIER))) {
-			return currentElement;
-		}
-
-		// Se podria referenciar a un nodo llamado "Signature", pero omitiriamos
-		// la busqueda dentro de cualquier nodo con dicho nombre si asi se indica
-		if (omitSignatures && currentElement.getLocalName().equals("Signature")) { //$NON-NLS-1$
-			return null;
-		}
-
-		// Si no, lo buscamos en cada uno de los hijos, deteniendonos
-		// en cuanto se encuentre
-		Node item;
-		final NodeList childList = currentElement.getChildNodes();
-		for (int i = 0; i < childList.getLength(); i++) {
-			item = childList.item(i);
-			if (item.getNodeType() == Node.ELEMENT_NODE) {
-				final Element el = findElementById(nodeId, (Element) item, omitSignatures);
-				if (el != null) {
-					return el;
-				}
-			}
-		}
-		// si no lo encontramos en ninguno de los nodos hijo, devolvemos nulo
-		return null;
 	}
 
 	static String getDigestMethodByCommonName(final String identifierHashAlgorithm) throws NoSuchAlgorithmException {

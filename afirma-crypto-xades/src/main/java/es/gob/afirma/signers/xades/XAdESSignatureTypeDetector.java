@@ -89,7 +89,7 @@ public final class XAdESSignatureTypeDetector {
         for (int i = 0; i < references.size(); i++) {
             final String uri = references.get(i).getAttribute("URI"); //$NON-NLS-1$
             if (uri != null && uri.startsWith("#")) { //$NON-NLS-1$
-                final Node referencedNode = XAdESUtil.findElementById(uri.substring(1), signatureElement, false);
+                final Node referencedNode = XAdESDomLookup.findElementById(uri.substring(1), signatureElement, false);
                 if (referencedNode != null) {
                     return true;
                 }
@@ -139,7 +139,7 @@ public final class XAdESSignatureTypeDetector {
         for (int i = 0; i < references.size(); i++) {
             final String uri = references.get(i).getAttribute("URI"); //$NON-NLS-1$
             if (uri != null && uri.startsWith("#")) { //$NON-NLS-1$
-                final Node referencedNode = XAdESUtil.findElementById(uri.substring(1), docElement, true);
+                final Node referencedNode = XAdESDomLookup.findElementById(uri.substring(1), docElement, true);
                 if (referencedNode != null) {
                     return true;
                 }

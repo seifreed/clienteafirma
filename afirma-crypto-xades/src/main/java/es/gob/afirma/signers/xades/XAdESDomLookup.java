@@ -32,8 +32,63 @@ import es.uji.crypto.xades.jxades.util.XMLUtils;
  * <p>La clase es {@code final} y no instanciable. */
 public final class XAdESDomLookup {
 
+    private static final String[] SIGNED_PROPERTIES_TYPES = {
+        XAdESConstants.NAMESPACE_XADES_NO_VERSION_SIGNED_PROPERTIES,
+        XAdESConstants.NAMESPACE_XADES_1_2_2_SIGNED_PROPERTIES,
+        XAdESConstants.NAMESPACE_XADES_1_3_2_SIGNED_PROPERTIES,
+        XAdESConstants.NAMESPACE_XADES_1_4_1_SIGNED_PROPERTIES
+    };
+
+    private static final String SIGNATURE_TAG = "Signature"; //$NON-NLS-1$
+
     private XAdESDomLookup() {
         // No instanciable
+    }
+
+    /** Comprueba si el {@code Type} declarado en una {@code Reference} se
+     * corresponde con el de las {@code SignedProperties} de cualquier
+     * versi&oacute;n XAdES soportada.
+     *
+     * @param type Tipo declarado en el atributo {@code Type} de una
+     *        {@code Reference}.
+     * @return {@code true} si es {@code SignedProperties}; {@code false} en
+     *         caso contrario. */
+    public static boolean isSignedPropertiesType(final String type) {
+        for (final String signedPropertiesType : SIGNED_PROPERTIES_TYPES) {
+            if (signedPropertiesType.equals(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Busca recursivamente el nodo cuyo atributo {@code Id} coincida con el
+     * indicado.
+     *
+     * @param nodeId Identificador del nodo a buscar.
+     * @param currentElement Elemento en el que buscar.
+     * @param omitSignatures Si es {@code true}, omite la b&uacute;squeda
+     *        dentro de elementos {@code Signature}.
+     * @return Nodo con el identificador indicado, o {@code null} si no se
+     *         encuentra. */
+    public static Element findElementById(final String nodeId, final Element currentElement, final boolean omitSignatures) {
+        if (nodeId.equals(currentElement.getAttribute(XAdESConstants.ID_IDENTIFIER))) {
+            return currentElement;
+        }
+        if (omitSignatures && SIGNATURE_TAG.equals(currentElement.getLocalName())) {
+            return null;
+        }
+        final NodeList childList = currentElement.getChildNodes();
+        for (int i = 0; i < childList.getLength(); i++) {
+            final Node item = childList.item(i);
+            if (item.getNodeType() == Node.ELEMENT_NODE) {
+                final Element found = findElementById(nodeId, (Element) item, omitSignatures);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     /** Obtiene la primera firma encontrada en un elemento XML.
@@ -96,7 +151,7 @@ public final class XAdESDomLookup {
         for (int i = 0; i < references.getLength(); i++) {
             final Element reference = (Element) references.item(i);
             final String type = reference.getAttribute("Type"); //$NON-NLS-1$
-            if (type != null && !type.isEmpty() && XAdESUtil.isSignedPropertiesType(type)) {
+            if (type != null && !type.isEmpty() && XAdESDomLookup.isSignedPropertiesType(type)) {
                 return reference;
             }
         }
@@ -115,7 +170,7 @@ public final class XAdESDomLookup {
         if (uri == null || !uri.startsWith("#")) { //$NON-NLS-1$
             return null;
         }
-        return XAdESUtil.findElementById(uri.substring(1), signatureElement, false);
+        return XAdESDomLookup.findElementById(uri.substring(1), signatureElement, false);
     }
 
     /** Obtiene el elemento {@code SignedProperties} de una firma XAdES
@@ -157,7 +212,7 @@ public final class XAdESDomLookup {
     private static boolean referencesData(final Element reference, final Element signatureElement) {
         final String type = reference.getAttribute("Type"); //$NON-NLS-1$
         if (type != null && !type.isEmpty()) {
-            return !XAdESUtil.isSignedPropertiesType(type);
+            return !XAdESDomLookup.isSignedPropertiesType(type);
         }
         // Sin Type declarado: clasificamos por URI
         final String uri = reference.getAttribute("URI"); //$NON-NLS-1$
@@ -165,7 +220,7 @@ public final class XAdESDomLookup {
             // Referencia externa: siempre es un dato firmado
             return true;
         }
-        final Node referencedNode = XAdESUtil.findElementById(uri.substring(1), signatureElement, false);
+        final Node referencedNode = XAdESDomLookup.findElementById(uri.substring(1), signatureElement, false);
         if (referencedNode == null) {
             // Referencia interna a un nodo fuera de la firma → datos
             return true;

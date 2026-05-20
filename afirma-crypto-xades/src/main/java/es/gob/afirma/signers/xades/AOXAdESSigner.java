@@ -723,7 +723,7 @@ public final class AOXAdESSigner implements AOSigner, OptionalDataInterface {
 
     	// Tomamos de la referencia el ID del nodo y lo buscamos
     	final String nodeId = reference.substring(1);
-    	return XAdESUtil.findElementById(nodeId, document, false);
+    	return XAdESDomLookup.findElementById(nodeId, document, false);
     }
 
     private static void removeEnvelopedSignatures(final Element rootSig) {

@@ -713,7 +713,7 @@ public final class XAdESCoSigner {
 			throw new AOMalformedSignatureException("La URI de la firma original que referencia al manifest debe ser local (empezar por '#')"); //$NON-NLS-1$
 		}
 		final String manifestId = referenceUri.substring(1);
-		final Element manifestElement = XAdESUtil.findElementById(manifestId, signatureElement, false);
+		final Element manifestElement = XAdESDomLookup.findElementById(manifestId, signatureElement, false);
 		if (manifestElement == null) {
 			throw new AOMalformedSignatureException("No se encontro el manifest dentro de la firma"); //$NON-NLS-1$
 		}
