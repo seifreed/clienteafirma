@@ -624,286 +624,13 @@ public final class AOXMLDSigSigner implements AOSigner {
             }
         }
 
-        // crea una referencia al documento insertado en un nodo Object para la
-        // firma enveloping y a el estilo
-        XMLObject envelopingObject = null;
-        XMLObject envelopingStyleObject = null;
-
-        if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING)) {
-            try {
-                // crea el nuevo elemento Object que contiene el documento a
-                // firmar
-                final List<XMLStructure> structures = new ArrayList<>(1);
-
-                // Si los datos se han convertido a base64, bien por ser
-                // binarios o explicitos
-                if (isBase64) {
-                    structures.add(new DOMStructure(dataElement.getFirstChild()));
-                }
-                else {
-                    structures.add(new DOMStructure(dataElement));
-                }
-
-                final String objectId = "Object-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-                envelopingObject = fac.newXMLObject(structures, objectId, mimeType, encoding);
-
-                // crea la referencia al nuevo elemento Object
-                referenceList.add(
-            		fac.newReference(
-        				"#" + objectId, //$NON-NLS-1$
-        				digestMethod,
-        				transformList,
-        				XMLConstants.OBJURI,
-        				referenceId
-    				)
-				);
-
-                // Vamos con la hoja de estilo
-                if (xmlStyle.getStyleElement() != null) {
-                    final String objectStyleId = "StyleObject-" + UUID.randomUUID().toString(); //$NON-NLS-1$
-                    envelopingStyleObject = fac.newXMLObject(
-                		Collections.singletonList(new DOMStructure(xmlStyle.getStyleElement())),
-                		objectStyleId,
-                		xmlStyle.getStyleType(),
-                		xmlStyle.getStyleEncoding()
-            		);
-                    referenceList.add(
-                		fac.newReference(
-            				"#" + objectStyleId, //$NON-NLS-1$
-                            digestMethod,
-                            canonicalizationTransform != null ?
-                        		Collections.singletonList(canonicalizationTransform) :
-                        			null,
-            				XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-
-                }
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato enveloping", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
-                    canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
-
-        }
-
-        // crea una referencia al documento mediante la URI hacia el
-        // identificador del nodo CONTENT
-        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_DETACHED)) {
-            try {
-                if (dataElement != null) {
-                    // inserta en el nuevo documento de firma el documento a
-                    // firmar
-                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(dataElement));
-                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
-                    referenceList.add(
-                		fac.newReference(
-            				tmpUri,
-            				digestMethod,
-            				transformList,
-            				XMLConstants.OBJURI,
-            				referenceId
-        				)
-    				);
-                }
-                if (xmlStyle.getStyleElement() != null) {
-                    // inserta en el nuevo documento de firma la hoja de estilo
-                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(xmlStyle.getStyleElement()));
-                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
-                    referenceList.add(
-                		fac.newReference(
-            				tmpStyleUri,
-                            digestMethod,
-                            canonicalizationTransform != null ?
-                        		Collections.singletonList(canonicalizationTransform) :
-                        			null,
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato detached implicito", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            // Hojas de estilo remotas para detached. Comprobamos si la referencia al estilo es externa
-            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null &&
-            		(xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
-                try {
-                    referenceList.add(
-                		fac.newReference(
-            				xmlStyle.getStyleHref(),
-                            digestMethod,
-                            Collections.singletonList(fac.newTransform(canonicalizationAlgorithm, (TransformParameterSpec) null)),
-                            XMLConstants.OBJURI,
-                            referenceStyleId
-                        )
-                    );
-                }
-                catch (final Exception e) {
-                    LOGGER.severe(
-                		"No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Detached Implicita, esta no se firmara: " + e //$NON-NLS-1$
-                    );
-                }
-            }
-
-        }
-
-        // Crea una referencia al documento mediante la URI externa si la
-        // tenemos o usando un Message Digest
-        // precalculado si no tenemos otro remedio
-        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED)) {
-            Reference ref = null;
-            // No tenemos uri, suponemos que los datos son el message digest
-            if (precalculatedHashAlgorithm != null && (uri == null || uri.getScheme().equals("") || uri.getScheme().equals("file"))) { //$NON-NLS-1$ //$NON-NLS-2$
-                DigestMethod dm = null;
-                try {
-                    // Convertimos el algoritmo del Message Digest externo a la
-                    // nomenclatura XML
-                    if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA1")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA1, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-256")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA256, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-512")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.SHA512, null);
-                    }
-                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("RIPEMD160")) { //$NON-NLS-1$
-                        dm = fac.newDigestMethod(DigestMethod.RIPEMD160, null);
-                    }
-                }
-                catch (final Exception e) {
-                    throw new AOException("No se ha podido crear el metodo de huella digital para la referencia Externally Detached", e, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
-                }
-                if (dm == null) {
-                    throw new AOException("Metodo de Message Digest para la referencia Externally Detached no soportado: " + precalculatedHashAlgorithm, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
-                }
-                ref = fac.newReference(
-            		"", //$NON-NLS-1$
-            		dm,
-            		null,
-            		XMLConstants.OBJURI, // Es un nodo a firmar
-            		referenceId,
-            		data
-        		);
-            } else // Si es una referencia de tipo file:// obtenemos el fichero y
-			// creamos una referencia solo con
-			// el message digest
-			if (uri != null && uri.getScheme().equals("file")) { //$NON-NLS-1$
-			    try {
-			        ref = fac.newReference(
-			    		"", //$NON-NLS-1$
-			            digestMethod,
-			            null,
-			            XMLConstants.OBJURI,
-			            referenceId,
-			            MessageDigest.getInstance(
-			        		AOSignConstants.getDigestAlgorithmName(digestMethodAlgorithm)
-			    		).digest(AOUtil.getDataFromInputStream(AOUtil.loadFile(uri)))
-					);
-			    }
-			    catch (final Exception e) {
-			        throw new AOException("No se ha podido crear la referencia XML a partir de la URI local " + uri.toASCIIString(), e, //$NON-NLS-1$
-			        		XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR);
-			    }
-			}
-			// Si es una referencia distinta de file:// suponemos que es
-			// dereferenciable de forma universal
-			// por lo que dejamos que Java lo haga todo
-			else if (uri != null) {
-			    try {
-			        ref = fac.newReference(uri.toASCIIString(), digestMethod);
-			    }
-			    catch (final Exception e) {
-			        throw new AOException(
-			    		"No se ha podido crear la referencia Externally Detached, probablemente por no obtenerse el metodo de digest", //$NON-NLS-1$
-			            e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR
-			        );
-			    }
-			}
-            if (ref == null) {
-                throw new AOException("Error al generar la firma Externally Detached, no se ha podido crear la referencia externa", XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-            referenceList.add(ref);
-
-            // Hojas de estilo remotas en Externally Detached
-            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null) {
-                // Comprobamos que la URL es valida
-                if (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
-                    try {
-                        referenceList.add(
-                    		fac.newReference(
-                				xmlStyle.getStyleHref(),
-                                digestMethod,
-                                canonicalizationTransform != null ?
-                            		Collections.singletonList(canonicalizationTransform) :
-                            			null,
-                                XMLConstants.OBJURI,
-                                referenceStyleId
-                            )
-                        );
-                    }
-                    catch (final Exception e) {
-                        LOGGER.severe(
-                    		"No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma Externally Detached, esta no se firmara: " + e //$NON-NLS-1$
-                        );
-                    }
-                }
-                else {
-                    LOGGER.warning("Se necesita una referencia externa HTTP o HTTPS a la hoja de estilo para referenciarla en firmas XML Externally Detached"); //$NON-NLS-1$
-                }
-            }
-
-        }
-
-        // crea una referencia indicando que se trata de una firma enveloped
-        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
-            try {
-
-                // Transformacion enveloped
-                // La enveloped siempre la primera, para que no se quede sin
-                // nodos Signature por haber
-                // ejecutado antes otra transformacion
-                transformList.add(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null));
-
-                if (!avoidXpathExtraTransformsOnEnveloped) {
-	                // Transformacion XPATH para eliminar el resto de firmas del documento
-	                transformList.add(
-	                  fac.newTransform(
-	                    Transform.XPATH,
-	                    new XPathFilterParameterSpec("not(ancestor-or-self::" + xmlSignaturePrefix + ":Signature)", //$NON-NLS-1$ //$NON-NLS-2$
-	                    Collections.singletonMap(xmlSignaturePrefix, XMLSignature.XMLNS))
-	                  )
-	                );
-                }
-
-                // crea la referencia
-                referenceList.add(
-            		fac.newReference(
-        				"", //$NON-NLS-1$
-        				digestMethod,
-        				transformList,
-        				XMLConstants.OBJURI, // Aunque sea Enveloped, es un nodo a firmar
-        				referenceId)
-    				);
-            }
-            catch (final Exception e) {
-                throw new AOException("Error al generar la firma en formato enveloped", e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
-            }
-
-            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
-                    canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
-
-        }
+        final Phase4Result phase4 = buildReferences(params, data, dataElement, docSignature,
+                referenceList, transformList, fac, digestMethod, canonicalizationTransform,
+                xmlStyle, isBase64, wasEncodedToBase64, mimeType, encoding, uri,
+                referenceId, referenceStyleId, tmpUri, tmpStyleUri);
 
         buildAndExecuteSignature(
-            referenceList, envelopingObject, envelopingStyleObject, docSignature,
+            referenceList, phase4.envelopingObject(), phase4.envelopingStyleObject(), docSignature,
             new SignatureBuildContext(fac, digestMethod, transformList, canonicalizationTransform,
                 canonicalizationAlgorithm, algoUri, xmlSignaturePrefix, format,
                 xmlStyle, styleId, tmpStyleUri, referenceStyleId,
@@ -1022,6 +749,349 @@ public final class AOXMLDSigSigner implements AOSigner {
                 "Error al crear la firma en formato " + format + ", modo " + mode, //$NON-NLS-1$ //$NON-NLS-2$
                 e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR);
         }
+    }
+
+    /** Salida de {@link #buildReferences}: los dos {@link XMLObject} que
+     * solo se construyen en formato ENVELOPING. En el resto de formatos
+     * ambos campos son {@code null}. */
+    private static record Phase4Result(XMLObject envelopingObject, XMLObject envelopingStyleObject) { }
+
+    /** Construye la lista de {@link Reference}s y los {@link XMLObject}s
+     * específicos del formato XMLDSig solicitado. Dispatcher de las 4 ramas:
+     * ENVELOPING (datos en {@code <Object>}), DETACHED (datos adoptados en
+     * {@code <AFIRMA>}), EXTERNALLY_DETACHED (URI externa o hash
+     * precalculado) y ENVELOPED (transformación ENVELOPED + XPATH opcional).
+     *
+     * <p>Esta extracción es solo el envoltorio; las 4 ramas siguen siendo
+     * código inline. Pasos sucesivos del refactor las extraerán a métodos
+     * dedicados ({@code buildReferencesFor{Enveloping,Detached,...}}).</p>
+     *
+     * @param params Parámetros parseados.
+     * @param data Bytes a firmar (solo se consume en EXTERNALLY_DETACHED).
+     * @param dataElement Elemento con los datos preparado por la fase 2.
+     * @param docSignature Documento de la firma (mutado por la rama DETACHED).
+     * @param referenceList Lista de referencias mutable a la que se añaden
+     *                      las referencias de la rama elegida.
+     * @param transformList Lista de transformaciones mutable (la rama
+     *                      ENVELOPED añade ENVELOPED + XPATH).
+     * @param fac Factory XML.
+     * @param digestMethod Método de digest preparado.
+     * @param canonicalizationTransform Transformación de canonicalización (puede ser {@code null}).
+     * @param xmlStyle Hoja de estilo (puede estar vacía).
+     * @param isBase64 {@code true} si {@code dataElement} contiene datos Base64.
+     * @param wasEncodedToBase64 {@code true} si los datos se convirtieron a Base64 durante la fase IMPLICIT.
+     * @param mimeType Tipo MIME del contenido (o {@code null}).
+     * @param encoding Codificación del contenido (o {@code null}).
+     * @param uri URI externa (solo EXTERNALLY_DETACHED).
+     * @param referenceId Identificador único de la referencia principal.
+     * @param referenceStyleId Identificador único de la referencia a la hoja de estilo.
+     * @param tmpUri URI relativa al {@code contentId} (formato {@code "#id"}).
+     * @param tmpStyleUri URI relativa al {@code styleId}.
+     * @return Los {@link XMLObject}s de la rama ENVELOPING (o {@code null}s
+     *         en el resto de formatos).
+     * @throws AOException Si la generación de la firma para el formato falla. */
+    private static Phase4Result buildReferences(
+            final SignParams params,
+            final byte[] data,
+            final Element dataElement,
+            final Document docSignature,
+            final List<Reference> referenceList,
+            final List<Transform> transformList,
+            final XMLSignatureFactory fac,
+            final DigestMethod digestMethod,
+            final Transform canonicalizationTransform,
+            final XmlStyle xmlStyle,
+            final boolean isBase64,
+            final boolean wasEncodedToBase64,
+            final String mimeType,
+            final String encoding,
+            final URI uri,
+            final String referenceId,
+            final String referenceStyleId,
+            final String tmpUri,
+            final String tmpStyleUri) throws AOException {
+
+        final String format = params.format();
+        final String canonicalizationAlgorithm = params.canonicalizationAlgorithm();
+        final String precalculatedHashAlgorithm = params.precalculatedHashAlgorithm();
+        final String digestMethodAlgorithm = params.digestMethodAlgorithm();
+        final boolean avoidXpathExtraTransformsOnEnveloped = params.avoidXpathExtraTransformsOnEnveloped();
+        final String xmlSignaturePrefix = params.xmlSignaturePrefix();
+
+        // crea una referencia al documento insertado en un nodo Object para la
+        // firma enveloping y a el estilo
+        XMLObject envelopingObject = null;
+        XMLObject envelopingStyleObject = null;
+
+        if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING)) {
+            try {
+                // crea el nuevo elemento Object que contiene el documento a
+                // firmar
+                final List<XMLStructure> structures = new ArrayList<>(1);
+
+                // Si los datos se han convertido a base64, bien por ser
+                // binarios o explicitos
+                if (isBase64) {
+                    structures.add(new DOMStructure(dataElement.getFirstChild()));
+                }
+                else {
+                    structures.add(new DOMStructure(dataElement));
+                }
+
+                final String objectId = "Object-" + UUID.randomUUID().toString(); //$NON-NLS-1$
+                envelopingObject = fac.newXMLObject(structures, objectId, mimeType, encoding);
+
+                // crea la referencia al nuevo elemento Object
+                referenceList.add(
+                    fac.newReference(
+                        "#" + objectId, //$NON-NLS-1$
+                        digestMethod,
+                        transformList,
+                        XMLConstants.OBJURI,
+                        referenceId
+                    )
+                );
+
+                // Vamos con la hoja de estilo
+                if (xmlStyle.getStyleElement() != null) {
+                    final String objectStyleId = "StyleObject-" + UUID.randomUUID().toString(); //$NON-NLS-1$
+                    envelopingStyleObject = fac.newXMLObject(
+                        Collections.singletonList(new DOMStructure(xmlStyle.getStyleElement())),
+                        objectStyleId,
+                        xmlStyle.getStyleType(),
+                        xmlStyle.getStyleEncoding()
+                    );
+                    referenceList.add(
+                        fac.newReference(
+                            "#" + objectStyleId, //$NON-NLS-1$
+                            digestMethod,
+                            canonicalizationTransform != null
+                                ? Collections.singletonList(canonicalizationTransform)
+                                : null,
+                            XMLConstants.OBJURI,
+                            referenceStyleId
+                        )
+                    );
+                }
+            }
+            catch (final Exception e) {
+                throw new AOException("Error al generar la firma en formato enveloping", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
+            }
+
+            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                    canonicalizationTransform, referenceStyleId, "Enveloping"); //$NON-NLS-1$
+        }
+
+        // crea una referencia al documento mediante la URI hacia el
+        // identificador del nodo CONTENT
+        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_DETACHED)) {
+            try {
+                if (dataElement != null) {
+                    // inserta en el nuevo documento de firma el documento a
+                    // firmar
+                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(dataElement));
+                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
+                    referenceList.add(
+                        fac.newReference(
+                            tmpUri,
+                            digestMethod,
+                            transformList,
+                            XMLConstants.OBJURI,
+                            referenceId
+                        )
+                    );
+                }
+                if (xmlStyle.getStyleElement() != null) {
+                    // inserta en el nuevo documento de firma la hoja de estilo
+                    docSignature.getDocumentElement().appendChild(docSignature.adoptNode(xmlStyle.getStyleElement()));
+                    // crea la referencia a los datos firmados que se encontraran en el mismo documento
+                    referenceList.add(
+                        fac.newReference(
+                            tmpStyleUri,
+                            digestMethod,
+                            canonicalizationTransform != null
+                                ? Collections.singletonList(canonicalizationTransform)
+                                : null,
+                            XMLConstants.OBJURI,
+                            referenceStyleId
+                        )
+                    );
+                }
+            }
+            catch (final Exception e) {
+                throw new AOException("Error al generar la firma en formato detached implicito", e, XMLErrorCode.Internal.UNKWNON_XML_SIGNING_ERROR); //$NON-NLS-1$
+            }
+
+            // Hojas de estilo remotas para detached. Comprobamos si la referencia al estilo es externa
+            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null
+                    && (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX))) {
+                try {
+                    referenceList.add(
+                        fac.newReference(
+                            xmlStyle.getStyleHref(),
+                            digestMethod,
+                            Collections.singletonList(fac.newTransform(canonicalizationAlgorithm, (TransformParameterSpec) null)),
+                            XMLConstants.OBJURI,
+                            referenceStyleId
+                        )
+                    );
+                }
+                catch (final Exception e) {
+                    LOGGER.severe(
+                        "No ha sido posible anadir la referencia a la hoja de estilo del XML en la firma Detached Implicita, esta no se firmara: " + e //$NON-NLS-1$
+                    );
+                }
+            }
+        }
+
+        // Crea una referencia al documento mediante la URI externa si la
+        // tenemos o usando un Message Digest
+        // precalculado si no tenemos otro remedio
+        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED)) {
+            Reference ref = null;
+            // No tenemos uri, suponemos que los datos son el message digest
+            if (precalculatedHashAlgorithm != null && (uri == null || uri.getScheme().equals("") || uri.getScheme().equals("file"))) { //$NON-NLS-1$ //$NON-NLS-2$
+                DigestMethod dm = null;
+                try {
+                    // Convertimos el algoritmo del Message Digest externo a la
+                    // nomenclatura XML
+                    if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA1")) { //$NON-NLS-1$
+                        dm = fac.newDigestMethod(DigestMethod.SHA1, null);
+                    }
+                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-256")) { //$NON-NLS-1$
+                        dm = fac.newDigestMethod(DigestMethod.SHA256, null);
+                    }
+                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("SHA-512")) { //$NON-NLS-1$
+                        dm = fac.newDigestMethod(DigestMethod.SHA512, null);
+                    }
+                    else if (AOSignConstants.getDigestAlgorithmName(precalculatedHashAlgorithm).equalsIgnoreCase("RIPEMD160")) { //$NON-NLS-1$
+                        dm = fac.newDigestMethod(DigestMethod.RIPEMD160, null);
+                    }
+                }
+                catch (final Exception e) {
+                    throw new AOException("No se ha podido crear el metodo de huella digital para la referencia Externally Detached", e, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
+                }
+                if (dm == null) {
+                    throw new AOException("Metodo de Message Digest para la referencia Externally Detached no soportado: " + precalculatedHashAlgorithm, XMLErrorCode.Request.INVALID_PRECALCULATED_DATA_HASH_ALGORITHM); //$NON-NLS-1$
+                }
+                ref = fac.newReference(
+                    "", //$NON-NLS-1$
+                    dm,
+                    null,
+                    XMLConstants.OBJURI, // Es un nodo a firmar
+                    referenceId,
+                    data
+                );
+            }
+            else // Si es una referencia de tipo file:// obtenemos el fichero y
+            // creamos una referencia solo con
+            // el message digest
+            if (uri != null && uri.getScheme().equals("file")) { //$NON-NLS-1$
+                try {
+                    ref = fac.newReference(
+                        "", //$NON-NLS-1$
+                        digestMethod,
+                        null,
+                        XMLConstants.OBJURI,
+                        referenceId,
+                        MessageDigest.getInstance(
+                            AOSignConstants.getDigestAlgorithmName(digestMethodAlgorithm)
+                        ).digest(AOUtil.getDataFromInputStream(AOUtil.loadFile(uri)))
+                    );
+                }
+                catch (final Exception e) {
+                    throw new AOException("No se ha podido crear la referencia XML a partir de la URI local " + uri.toASCIIString(), e, //$NON-NLS-1$
+                            XMLErrorCode.Communication.DERREFERENCING_DATA_ERROR);
+                }
+            }
+            // Si es una referencia distinta de file:// suponemos que es
+            // dereferenciable de forma universal
+            // por lo que dejamos que Java lo haga todo
+            else if (uri != null) {
+                try {
+                    ref = fac.newReference(uri.toASCIIString(), digestMethod);
+                }
+                catch (final Exception e) {
+                    throw new AOException(
+                        "No se ha podido crear la referencia Externally Detached, probablemente por no obtenerse el metodo de digest", //$NON-NLS-1$
+                        e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR
+                    );
+                }
+            }
+            if (ref == null) {
+                throw new AOException("Error al generar la firma Externally Detached, no se ha podido crear la referencia externa", XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+            }
+            referenceList.add(ref);
+
+            // Hojas de estilo remotas en Externally Detached
+            if (xmlStyle.getStyleHref() != null && xmlStyle.getStyleElement() == null) {
+                // Comprobamos que la URL es valida
+                if (xmlStyle.getStyleHref().startsWith(HTTP_PROTOCOL_PREFIX) || xmlStyle.getStyleHref().startsWith(HTTPS_PROTOCOL_PREFIX)) {
+                    try {
+                        referenceList.add(
+                            fac.newReference(
+                                xmlStyle.getStyleHref(),
+                                digestMethod,
+                                canonicalizationTransform != null
+                                    ? Collections.singletonList(canonicalizationTransform)
+                                    : null,
+                                XMLConstants.OBJURI,
+                                referenceStyleId
+                            )
+                        );
+                    }
+                    catch (final Exception e) {
+                        LOGGER.severe(
+                            "No ha sido posible anadir la referencia a la hoja de estilo remota del XML en la firma Externally Detached, esta no se firmara: " + e //$NON-NLS-1$
+                        );
+                    }
+                }
+                else {
+                    LOGGER.warning("Se necesita una referencia externa HTTP o HTTPS a la hoja de estilo para referenciarla en firmas XML Externally Detached"); //$NON-NLS-1$
+                }
+            }
+        }
+
+        // crea una referencia indicando que se trata de una firma enveloped
+        else if (format.equals(AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPED)) {
+            try {
+                // Transformacion enveloped
+                // La enveloped siempre la primera, para que no se quede sin
+                // nodos Signature por haber
+                // ejecutado antes otra transformacion
+                transformList.add(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null));
+
+                if (!avoidXpathExtraTransformsOnEnveloped) {
+                    // Transformacion XPATH para eliminar el resto de firmas del documento
+                    transformList.add(
+                        fac.newTransform(
+                            Transform.XPATH,
+                            new XPathFilterParameterSpec("not(ancestor-or-self::" + xmlSignaturePrefix + ":Signature)", //$NON-NLS-1$ //$NON-NLS-2$
+                            Collections.singletonMap(xmlSignaturePrefix, XMLSignature.XMLNS))
+                        )
+                    );
+                }
+
+                // crea la referencia
+                referenceList.add(
+                    fac.newReference(
+                        "", //$NON-NLS-1$
+                        digestMethod,
+                        transformList,
+                        XMLConstants.OBJURI, // Aunque sea Enveloped, es un nodo a firmar
+                        referenceId
+                    )
+                );
+            }
+            catch (final Exception e) {
+                throw new AOException("Error al generar la firma en formato enveloped", e, XMLErrorCode.Internal.INTERNAL_XML_SIGNING_ERROR); //$NON-NLS-1$
+            }
+
+            addRemoteStyleSheetReference(xmlStyle, referenceList, fac, digestMethod,
+                    canonicalizationTransform, referenceStyleId, "Enveloped"); //$NON-NLS-1$
+        }
+
+        return new Phase4Result(envelopingObject, envelopingStyleObject);
     }
 
     /** Contexto inmutable con todos los datos de configuración que necesita
