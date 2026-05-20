@@ -99,6 +99,52 @@ public final class PreferencesManager {
 	 */
 	private static Properties INTERNAL_PREFERENCES_DATA;
 
+	// =================================================================
+	// Seam testable (Oleada 9 Fase A, 2026-05-20). Dos suppliers
+	// package-private sustituyen los accesos directos a
+	// Preferences.{user,system}Root() y permiten que los tests aislen
+	// el árbol de preferencias bajo un subnodo único por test.
+	//
+	// Los path constants del código original empiezan por '/'
+	// (absolutos). Como un path absoluto pasado a Preferences.node()
+	// *ignora* el receptor, los helpers eliminan la barra inicial para
+	// convertirlo en relativo: así un supplier que devuelva un subnodo
+	// produce aislamiento real, en lugar de aterrizar siempre en el
+	// root global.
+	//
+	// En producción la conversión es no-op: cuando el receptor *es*
+	// userRoot(), `userRoot().node("/x/y")` y `userRoot().node("x/y")`
+	// resuelven al mismo nodo. Por eso este cambio preserva el
+	// comportamiento original byte-a-byte sin ningún flag adicional.
+	//
+	// El split estructural a sub-managers temáticos es trabajo de una
+	// sesión futura; esto es solo la red de tests para hacerlo seguro.
+	// =================================================================
+	/** Suministrador del nodo raíz de usuario. Sustituible solo en tests. */
+	static volatile java.util.function.Supplier<Preferences> USER_ROOT_SUPPLIER = Preferences::userRoot;
+	/** Suministrador del nodo raíz de sistema. Sustituible solo en tests. */
+	static volatile java.util.function.Supplier<Preferences> SYSTEM_ROOT_SUPPLIER = Preferences::systemRoot;
+
+	private static String relativize(final String absolutePath) {
+		return absolutePath.startsWith("/") ? absolutePath.substring(1) : absolutePath; //$NON-NLS-1$
+	}
+
+	private static Preferences userNode(final String absolutePath) {
+		return USER_ROOT_SUPPLIER.get().node(relativize(absolutePath));
+	}
+
+	private static Preferences systemNode(final String absolutePath) {
+		return SYSTEM_ROOT_SUPPLIER.get().node(relativize(absolutePath));
+	}
+
+	private static boolean userNodeExists(final String absolutePath) throws BackingStoreException {
+		return USER_ROOT_SUPPLIER.get().nodeExists(relativize(absolutePath));
+	}
+
+	private static boolean systemNodeExists(final String absolutePath) throws BackingStoreException {
+		return SYSTEM_ROOT_SUPPLIER.get().nodeExists(relativize(absolutePath));
+	}
+
 	private static final String TRUE_VALUE = "true"; //$NON-NLS-1$
 	private static final String FALSE_VALUE = "false"; //$NON-NLS-1$
 
@@ -634,10 +680,8 @@ public final class PreferencesManager {
 
 		LOGGER.info("Cargamos los objetos de acceso a las preferencias del sistema"); //$NON-NLS-1$
 
-		final Preferences userRootPreferences = Preferences.userRoot();
-
 		// Cargamos las preferencias de usuario
-		USER_PREFERENCES = userRootPreferences.node(PREFERENCE_NODE);
+		USER_PREFERENCES = userNode(PREFERENCE_NODE);
 
 		// Si existen preferencias del sistema actualizadas, seran las que usemos. Si no,
 		// cargaremos las del sistema por defecto. Si no, no cargaremos ninguna
@@ -645,15 +689,15 @@ public final class PreferencesManager {
 		Preferences configUpdatedSystemPreferences;
 		try {
 			// Cargamos las preferencias del sistema
-			configSystemPreferences = Preferences.systemRoot().nodeExists(PREFERENCE_NODE)
-					? Preferences.systemRoot().node(PREFERENCE_NODE)
+			configSystemPreferences = systemNodeExists(PREFERENCE_NODE)
+					? systemNode(PREFERENCE_NODE)
 					: null;
 
 			// Si hay preferencias del sistema y se permiten actualizar, comprobamos si hay alguna version actualizada
 			configUpdatedSystemPreferences = configSystemPreferences != null
 					&& isAutommaticUpdateConfigAllowed()
-					&& Preferences.userRoot().nodeExists(UPDATED_SYSTEM_PREFERENCE_NODE)
-					? Preferences.userRoot().node(UPDATED_SYSTEM_PREFERENCE_NODE)
+					&& userNodeExists(UPDATED_SYSTEM_PREFERENCE_NODE)
+					? userNode(UPDATED_SYSTEM_PREFERENCE_NODE)
 					: null;
 		}
 		catch (final Exception e) {
@@ -673,7 +717,7 @@ public final class PreferencesManager {
 
 		// Las preferencias internas siempre seran las del sistema (aunque despues se tomen datos del usuario).
 		// Si hay que editarlas en algun momento ya se cambiara si es necesario.
-		INTERNAL_PREFERENCES = Preferences.systemRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+		INTERNAL_PREFERENCES = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 		try {
 			INTERNAL_PREFERENCES_DATA = loadInternalPreferencesData();
 		} catch (final Exception e) {
@@ -720,10 +764,9 @@ public final class PreferencesManager {
 		Properties preferencesData = null;
 
 		// Cargamos las preferencias internas establecidas a nivel de sistema
-		final Preferences systemRootPreferences = Preferences.systemRoot();
-		if (systemRootPreferences.nodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
+		if (systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
 			preferencesData = new Properties();
-			final Preferences internalSystemNode = systemRootPreferences.node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+			final Preferences internalSystemNode = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 			try {
 				for (final String key : internalSystemNode.keys()) {
 					preferencesData.setProperty(key, internalSystemNode.get(key, null));
@@ -737,9 +780,8 @@ public final class PreferencesManager {
 
 			// Cargamos las preferencias cargadas a nivel de usuario, con cuidado de no pisar
 			// aquellas exclusivas de sistema
-			final Preferences userRootPreferences = Preferences.userRoot();
-			if (userRootPreferences.nodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
-				final Preferences internalUserNode = userRootPreferences.node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+			if (userNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
+				final Preferences internalUserNode = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 				for (final String key : internalUserNode.keys()) {
 					if (!isSystemConfigPreference(key)) {
 						preferencesData.setProperty(key, internalUserNode.get(key, null));
@@ -912,11 +954,11 @@ public final class PreferencesManager {
 
 	private static void createSystemPrefs() {
 		try {
-			SYSTEM_PREFERENCES = Preferences.systemRoot().node(PREFERENCE_NODE);
+			SYSTEM_PREFERENCES = systemNode(PREFERENCE_NODE);
 			REAL_SYSTEM_PREFERENCES = SYSTEM_PREFERENCES;
 		}
 		catch (final Exception e) {
-			SYSTEM_PREFERENCES = Preferences.userRoot().node(UPDATED_SYSTEM_PREFERENCE_NODE);
+			SYSTEM_PREFERENCES = userNode(UPDATED_SYSTEM_PREFERENCE_NODE);
 			REAL_SYSTEM_PREFERENCES = null;
 		}
 	}
@@ -929,8 +971,8 @@ public final class PreferencesManager {
 		if (SYSTEM_PREFERENCES != null && !SYSTEM_PREFERENCES.isUserNode()) {
 			REAL_SYSTEM_PREFERENCES = SYSTEM_PREFERENCES;
 		}
-		SYSTEM_PREFERENCES = Preferences.userRoot().node(UPDATED_SYSTEM_PREFERENCE_NODE);
-		INTERNAL_PREFERENCES = Preferences.userRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+		SYSTEM_PREFERENCES = userNode(UPDATED_SYSTEM_PREFERENCE_NODE);
+		INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 	}
 
 	/**
@@ -1194,7 +1236,7 @@ public final class PreferencesManager {
 		}
 		catch (final Exception e) {
 			if (!INTERNAL_PREFERENCES.isUserNode()) {
-				INTERNAL_PREFERENCES = Preferences.userRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+				INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 				setConfigFileInfo(url, allowUpdates, configDataInfo);
 				return;
 			}
@@ -1216,7 +1258,7 @@ public final class PreferencesManager {
 		}
 		catch (final Exception e) {
 			if (!INTERNAL_PREFERENCES.isUserNode()) {
-				INTERNAL_PREFERENCES = Preferences.userRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE);
+				INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
 				setConfigCheckDate();
 				return;
 			}
@@ -1226,8 +1268,8 @@ public final class PreferencesManager {
 
 	private static boolean isAutommaticUpdateConfigAllowed() {
 		try {
-			return Preferences.systemRoot().nodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)
-					&& Preferences.systemRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE).getBoolean(SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG, false);
+			return systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)
+					&& systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).getBoolean(SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG, false);
 		}
 		catch (final Exception e) {
 			LOGGER.log(Level.WARNING, "No se ha podido comprobar si esta activa la actualizacion automatica de la configuracion", e); //$NON-NLS-1$
@@ -1274,9 +1316,9 @@ public final class PreferencesManager {
 			REAL_SYSTEM_PREFERENCES.removeNode();
 			removeEmptyTree(parent);
 		}
-		if (Preferences.systemRoot().nodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
-			final Preferences parent = Preferences.systemRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE).parent();
-			Preferences.systemRoot().node(INTERNAL_SYSTEM_PREFERENCE_NODE).removeNode();
+		if (systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
+			final Preferences parent = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).parent();
+			systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).removeNode();
 			removeEmptyTree(parent);
 		}
 	}
