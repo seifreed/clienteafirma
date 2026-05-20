@@ -9,6 +9,9 @@
 
 package es.gob.afirma.test.keystores;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -17,32 +20,35 @@ import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import es.gob.afirma.core.misc.AOUtil;
-import es.gob.afirma.core.misc.Platform;
 import es.gob.afirma.keystores.AOKeyStore;
 import es.gob.afirma.keystores.AOKeyStoreManager;
 import es.gob.afirma.keystores.AOKeyStoreManagerFactory;
 
 /** Pruebas espec&iacute;ficas para los almacenes de Mac OS X.
+ *
+ * <p>Ambos tests requieren un Keychain real y la contrase&ntilde;a del usuario; por eso est&aacute;n
+ * condicionados a {@code -Dafirma.it.macos.keychain=true} y a ejecutarse en macOS. Sin esa
+ * propiedad activa, los tests se omiten — no se mockean — siguiendo la pol&iacute;tica
+ * "No mocks (mandatory)" del CLAUDE.md ra&iacute;z.
+ *
  * @author Tom&aacute;s Garc&iacute;a-Mer&aacute;s */
-public class TestMacKeyChain {
+class TestMacKeyChain {
 
-    /** Prueba de carga y uso de un <i>KeyChain</i> en fichero suelto.
+    /** Prueba de carga y uso de un <i>KeyChain</i> en fichero suelto. Requiere
+     * el recurso {@code test.keychain} y la contrase&ntilde;a del usuario para
+     * desbloquearlo.
      * @throws Exception En cualquier error. */
 	@Test
-	@Ignore // Requieren contrasena del almacen
-    public void testStandaloneKeyChain() throws Exception {
-        if (!Platform.OS.MACOSX.equals(Platform.getOS())) {
-            return;
-        }
+	@EnabledOnOs(OS.MAC)
+	@EnabledIfSystemProperty(named = "afirma.it.macos.keychain", matches = "true")
+    void testStandaloneKeyChain() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
-        System.out.println(System.getProperty("java.version")); //$NON-NLS-1$
-        System.out.println(System.getProperty("java.vm.vendor")); //$NON-NLS-1$
-        System.out.println(System.getProperty("java.home")); //$NON-NLS-1$
 
         // Copiamos el KeyChain a un fichero temporal
         final File kc = File.createTempFile("test", ".keychain"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -61,50 +67,42 @@ public class TestMacKeyChain {
     		AOKeyStore.APPLE.getStorePasswordCallback(null),
     		null
 		);
-        Assert.assertNotNull(ksm);
+        assertNotNull(ksm);
         final String[] aliases = ksm.getAliases();
-        Assert.assertNotNull(aliases);
-        Assert.assertTrue(aliases.length > 0);
+        assertNotNull(aliases);
+        assertTrue(aliases.length > 0);
 
         final PrivateKeyEntry pke = ksm.getKeyEntry(aliases[0]);
-        Assert.assertNotNull(pke);
+        assertNotNull(pke);
 
         final X509Certificate cert = (X509Certificate) pke.getCertificate();
-        Assert.assertNotNull(cert);
+        assertNotNull(cert);
 
-        Assert.assertNotNull(pke.getPrivateKey());
-
+        assertNotNull(pke.getPrivateKey());
     }
 
-    /** Prueba de carga y uso del <i>KayChain</i> del sistema.
-     * Requiere importada en el sistema una entrada con alias "anf usuario activo" que tenga clave privada
+    /** Prueba de carga y uso del <i>KeyChain</i> del sistema. Requiere importada
+     * en el sistema una entrada con alias "anf usuario activo" que tenga clave
+     * privada accesible.
      * @throws Exception En cualquier error. */
 	@Test
-	//@Ignore // Requieren contrasena del almacen
-    public void testSystemKeyChain() throws Exception {
-        if (!Platform.OS.MACOSX.equals(Platform.getOS())) {
-            return;
-        }
+	@EnabledOnOs(OS.MAC)
+	@EnabledIfSystemProperty(named = "afirma.it.macos.keychain", matches = "true")
+    void testSystemKeyChain() throws Exception {
         Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
 
         final AOKeyStoreManager ksm = AOKeyStoreManagerFactory.getAOKeyStoreManager(AOKeyStore.APPLE, null, "Mac-Afirma", null, null); //$NON-NLS-1$
-        Assert.assertNotNull(ksm);
+        assertNotNull(ksm);
         final String[] aliases = ksm.getAliases();
-        Assert.assertNotNull(aliases);
-        Assert.assertTrue(aliases.length > 0);
+        assertNotNull(aliases);
+        assertTrue(aliases.length > 0);
         final PrivateKeyEntry pke = ksm.getKeyEntry(aliases[0]);
-        Assert.assertNotNull(pke);
+        assertNotNull(pke);
         final X509Certificate cert = (X509Certificate) pke.getCertificate();
-        Assert.assertNotNull(cert);
+        assertNotNull(cert);
 
-        Assert.assertNotNull(
-            cert.getSubjectX500Principal().toString()
-        );
-        System.out.println(cert.getSubjectX500Principal().toString());
-
-        Assert.assertNotNull(pke.getPrivateKey());
-        System.out.println(pke.getPrivateKey());
-
+        assertNotNull(cert.getSubjectX500Principal().toString());
+        assertNotNull(pke.getPrivateKey());
     }
 
 }
