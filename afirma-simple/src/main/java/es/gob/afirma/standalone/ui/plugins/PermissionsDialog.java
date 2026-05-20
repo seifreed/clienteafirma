@@ -66,7 +66,6 @@ public class PermissionsDialog extends JDialog implements KeyListener {
 	}
 
 
-	@SuppressWarnings("serial")
 	void createUI() {
 		setIconImages(DesktopUtil.getIconImages());
 		getAccessibleContext().setAccessibleDescription(
@@ -78,6 +77,7 @@ public class PermissionsDialog extends JDialog implements KeyListener {
 		c.setLayout(gbl);
 
         final JLabel permissionsLabel = new JLabel() {
+			private static final long serialVersionUID = 1L;
 			@Override public Dimension getPreferredSize() {
 		        return new Dimension(getParent().getSize().width, super.getPreferredSize().height);
 		    }

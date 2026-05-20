@@ -16,9 +16,9 @@ import org.w3c.dom.NamedNodeMap;
  *
  * @author Christoffer Lerno
  */
-@SuppressWarnings({"serial"})
 public class XmlElementAttributes extends HashMap<String, String>
 {
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Creates an empty element attribute map.

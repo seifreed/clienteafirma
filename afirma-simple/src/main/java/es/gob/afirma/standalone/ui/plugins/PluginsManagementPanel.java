@@ -218,9 +218,9 @@ public final class PluginsManagementPanel extends JPanel {
 	 * agregar a un panel con scroll.
 	 * @return Componente para la visualizaci&oacute;n del texto.
 	 */
-	@SuppressWarnings("serial")
 	private JComponent createScrollableTextPanel() {
 		this.pluginInfoPane = new JLabel() {
+			private static final long serialVersionUID = 1L;
 			@Override public Dimension getPreferredSize() {
 		        return new Dimension(getParent().getSize().width, super.getPreferredSize().height);
 		    }
@@ -228,6 +228,7 @@ public final class PluginsManagementPanel extends JPanel {
 		this.pluginInfoPane.setFocusable(false);
 
 		final JPanel textPanel = new JPanel() {
+			private static final long serialVersionUID = 1L;
 			@Override public Dimension getPreferredSize() {
 		        return new Dimension(getParent().getSize().width, super.getPreferredSize().height);
 		    }

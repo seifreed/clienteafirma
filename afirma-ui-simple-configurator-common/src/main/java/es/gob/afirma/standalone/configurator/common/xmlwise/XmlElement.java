@@ -14,9 +14,10 @@ import org.w3c.dom.NodeList;
  *
  * @author Christoffer Lerno
  */
-@SuppressWarnings({"serial"})
 public class XmlElement extends LinkedList<XmlElement>
 {
+	private static final long serialVersionUID = 1L;
+
 	private final XmlElementAttributes m_attributes;
 	private final String m_value;
 	private final String m_name;
