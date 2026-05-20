@@ -1,7 +1,7 @@
 package es.gob.afirma.signfolder.server.proxy;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Assume;
 import org.junit.Test;
 
 import es.gob.afirma.core.misc.Base64;
@@ -23,8 +23,9 @@ public final class TestStorageService {
 	/** Prueba de almac&eacute;n de un texto simple.
 	 * @throws Exception En cualquier error. */
 	@Test
-	@Ignore // No ejecutamos de forma automatica
 	public void testStoreSimpleText() throws Exception {
+		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.intermediate.server=true (servicio de almacenamiento intermedio corriendo)", //$NON-NLS-1$
+				Boolean.getBoolean("afirma.it.intermediate.server")); //$NON-NLS-1$
 		final UrlHttpManager mgr = UrlHttpManagerFactory.getInstalledManager();
 		byte[] res;
 		try {
