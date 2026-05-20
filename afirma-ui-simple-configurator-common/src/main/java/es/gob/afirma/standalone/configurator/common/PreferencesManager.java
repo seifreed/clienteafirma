@@ -906,20 +906,8 @@ public final class PreferencesManager {
 	 * @param value Valor que se desea almacenar.
 	 */
 	public static void putSystemPref(final String key, final String value) {
-
 		init();
-
-		if (SYSTEM_PREFERENCES == null) {
-			createSystemPrefs();
-		}
-
-		try {
-			SYSTEM_PREFERENCES.put(key, value);
-		}
-		catch (final Exception e) {
-			unlockSystemPreferences();
-			SYSTEM_PREFERENCES.put(key, value);
-		}
+		putSystemPreferenceWithUnlockFallback(() -> SYSTEM_PREFERENCES.put(key, value));
 	}
 
 	private static void createSystemPrefs() {
@@ -952,19 +940,32 @@ public final class PreferencesManager {
 	 * @param value Valor que se desea almacenar.
 	 */
 	public static void putBooleanSystemPref(final String key, final boolean value) {
-
 		init();
+		putSystemPreferenceWithUnlockFallback(() -> SYSTEM_PREFERENCES.putBoolean(key, value));
+	}
 
+	/**
+	 * Ejecuta una escritura sobre el almac&eacute;n de preferencias del sistema con
+	 * fallback al almac&eacute;n de usuario cuando la primera escritura falla (caso
+	 * t&iacute;pico: el almac&eacute;n del sistema est&aacute; en una rama de
+	 * Preferences solo lectura para el usuario actual). Centraliza el patr&oacute;n
+	 * try-catch-retry usado por {@link #putSystemPref(String, String)} y
+	 * {@link #putBooleanSystemPref(String, boolean)}.
+	 *
+	 * @param putAction Acci&oacute;n que escribe sobre {@code SYSTEM_PREFERENCES}.
+	 *                  Se ejecuta primero contra el almac&eacute;n del sistema y, si
+	 *                  lanza, una segunda vez tras invocar {@link #unlockSystemPreferences()}.
+	 */
+	private static void putSystemPreferenceWithUnlockFallback(final Runnable putAction) {
 		if (SYSTEM_PREFERENCES == null) {
 			createSystemPrefs();
 		}
-
 		try {
-			SYSTEM_PREFERENCES.putBoolean(key, value);
+			putAction.run();
 		}
 		catch (final Exception e) {
 			unlockSystemPreferences();
-			SYSTEM_PREFERENCES.putBoolean(key, value);
+			putAction.run();
 		}
 	}
 
