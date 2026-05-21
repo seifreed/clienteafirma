@@ -11,6 +11,7 @@ import es.gob.afirma.keystores.AOKeyStoreManager;
 import es.gob.afirma.keystores.AOKeyStoreManagerFactory;
 import es.gob.afirma.standalone.SimpleKeyStoreManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 
 public class LoadKeystoreTask extends Thread{
@@ -31,7 +32,7 @@ public class LoadKeystoreTask extends Thread{
 
 		// Comprobamos cual fue el ultimo almacen utilizado y si habia alguno establecido por defecto
 		final String lastSelectedKeyStore = KeyStorePreferencesManager.getLastSelectedKeystore();
-		final boolean useDefaultStore = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS);
+		final boolean useDefaultStore = PreferencesManager.getBoolean(GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS);
 
 		// Si hay marcado un almacen como el ultimo seleccionado, lo usamos (este es el caso en el que se llaman
 		// varias operaciones de firma dentro de la misma invocacion a la aplicacion)

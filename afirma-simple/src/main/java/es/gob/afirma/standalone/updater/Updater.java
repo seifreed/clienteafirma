@@ -28,6 +28,7 @@ import es.gob.afirma.core.misc.http.UrlHttpMethod;
 import es.gob.afirma.core.ui.AOUIFactory;
 import es.gob.afirma.standalone.HttpManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.ui.tasks.SSLContextConfigurationTask;
 
 /** Utilidad para la gesti&oacute;n de actualizaciones de la aplicaci&oacute;n.
@@ -193,7 +194,7 @@ public final class Updater {
 	public static void checkForUpdates(final Object parent, SSLContextConfigurationTask sslContextConfigurationTask) {
 
 		// Miramos en la configuracion de la aplicacion que el usuario ha establecido mediante el UI.
-		boolean omitCheck = !PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_UPDATECHECK);
+		boolean omitCheck = !PreferencesManager.getBoolean(GeneralPreferenceKeys.UPDATECHECK);
 
 		// Comprobamos si ya se ha realizado la comprobacion de actualizaciones hoy
 		if (!omitCheck)

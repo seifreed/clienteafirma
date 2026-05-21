@@ -31,6 +31,7 @@ import es.gob.afirma.core.misc.Platform;
 import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /** Panel para la espera y detecci&oacute;n autom&aacute;tica de insercci&oacute;n de DNIe.
  * @author Tom&aacute;s Garc&iacute;a-Mer&aacute;s */
@@ -166,12 +167,12 @@ public final class DNIeWaitPanel extends JPanel implements KeyListener {
         c.gridy = 4;
         final JCheckBox hideDniWaitScreen = new JCheckBox(
     		SimpleAfirmaMessages.getString("DNIeWaitPanel.8"), //$NON-NLS-1$
-    		PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN)
+    		PreferencesManager.getBoolean(GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN)
 		);
         hideDniWaitScreen.addKeyListener(this);
         hideDniWaitScreen.addChangeListener(
     		e -> PreferencesManager.putBoolean(
-				PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN,
+				GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN,
 				hideDniWaitScreen.isSelected()
 			)
     	);

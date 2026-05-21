@@ -31,6 +31,7 @@ import es.gob.afirma.keystores.KeystoreAlternativeException;
 import es.gob.afirma.keystores.SmartCardLockedException;
 import es.gob.afirma.keystores.mozilla.MozillaKeyStoreUtilities;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 
 /** Gestor simple de <code>KeyStores</code>. Obtiene o un <code>KeyStore</code> de DNIe
@@ -144,7 +145,7 @@ public final class SimpleKeyStoreManager {
 
         // Configuramos el uso de JMulticard segun lo establecido en el dialogo de preferencias
         final boolean enableJMulticard = PreferencesManager.getBoolean(
-        		PreferencesManager.PREFERENCE_GENERAL_ENABLED_JMULTICARD);
+        		GeneralPreferenceKeys.ENABLED_JMULTICARD);
 
         JMulticardUtilities.configureJMulticard(enableJMulticard);
 
@@ -238,7 +239,7 @@ public final class SimpleKeyStoreManager {
     private static AOKeyStoreManager getKeyStoreManager(final AOKeyStore aoks, final Component parent) throws IOException, KeystoreAlternativeException {
     	String lib = null;
     	if (AOKeyStore.PKCS12.equals(aoks) || AOKeyStore.PKCS11.equals(aoks)) {
-    		lib = PreferencesManager.get(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH);
+    		lib = PreferencesManager.get(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH);
     	}
     	return AOKeyStoreManagerFactory.getAOKeyStoreManager(
     		aoks,

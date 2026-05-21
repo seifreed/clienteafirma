@@ -82,6 +82,7 @@ import es.gob.afirma.signvalidation.ValidateBinarySignature;
 import es.gob.afirma.signvalidation.ValidatePdfSignature;
 import es.gob.afirma.standalone.configurator.common.ConfigUpdaterManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.plugins.manager.PluginsManager;
 import es.gob.afirma.standalone.protocol.ProtocolInvocationLauncher;
@@ -257,7 +258,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
         // por eso usamos un booleano para ver si fallo, en vez de una comprobacion
         // de igualdad a null
 		boolean showDNIeScreen = preSelectedFile == null
-				&& !PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN);
+				&& !PreferencesManager.getBoolean(GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN);
         if (showDNIeScreen) {
 	        try {
 	        	if (javax.smartcardio.TerminalFactory.getDefault().terminals().list().isEmpty()) {
@@ -451,7 +452,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
 	    	try {
 	    		final AOKeyStore aoks = SimpleKeyStoreManager.getDefaultKeyStoreType();
 	    		if (aoks.equals(AOKeyStore.PKCS12) || aoks.equals(AOKeyStore.PKCS11)) {
-	    			lib = PreferencesManager.get(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH);
+	    			lib = PreferencesManager.get(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH);
 	    		}
 	    		this.ksManager = AOKeyStoreManagerFactory.getAOKeyStoreManager(
 						aoks, // Store
@@ -933,7 +934,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
        	}
 
     	// Comprobamos actualizaciones si estan habilitadas
-        if (updatesEnabled && PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_UPDATECHECK)) {
+        if (updatesEnabled && PreferencesManager.getBoolean(GeneralPreferenceKeys.UPDATECHECK)) {
         	LOGGER.info("Buscamos actualizaciones"); //$NON-NLS-1$
 			Updater.checkForUpdates(null, sslContextConfigurationTask);
 		} else {
@@ -999,7 +1000,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
 					// Configuramos el uso de JMulticard segun lo establecido en el dialogo de
 					// preferencias
 					final boolean enableJMulticard = PreferencesManager
-							.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLED_JMULTICARD);
+							.getBoolean(GeneralPreferenceKeys.ENABLED_JMULTICARD);
 
 					JMulticardUtilities.configureJMulticard(enableJMulticard);
 
@@ -1141,7 +1142,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
 	 *         <code>false</code> en caso contrario
 	 */
     public boolean askForClosing() {
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_OMIT_ASKONCLOSE)) {
+    	if (PreferencesManager.getBoolean(GeneralPreferenceKeys.OMIT_ASKONCLOSE)) {
     		closeApplication(0);
             return true;
     	}
@@ -1358,7 +1359,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
     	final boolean isSupportedVersion = isJavaSupported();
 
 		final boolean needCheck = PreferencesManager
-				.getBoolean(PreferencesManager.PREFERENCE_GENERAL_CHECK_JAVA_VERSION);
+				.getBoolean(GeneralPreferenceKeys.CHECK_JAVA_VERSION);
 
     	if (!isSupportedVersion && needCheck) {
 
@@ -1379,10 +1380,10 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
     				JOptionPane.WARNING_MESSAGE);
 
     		if (cbDontShow.isSelected()) {
-    			PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_CHECK_JAVA_VERSION, false);
+    			PreferencesManager.putBoolean(GeneralPreferenceKeys.CHECK_JAVA_VERSION, false);
     		}
 		} else if (isSupportedVersion && !needCheck) {
-    		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_CHECK_JAVA_VERSION, true);
+    		PreferencesManager.putBoolean(GeneralPreferenceKeys.CHECK_JAVA_VERSION, true);
     	}
 	}
 

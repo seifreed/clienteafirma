@@ -10,6 +10,7 @@ import es.gob.afirma.core.misc.http.UrlHttpManagerFactory;
 import es.gob.afirma.core.misc.http.UrlHttpManagerImpl;
 import es.gob.afirma.core.misc.http.UrlHttpMethod;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /**
  * Clase para el acceso a recursos y servicios remotos. Esta clase debe gestionar todas las conexiones
@@ -27,8 +28,8 @@ public class HttpManager {
 	public HttpManager() {
 		this.urlManager = UrlHttpManagerFactory.getInstalledManager();
 		setSecureConnections(PreferencesManager.getBoolean(
-				PreferencesManager.PREFERENCE_GENERAL_SECURE_CONNECTIONS));
-		setSecureDomains(PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SECURE_DOMAINS_LIST));
+				GeneralPreferenceKeys.SECURE_CONNECTIONS));
+		setSecureDomains(PreferencesManager.get(GeneralPreferenceKeys.SECURE_DOMAINS_LIST));
 	}
 
 	/**

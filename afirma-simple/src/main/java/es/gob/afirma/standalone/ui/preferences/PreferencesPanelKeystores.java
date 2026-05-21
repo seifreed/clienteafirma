@@ -59,6 +59,7 @@ import es.gob.afirma.keystores.filters.rfc.KeyUsageFilter;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.SimpleKeyStoreManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.ui.core.jse.certificateselection.CertificateSelectionDialog;
 
@@ -240,7 +241,7 @@ final class PreferencesPanelKeystores extends JScrollPane {
 				} else if (AOKeyStore.PKCS12.equals(ks) || AOKeyStore.PKCS11.getName().equals(ks.getName())) {
 					lib = PreferencesPanelKeystores.this.localKeystoreSelectedPath;
 					if (lib == null) {
-						lib = PreferencesManager.get(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH);
+						lib = PreferencesManager.get(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH);
 					}
 				}
 
@@ -893,11 +894,11 @@ final class PreferencesPanelKeystores extends JScrollPane {
 	void savePreferences() {
 
 		if (this.localKeystoreSelectedPath != null) {
-			PreferencesManager.put(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH, this.localKeystoreSelectedPath);
+			PreferencesManager.put(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH, this.localKeystoreSelectedPath);
 			KeyStorePreferencesManager.setLastSelectedKeystoreLib(this.localKeystoreSelectedPath);
 		}
 
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS, this.callsFromNavigator.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS, this.callsFromNavigator.isSelected());
 
 		final RegisteredKeystore rks = (RegisteredKeystore) this.keystores.getSelectedItem();
 		AOKeyStore aoks = SimpleKeyStoreManager.getKeyStore(rks.getName());
@@ -908,7 +909,7 @@ final class PreferencesPanelKeystores extends JScrollPane {
 		}
 
 		if (aoks != null && AOKeyStore.PKCS11.getProviderName().equals(aoks.getProviderName()) && rks.getLib() != null) {
-			PreferencesManager.put(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH, rks.getLib());
+			PreferencesManager.put(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH, rks.getLib());
 		}
 
 		if (AOKeyStore.PKCS12.getName().equals(rks.getName())) {
@@ -928,7 +929,7 @@ final class PreferencesPanelKeystores extends JScrollPane {
 		}
 
 		PreferencesManager.putBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS, this.showExpiredCerts.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN, this.hideDniStartScreen.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN, this.hideDniStartScreen.isSelected());
 		PreferencesManager.putBoolean(SIGN_ONLY_CERTS, this.onlySignature.isSelected());
 		PreferencesManager.putBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS, this.onlyAlias.isSelected());
 		PreferencesManager.putBoolean(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE, this.skipAuthCertDnie.isSelected());
@@ -980,8 +981,8 @@ final class PreferencesPanelKeystores extends JScrollPane {
 		}
 
 		this.keystores.repaint();
-		this.callsFromNavigator.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS));
-		this.hideDniStartScreen.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN));
+		this.callsFromNavigator.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS));
+		this.hideDniStartScreen.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN));
 		this.showExpiredCerts.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS));
 		this.onlySignature.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.SIGN_ONLY_CERTS));
 		this.onlyAlias.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS));
@@ -1019,8 +1020,8 @@ final class PreferencesPanelKeystores extends JScrollPane {
 
 		// Eliminamos el resto de las opciones de configuracion
 		PreferencesManager.remove(KeyStorePreferenceKeys.DEFAULT_STORE);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN);
+		PreferencesManager.remove(GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS);
+		PreferencesManager.remove(GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN);
 		PreferencesManager.remove(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS);
 		PreferencesManager.remove(KeyStorePreferenceKeys.SIGN_ONLY_CERTS);
 		PreferencesManager.remove(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS);

@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import es.gob.afirma.standalone.HttpManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 public class SecureDomainsHandler {
 
@@ -24,7 +25,7 @@ public class SecureDomainsHandler {
 	 * Carga la informaci&oacute;n actualmente configurada en la vista.
 	 */
 	void loadViewData() {
-		final String secureDomains = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SECURE_DOMAINS_LIST);
+		final String secureDomains = PreferencesManager.get(GeneralPreferenceKeys.SECURE_DOMAINS_LIST);
 		if (secureDomains != null) {
 			this.view.getSecureDomainsListTA().setText(secureDomains.replaceAll(COMMA_SEPARATOR, LINE_BREAK));
 		}
@@ -42,10 +43,10 @@ public class SecureDomainsHandler {
 				.replace(CRLF, COMMA_SEPARATOR).replace(LINE_BREAK, COMMA_SEPARATOR);
 
 		if (secureDomains.isEmpty()) {
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_SECURE_DOMAINS_LIST);
+			PreferencesManager.remove(GeneralPreferenceKeys.SECURE_DOMAINS_LIST);
 		}
 		else {
-			PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_SECURE_DOMAINS_LIST, secureDomains);
+			PreferencesManager.put(GeneralPreferenceKeys.SECURE_DOMAINS_LIST, secureDomains);
 		}
 
 		// Configuramos los dominios seguros para que tenga efecto inmediato

@@ -28,6 +28,7 @@ import es.gob.afirma.core.ui.AOUIFactory;
 import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 final class PreferencesPanel extends JPanel implements KeyListener, DisposableInterface {
 
@@ -53,7 +54,7 @@ final class PreferencesPanel extends JPanel implements KeyListener, DisposableIn
 
 	void createUI(final int selectedTabIndex) {
 
-		final boolean blocked = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_BLOCKED);
+		final boolean blocked = PreferencesManager.getBoolean(GeneralPreferenceKeys.BLOCKED);
 
 		this.preferencesPanelGeneral = new PreferencesPanelGeneral(this, this.modificationListener, this, this, blocked);
 		this.preferencesPanelCades = new PreferencesPanelCades(this, this.modificationListener, blocked);

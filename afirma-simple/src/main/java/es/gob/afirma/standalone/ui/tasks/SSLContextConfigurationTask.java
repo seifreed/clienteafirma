@@ -11,6 +11,7 @@ import javax.net.ssl.HttpsURLConnection;
 import es.gob.afirma.core.misc.http.SslSecurityManager;
 import es.gob.afirma.standalone.HttpManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /**
  * Hilo para la configuraci&oacute;n del contexto SSL para las conexiones remotas.
@@ -30,7 +31,7 @@ public class SSLContextConfigurationTask extends Thread {
 
     	// Establecemos si deben respetarse las comprobaciones de seguridad de las
     	// conexiones de red
-    	final boolean secureConnections = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_SECURE_CONNECTIONS);
+    	final boolean secureConnections = PreferencesManager.getBoolean(GeneralPreferenceKeys.SECURE_CONNECTIONS);
 
     	LOGGER.info("Configuramos el contexto SSL"); //$NON-NLS-1$
     	HttpManager.setSecureConnections(secureConnections);
@@ -38,7 +39,7 @@ public class SSLContextConfigurationTask extends Thread {
     	// Establecemos el listado de dominios seguros
     	LOGGER.info("Configuramos el listado de dominios seguros"); //$NON-NLS-1$
     	HttpManager.setSecureDomains(
-    			PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SECURE_DOMAINS_LIST));
+    			PreferencesManager.get(GeneralPreferenceKeys.SECURE_DOMAINS_LIST));
 
     	// Configuramos las propiedades del sistema necesarias para que SSLErrorProcesor las trate correctamente
     	final boolean allowPersonalTruststore = PreferencesManager.getBoolean(PreferencesManager.ADMIN_PREFERENCE_ALLOW_PERSONAL_TRUSTSTORE);

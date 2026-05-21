@@ -47,6 +47,7 @@ import es.gob.afirma.standalone.ProxyUtil;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager.PreferencesSource;
 import es.gob.afirma.standalone.configurator.common.PreferencesPlistHandler;
 
@@ -718,18 +719,18 @@ final class PreferencesPanelGeneral extends JScrollPane {
 
 	void savePreferences() {
 		// Opciones varias
-		PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_SIGNATURE_ALGORITHM, this.signatureAlgorithms.getSelectedItem().toString());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_OMIT_ASKONCLOSE, this.avoidAskForClose.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_CONFIRMTOSIGN, this.confirmToSign.isSelected());
+		PreferencesManager.put(GeneralPreferenceKeys.SIGNATURE_ALGORITHM, this.signatureAlgorithms.getSelectedItem().toString());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.OMIT_ASKONCLOSE, this.avoidAskForClose.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.CONFIRMTOSIGN, this.confirmToSign.isSelected());
 		if (SimpleAfirma.isUpdatesEnabled()) {
-			PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_UPDATECHECK, this.checkForUpdates.isSelected());
+			PreferencesManager.putBoolean(GeneralPreferenceKeys.UPDATECHECK, this.checkForUpdates.isSelected());
 		}
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES, this.allowSignInvalidSignatures.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLED_JMULTICARD, this.enableJMulticard.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_VDI_OPTIMIZATION, this.optimizedForVdi.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLE_PROGRESS_DIALOG, this.enableProgressDialog.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_MASSIVE_OVERWRITE, this.massiveOverwrite.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_SECURE_CONNECTIONS, this.secureConnections.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES, this.allowSignInvalidSignatures.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.ENABLED_JMULTICARD, this.enableJMulticard.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.VDI_OPTIMIZATION, this.optimizedForVdi.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.ENABLE_PROGRESS_DIALOG, this.enableProgressDialog.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.MASSIVE_OVERWRITE, this.massiveOverwrite.isSelected());
+		PreferencesManager.putBoolean(GeneralPreferenceKeys.SECURE_CONNECTIONS, this.secureConnections.isSelected());
 
 		// Segun lo configurado establecemos el uso de conexiones de seguras
 		HttpManager.setSecureConnections(this.secureConnections.isSelected());
@@ -738,41 +739,41 @@ final class PreferencesPanelGeneral extends JScrollPane {
 	void loadPreferences() {
 
 		this.signatureAlgorithms.setSelectedItem(
-			PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SIGNATURE_ALGORITHM)
+			PreferencesManager.get(GeneralPreferenceKeys.SIGNATURE_ALGORITHM)
 		);
 		// Si el valor establecido no es valido, establecemos el valor por defecto
 		if (this.signatureAlgorithms.getSelectedItem() == null) {
 			this.signatureAlgorithms.setSelectedItem(
-					PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SIGNATURE_ALGORITHM, PreferencesSource.DEFAULT));
+					PreferencesManager.get(GeneralPreferenceKeys.SIGNATURE_ALGORITHM, PreferencesSource.DEFAULT));
 		}
-		this.avoidAskForClose.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_OMIT_ASKONCLOSE));
-		this.confirmToSign.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_CONFIRMTOSIGN));
+		this.avoidAskForClose.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.OMIT_ASKONCLOSE));
+		this.confirmToSign.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.CONFIRMTOSIGN));
 
 		if (!SimpleAfirma.isUpdatesEnabled()) {
 			this.checkForUpdates.setSelected(false);
 			this.checkForUpdates.setEnabled(false);
 		}
 		else {
-			this.checkForUpdates.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_UPDATECHECK));
+			this.checkForUpdates.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.UPDATECHECK));
 		}
 
-		this.allowSignInvalidSignatures.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES));
+		this.allowSignInvalidSignatures.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES));
 
 		if (JMulticardUtilities.isJMulticardConfigurateBySystem()) {
 			this.enableJMulticard.setSelected(false);
 			this.enableJMulticard.setEnabled(false);
 		}
 		else {
-			this.enableJMulticard.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLED_JMULTICARD));
+			this.enableJMulticard.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.ENABLED_JMULTICARD));
 		}
 
-		this.optimizedForVdi.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_VDI_OPTIMIZATION));
+		this.optimizedForVdi.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.VDI_OPTIMIZATION));
 
-		this.enableProgressDialog.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLE_PROGRESS_DIALOG));
+		this.enableProgressDialog.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.ENABLE_PROGRESS_DIALOG));
 
-		this.massiveOverwrite.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_MASSIVE_OVERWRITE));
+		this.massiveOverwrite.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.MASSIVE_OVERWRITE));
 
-		this.secureConnections.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_SECURE_CONNECTIONS));
+		this.secureConnections.setSelected(PreferencesManager.getBoolean(GeneralPreferenceKeys.SECURE_CONNECTIONS));
 		
 		boolean allowPersonalTruststore = PreferencesManager.getBoolean(PreferencesManager.ADMIN_PREFERENCE_ALLOW_PERSONAL_TRUSTSTORE);
 		

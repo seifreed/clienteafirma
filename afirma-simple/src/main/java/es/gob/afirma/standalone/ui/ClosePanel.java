@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /** Panel para preguntar si se desea cerrar la aplicaci&oacute;n.
  * @author Tom&aacute;s Garc&iacute;a-Mer&aacute;s */
@@ -34,11 +35,11 @@ public final class ClosePanel extends JPanel {
 		setLayout(new GridLayout(0,1));
 		add(new JLabel(SimpleAfirmaMessages.getString("SimpleAfirma.47"))); //$NON-NLS-1$
 		this.ask.setSelected(PreferencesManager.getBoolean(
-			PreferencesManager.PREFERENCE_GENERAL_OMIT_ASKONCLOSE)
+			GeneralPreferenceKeys.OMIT_ASKONCLOSE)
 		);
 		this.ask.addItemListener(
 			e -> PreferencesManager.putBoolean(
-				PreferencesManager.PREFERENCE_GENERAL_OMIT_ASKONCLOSE,
+				GeneralPreferenceKeys.OMIT_ASKONCLOSE,
 				ClosePanel.this.getAskCheckBox().isSelected()
 			)
 		);

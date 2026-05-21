@@ -19,6 +19,7 @@ import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 import es.gob.afirma.core.misc.protocol.ProtocolVersion;
 import es.gob.afirma.standalone.SimpleErrorCode;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /** Gestor de la invocaci&oacute;n por <i>WebSocket</i>. */
 public class AfirmaWebSocketServerManager {
@@ -65,7 +66,7 @@ public class AfirmaWebSocketServerManager {
 
  		// Configuramos la optimizacion para VDI segun lo establecido en el dialogo de preferencias
  		final boolean optimizedForVdi = PreferencesManager
- 				.getBoolean(PreferencesManager.PREFERENCE_GENERAL_VDI_OPTIMIZATION);
+ 				.getBoolean(GeneralPreferenceKeys.VDI_OPTIMIZATION);
          System.setProperty(SYSTEM_PROPERTY_OPTIMIZED_FOR_VDI, Boolean.toString(optimizedForVdi));
 
 		int port = channelInfo.nextPortAvailable();

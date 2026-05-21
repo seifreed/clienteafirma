@@ -1,11 +1,11 @@
 package es.gob.afirma.standalone.ui.preferences;
 
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_XML;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_BIN;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_FACTURAE;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_ODF;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_OOXML;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_PDF;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_XML;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import es.gob.afirma.core.signers.AOSignConstants;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager.PreferencesSource;
 
 class DefaultFormatPanel extends JPanel {
@@ -202,35 +203,35 @@ class DefaultFormatPanel extends JPanel {
 	 * Carga los valores almacenados en las preferencias del sistema.
 	 */
 	void loadPreferences() {
-		this.pdfFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF));
-		this.ooxmlFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML));
-		this.facturaeFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE));
-		this.odfFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF));
-		this.xmlFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML));
-		this.binFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN));
+		this.pdfFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_PDF));
+		this.ooxmlFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_OOXML));
+		this.facturaeFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_FACTURAE));
+		this.odfFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_ODF));
+		this.xmlFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_XML));
+		this.binFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_BIN));
 	}
 
 	/**
 	 * Carga los valores por defecto de los campos del di&aacute;logo.
 	 */
 	void resetPreferences() {
-		this.pdfFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF, PreferencesSource.DEFAULT));
-		this.ooxmlFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML, PreferencesSource.DEFAULT));
-		this.facturaeFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE, PreferencesSource.DEFAULT));
-		this.odfFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF, PreferencesSource.DEFAULT));
-		this.xmlFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML, PreferencesSource.DEFAULT));
-		this.binFilesCombo.setSelectedItem(PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN, PreferencesSource.DEFAULT));
+		this.pdfFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_PDF, PreferencesSource.DEFAULT));
+		this.ooxmlFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_OOXML, PreferencesSource.DEFAULT));
+		this.facturaeFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_FACTURAE, PreferencesSource.DEFAULT));
+		this.odfFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_ODF, PreferencesSource.DEFAULT));
+		this.xmlFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_XML, PreferencesSource.DEFAULT));
+		this.binFilesCombo.setSelectedItem(PreferencesManager.get(DEFAULT_FORMAT_BIN, PreferencesSource.DEFAULT));
 	}
 
 	/**
 	 * Almacena los valores actuales de los campos del di&aacute;logo en las preferencias de la aplicaci&oacute;n.
 	 */
 	void savePreferences() {
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN, this.binFilesCombo.getSelectedItem().toString());
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE, this.facturaeFilesCombo.getSelectedItem().toString());
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML, this.ooxmlFilesCombo.getSelectedItem().toString());
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF, this.pdfFilesCombo.getSelectedItem().toString());
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML, this.xmlFilesCombo.getSelectedItem().toString());
-		PreferencesManager.put(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF, this.odfFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_BIN, this.binFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_FACTURAE, this.facturaeFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_OOXML, this.ooxmlFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_PDF, this.pdfFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_XML, this.xmlFilesCombo.getSelectedItem().toString());
+		PreferencesManager.put(DEFAULT_FORMAT_ODF, this.odfFilesCombo.getSelectedItem().toString());
 	}
 }

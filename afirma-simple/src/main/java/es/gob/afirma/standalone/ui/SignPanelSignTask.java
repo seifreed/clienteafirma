@@ -71,6 +71,7 @@ import es.gob.afirma.standalone.DesktopUtil;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.plugins.AfirmaPlugin;
 import es.gob.afirma.standalone.plugins.Permission;
@@ -220,7 +221,7 @@ final class SignPanelSignTask extends SwingWorker<Void, Void> {
         	// Evitamos agregar nuevas firmas a los documentos con firmas no validas
         	if (signConfig.getSignValidity() != null
         			&& signConfig.getSignValidity().get(0).getValidity() == SIGN_DETAIL_TYPE.KO
-        			&& !PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES)) {
+        			&& !PreferencesManager.getBoolean(GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES)) {
         		LOGGER.severe("La entrada es una firma invalida. Se omitira"); //$NON-NLS-1$
         		continue;
         	}
@@ -311,7 +312,7 @@ final class SignPanelSignTask extends SwingWorker<Void, Void> {
         	final String keyType = this.selectedPke.getPrivateKey().getAlgorithm();
         	String digestAlgorithm = signConfig.getDigestAlgorithm();
         	if (digestAlgorithm == null) {
-        		digestAlgorithm = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_SIGNATURE_ALGORITHM);
+        		digestAlgorithm = PreferencesManager.get(GeneralPreferenceKeys.SIGNATURE_ALGORITHM);
         	}
         	try {
         		signatureAlgorithm = AOSignConstants.composeSignatureAlgorithmName(digestAlgorithm, keyType);
@@ -478,7 +479,7 @@ final class SignPanelSignTask extends SwingWorker<Void, Void> {
             	}
 
             	final File defaultOutFile = new File(outDir, relativePath + defaultFilename);
-            	final boolean overwrite = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_MASSIVE_OVERWRITE);
+            	final boolean overwrite = PreferencesManager.getBoolean(GeneralPreferenceKeys.MASSIVE_OVERWRITE);
 
             	File outFile;
             	try {

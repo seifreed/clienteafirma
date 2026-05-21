@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 
 /** Di&aacute;logo que muestra mensajes con la informaci&oacute;n
  * de la tarea que esta realizando la aplicaci&oacute;n */
@@ -62,7 +63,7 @@ public final class ProgressInfoDialog extends JDialog {
 
 	    setContentPane(panel);
 
-	    this.enabledDialog = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLE_PROGRESS_DIALOG);
+	    this.enabledDialog = PreferencesManager.getBoolean(GeneralPreferenceKeys.ENABLE_PROGRESS_DIALOG);
 	}
 
 	/** Establece el mensaje del di&aacute;logo.

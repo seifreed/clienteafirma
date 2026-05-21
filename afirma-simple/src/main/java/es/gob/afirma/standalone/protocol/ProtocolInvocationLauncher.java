@@ -48,6 +48,7 @@ import es.gob.afirma.standalone.JMulticardUtilities;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleErrorCode;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.protocol.ProtocolInvocationLauncherUtil.DecryptionException;
 import es.gob.afirma.standalone.ui.AboutDialog;
 import es.gob.afirma.standalone.ui.OSXHandler;
@@ -278,7 +279,7 @@ public final class ProtocolInvocationLauncher {
 		// Configuramos el uso de JMulticard segun lo establecido en el dialogo de
 		// preferencias
 		final boolean jMulticardEnabled = PreferencesManager
-				.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ENABLED_JMULTICARD);
+				.getBoolean(GeneralPreferenceKeys.ENABLED_JMULTICARD);
         JMulticardUtilities.configureJMulticard(jMulticardEnabled);
 
         // Por defecto, usaremos la version de protocolo proporcionada para la operacion,

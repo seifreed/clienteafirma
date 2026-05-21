@@ -52,6 +52,7 @@ import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.SimpleErrorCode;
 import es.gob.afirma.standalone.SimpleKeyStoreManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.so.macos.MacUtils;
 import es.gob.afirma.standalone.ui.ProgressInfoDialogManager;
@@ -94,7 +95,7 @@ final class ProtocolInvocationLauncherBatch {
         }
 
 		final String lastSelectedKeyStore = KeyStorePreferencesManager.getLastSelectedKeystore();
-		final boolean useDefaultStore = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS);
+		final boolean useDefaultStore = PreferencesManager.getBoolean(GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS);
 
 		// Si hay marcado un almacen como el ultimo seleccionado, lo usamos (este es el caso en el que se llaman
 		// varias operaciones de firma dentro de la misma invocacion a la aplicacion)
@@ -240,7 +241,7 @@ final class ProtocolInvocationLauncherBatch {
 
 			final String aoksLib;
 			if (useDefaultStore && (AOKeyStore.PKCS12.equals(aoks) || AOKeyStore.PKCS11.equals(aoks))) {
-				aoksLib = PreferencesManager.get(PreferencesManager.PREFERENCE_LOCAL_KEYSTORE_PATH);
+				aoksLib = PreferencesManager.get(GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH);
 			} else {
 				aoksLib = options.getDefaultKeyStoreLib();
 			}

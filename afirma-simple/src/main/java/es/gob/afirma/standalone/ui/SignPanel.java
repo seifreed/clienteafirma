@@ -9,12 +9,12 @@
 
 package es.gob.afirma.standalone.ui;
 
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_GENERAL_DEFAULT_FORMAT_XML;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_BIN;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_FACTURAE;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_ODF;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_OOXML;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_PDF;
+import static es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys.DEFAULT_FORMAT_XML;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -86,6 +86,7 @@ import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.GeneralPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 import es.gob.afirma.standalone.plugins.DataProcessAction;
@@ -215,7 +216,7 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
     	if (this.signOperationConfigs.size() == 1 &&
     			this.signOperationConfigs.get(0).getSignValidity() != null &&
     			this.signOperationConfigs.get(0).getSignValidity().get(0).getValidity() == SIGN_DETAIL_TYPE.KO &&
-    			!PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES)) {
+    			!PreferencesManager.getBoolean(GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES)) {
 
     		AOUIFactory.showErrorMessage(
     				SimpleAfirmaMessages.getString("SimpleAfirma.9"), //$NON-NLS-1$,
@@ -234,7 +235,7 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 		);
 
 		// Si procede, solicitamos confirmacion para firmar
-		if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_CONFIRMTOSIGN)) {
+		if (PreferencesManager.getBoolean(GeneralPreferenceKeys.CONFIRMTOSIGN)) {
 			final ConfirmSignatureDialog dialog = new ConfirmSignatureDialog(
 					this, this.signOperationConfigs.size());
 			dialog.setVisible(true);
@@ -248,13 +249,13 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 			// guardamos la preferencia
 			if (dialog.getResult().booleanValue()) {
 				PreferencesManager.putBoolean(
-						PreferencesManager.PREFERENCE_GENERAL_CONFIRMTOSIGN,
+						GeneralPreferenceKeys.CONFIRMTOSIGN,
 						false);
 				try {
 					PreferencesManager.flush();
 				} catch (final BackingStoreException e) {
 					LOGGER.warning("No se pudo guardar la preferencia del usuario: " + //$NON-NLS-1$
-							PreferencesManager.PREFERENCE_GENERAL_CONFIRMTOSIGN);
+							GeneralPreferenceKeys.CONFIRMTOSIGN);
 				}
 			}
 		}
@@ -529,7 +530,7 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 		 if (DataAnalizerUtil.isPDF(data)) {
 			 config.setFileType(FileType.PDF);
 			 config.setSigner(AOSignerFactory.getSigner(
-					 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF))
+					 PreferencesManager.get(DEFAULT_FORMAT_PDF))
 					 );
 			 // Se comprueba si ya esta firmada para deshabilitar la opcion de marca visible
 			 if (config.getSigner() instanceof AOPDFSigner &&
@@ -541,21 +542,21 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 		 else if (DataAnalizerUtil.isFacturae(data)) {
 			 config.setFileType(FileType.FACTURAE);
 			 config.setSigner(AOSignerFactory.getSigner(
-					 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE))
+					 PreferencesManager.get(DEFAULT_FORMAT_FACTURAE))
 					 );
 		 }
 		 // Comprobamos si es un OOXML
 		 else if (DataAnalizerUtil.isOOXML(data)) {
 			 config.setFileType(FileType.OOXML);
 			 config.setSigner(AOSignerFactory.getSigner(
-					 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML))
+					 PreferencesManager.get(DEFAULT_FORMAT_OOXML))
 					 );
 		 }
 		 // Comprobamos si es un ODF
 		 else if (DataAnalizerUtil.isODF(data)) {
 			 config.setFileType(FileType.ODF);
 			 config.setSigner(AOSignerFactory.getSigner(
-					 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF))
+					 PreferencesManager.get(DEFAULT_FORMAT_ODF))
 					 );
 		 }
 		 // Comprobamos si es un fichero de firma CAdES o XAdES (los PDF, facturas, OOXML y ODF pasaran por las condiciones anteriores)
@@ -574,14 +575,14 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 			 else if (DataAnalizerUtil.isXML(data)) {
 				 config.setFileType(FileType.XML);
 				 config.setSigner(AOSignerFactory.getSigner(
-						 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML))
+						 PreferencesManager.get(DEFAULT_FORMAT_XML))
 						 );
 			 }
 			 // Cualquier otro tipo de fichero
 			 else {
 				 config.setFileType(FileType.BINARY);
 				 config.setSigner(AOSignerFactory.getSigner(
-						 PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN))
+						 PreferencesManager.get(DEFAULT_FORMAT_BIN))
 						 );
 			 }
 		 }
@@ -604,32 +605,32 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 		 // Comprobamos si es un fichero PDF
 		 if (DataAnalizerUtil.isPDF(data)) {
 			 newConfig.setFileType(FileType.PDF);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_PDF);
 		 }
 		 // Comprobamos si es una factura electronica
 		 else if (DataAnalizerUtil.isFacturae(data)) {
 			 newConfig.setFileType(FileType.FACTURAE);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_FACTURAE);
 		 }
 		 // Comprobamos si es un OOXML
 		 else if (DataAnalizerUtil.isOOXML(data)) {
 			 newConfig.setFileType(FileType.OOXML);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_OOXML);
 		 }
 		 // Comprobamos si es un ODF
 		 else if (DataAnalizerUtil.isODF(data)) {
 			 newConfig.setFileType(FileType.ODF);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_ODF);
 		 }
 		// Comprobamos si es un fichero XML
 		 else if (DataAnalizerUtil.isXML(data)) {
 			 newConfig.setFileType(FileType.XML);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_XML);
 		 }
 		 // Cualquier otro tipo de fichero
 		 else {
 			 newConfig.setFileType(FileType.BINARY);
-			 defaultSignFormat = PreferencesManager.get(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN);
+			 defaultSignFormat = PreferencesManager.get(DEFAULT_FORMAT_BIN);
 		 }
 
 		 // Si se establecio desde fuera el formato de firma, se utiliza ese. Si no, el por defecto
