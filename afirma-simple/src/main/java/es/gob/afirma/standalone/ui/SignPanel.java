@@ -86,6 +86,7 @@ import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 import es.gob.afirma.standalone.plugins.DataProcessAction;
 import es.gob.afirma.standalone.plugins.InputData;
@@ -384,13 +385,13 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 
     	final List<CertificateFilter> filters = new ArrayList<>();
 
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.SIGN_ONLY_CERTS)) {
     		filters.add(new KeyUsageFilter(KeyUsageFilter.SIGN_CERT_USAGE));
     	}
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE)) {
     		filters.add(new SkipAuthDNIeFilter());
     	}
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS)) {
     		filters.add(new PseudonymFilter(PseudonymFilter.VALUE_ONLY));
     	}
     	if (filters.size() > 1) {

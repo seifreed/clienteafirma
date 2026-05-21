@@ -27,6 +27,7 @@ import es.gob.afirma.standalone.ProxyUtil;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.SimpleErrorCode;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.ProxyPreferenceKeys;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager.PreferencesSource;
 
 public class ProxyPanelHandler {
@@ -122,7 +123,7 @@ public class ProxyPanelHandler {
 	 */
 	void loadViewData() {
 
-		final String typePreference = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_TYPE);
+		final String typePreference = PreferencesManager.get(ProxyPreferenceKeys.PROXY_TYPE);
 		ConfigType proxyType;
 		try {
 			proxyType = ConfigType.valueOf(typePreference);
@@ -133,13 +134,13 @@ public class ProxyPanelHandler {
 
 		// XXX: Comprobacion por compatibilidad entre Autofirma 1.7 y anteriores. Si se encuentra configurada
 		// la propiedad antigua, ajustamos la configuracion
-		if (PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_SELECTED, PreferencesSource.USER) != null) {
-			final boolean selected = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_PROXY_SELECTED);
+		if (PreferencesManager.get(ProxyPreferenceKeys.PROXY_SELECTED, PreferencesSource.USER) != null) {
+			final boolean selected = PreferencesManager.getBoolean(ProxyPreferenceKeys.PROXY_SELECTED);
 			if (!selected) {
 				proxyType = ConfigType.SYSTEM;
 			}
 			else {
-				final String host = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST);
+				final String host = PreferencesManager.get(ProxyPreferenceKeys.PROXY_HOST);
 				if (host != null && !host.trim().isEmpty()) {
 					proxyType = ConfigType.CUSTOM;
 				}
@@ -179,15 +180,15 @@ public class ProxyPanelHandler {
 				throw new ConfigurationException(SimpleAfirmaMessages.getString("ProxyDialog.3")); //$NON-NLS-1$
 			}
 			else {
-				PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST, host);
-				PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_PORT, port);
+				PreferencesManager.put(ProxyPreferenceKeys.PROXY_HOST, host);
+				PreferencesManager.put(ProxyPreferenceKeys.PROXY_PORT, port);
 
 				// Si no se establece usuario, nos aseguramos de eliminar el actual. Si se establece, lo guardamos.
 				if (config.getUsername() == null || config.getUsername().trim().isEmpty()) {
-					PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_USERNAME);
+					PreferencesManager.remove(ProxyPreferenceKeys.PROXY_USERNAME);
 				}
 				else {
-					PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_USERNAME,
+					PreferencesManager.put(ProxyPreferenceKeys.PROXY_USERNAME,
 							config.getUsername().trim());
 				}
 
@@ -195,43 +196,43 @@ public class ProxyPanelHandler {
 				// la guardamos cifrada.
 				final char[] password = config.getPassword();
 				if (password == null || password.length == 0) {
-					PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD);
+					PreferencesManager.remove(ProxyPreferenceKeys.PROXY_PASSWORD);
 				}
 				else {
 					try {
 						final String cipheredPwd = ProxyUtil.cipherPassword(password);
 						if (cipheredPwd != null) {
-							PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD, cipheredPwd);
+							PreferencesManager.put(ProxyPreferenceKeys.PROXY_PASSWORD, cipheredPwd);
 						}
 					}
 					catch (final Exception e) {
 						LOGGER.severe("Error cifrando la contrasena del Proxy: " + e); //$NON-NLS-1$
 						JOptionPane.showMessageDialog(this.view.getParent(), SimpleAfirmaMessages.getString("ProxyDialog.19")); //$NON-NLS-1$);
-						PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD, ""); //$NON-NLS-1$
+						PreferencesManager.put(ProxyPreferenceKeys.PROXY_PASSWORD, ""); //$NON-NLS-1$
 					}
 				}
 
 				if (config.getExcludedUrls() != null && !config.getExcludedUrls().trim().isEmpty()) {
-					PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS,
+					PreferencesManager.put(ProxyPreferenceKeys.PROXY_EXCLUDED_URLS,
 							config.getExcludedUrls().trim().replace(",", "|"));  //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				else {
-					PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS);
+					PreferencesManager.remove(ProxyPreferenceKeys.PROXY_EXCLUDED_URLS);
 				}
 			}
 		}
 		else {
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST);
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_PORT);
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_USERNAME);
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD);
-			PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS);
+			PreferencesManager.remove(ProxyPreferenceKeys.PROXY_HOST);
+			PreferencesManager.remove(ProxyPreferenceKeys.PROXY_PORT);
+			PreferencesManager.remove(ProxyPreferenceKeys.PROXY_USERNAME);
+			PreferencesManager.remove(ProxyPreferenceKeys.PROXY_PASSWORD);
+			PreferencesManager.remove(ProxyPreferenceKeys.PROXY_EXCLUDED_URLS);
 		}
 		// Borramos las antiguas propiedades de configuracion
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_PROXY_SELECTED);
+		PreferencesManager.remove(ProxyPreferenceKeys.PROXY_SELECTED);
 
 		// Guardamos el tipo de proxy seleccionado (ninguno, automatico o manual)
-		PreferencesManager.put(PreferencesManager.PREFERENCE_GENERAL_PROXY_TYPE, config.getConfigType().name());
+		PreferencesManager.put(ProxyPreferenceKeys.PROXY_TYPE, config.getConfigType().name());
 
 		try {
 			PreferencesManager.flush();
@@ -246,13 +247,13 @@ public class ProxyPanelHandler {
 	 */
 	private void loadCustomConfig() {
 		this.view.getHostField().setText(
-				PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST));
+				PreferencesManager.get(ProxyPreferenceKeys.PROXY_HOST));
 		this.view.getPortField().setText(
-				PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_PORT));
+				PreferencesManager.get(ProxyPreferenceKeys.PROXY_PORT));
 		this.view.getUsernameField().setText(
-				PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_USERNAME));
+				PreferencesManager.get(ProxyPreferenceKeys.PROXY_USERNAME));
 
-		final String cipheredPwd = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD);
+		final String cipheredPwd = PreferencesManager.get(ProxyPreferenceKeys.PROXY_PASSWORD);
 
 		char[] pwd;
 		try {
@@ -266,13 +267,13 @@ public class ProxyPanelHandler {
 			// Si no la eliminamos, el dialogo de error persistiria aunque tuviesemos sin marcar
 			// la casilla de "Usar proxy", obligandonos a establecer una solo para evitar el error
 			PreferencesManager.remove(
-				PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD
+				ProxyPreferenceKeys.PROXY_PASSWORD
 			);
 		}
 
 		this.view.getPasswordField().setText(pwd == null ? "" : String.valueOf(pwd)); //$NON-NLS-1$
 
-		final String excludedUrls = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS);
+		final String excludedUrls = PreferencesManager.get(ProxyPreferenceKeys.PROXY_EXCLUDED_URLS);
 		if (excludedUrls != null) {
 			this.view.getExcludedUrlsField().setText(excludedUrls.replace("|", ",")); //$NON-NLS-1$ //$NON-NLS-2$
 		}

@@ -11,6 +11,7 @@ import es.gob.afirma.keystores.AOKeyStoreManager;
 import es.gob.afirma.keystores.AOKeyStoreManagerFactory;
 import es.gob.afirma.standalone.SimpleKeyStoreManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 
 public class LoadKeystoreTask extends Thread{
 
@@ -39,7 +40,7 @@ public class LoadKeystoreTask extends Thread{
 		}
 		// Si no, si el usuario definio un almacen por defecto para usarlo en las llamadas a la aplicacion, lo usamos
 		else if (useDefaultStore) {
-			final String defaultStore = PreferencesManager.get(PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE);
+			final String defaultStore = PreferencesManager.get(KeyStorePreferenceKeys.DEFAULT_STORE);
 			if (!PreferencesManager.VALUE_KEYSTORE_DEFAULT.equals(defaultStore)
 				&& !AOKeyStore.PKCS12.getName().equals(defaultStore)
 				&& !AOKeyStore.PKCS11.getName().equals(defaultStore)) {

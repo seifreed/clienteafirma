@@ -71,6 +71,7 @@ import es.gob.afirma.standalone.DesktopUtil;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.plugins.AfirmaPlugin;
 import es.gob.afirma.standalone.plugins.Permission;
 import es.gob.afirma.standalone.plugins.PluginControlledException;
@@ -745,7 +746,7 @@ final class SignPanelSignTask extends SwingWorker<Void, Void> {
 			this.ksm,
 			this.parent,
 			true,             // Comprobar claves privadas
-			PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS), // Mostrar certificados caducados
+			PreferencesManager.getBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS), // Mostrar certificados caducados
 			true,             // Comprobar validez temporal del certificado
 			filters,
 			mandatoryCertificate

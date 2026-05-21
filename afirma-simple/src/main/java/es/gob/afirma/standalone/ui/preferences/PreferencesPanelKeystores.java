@@ -9,8 +9,8 @@
 
 package es.gob.afirma.standalone.ui.preferences;
 
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS;
+import static es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys.DEFAULT_STORE;
+import static es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys.SIGN_ONLY_CERTS;
 
 import java.awt.Container;
 import java.awt.Cursor;
@@ -59,6 +59,7 @@ import es.gob.afirma.keystores.filters.rfc.KeyUsageFilter;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.SimpleKeyStoreManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.ui.core.jse.certificateselection.CertificateSelectionDialog;
 
 /** Pesta&ntilde;a de configuraci&oacute;n de las preferencias de certificados.
@@ -273,7 +274,7 @@ final class PreferencesPanelKeystores extends JScrollPane {
 							ksm,
 				        	this,
 		                	true,
-		                	PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS),
+		                	PreferencesManager.getBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS),
 		                 	false,
 		                 	getCertFilters(),
 		                 	false,
@@ -920,22 +921,22 @@ final class PreferencesPanelKeystores extends JScrollPane {
 				ksName = PreferencesManager.VALUE_KEYSTORE_DEFAULT;
 			}
 			PreferencesManager.put(
-					PREFERENCE_KEYSTORE_DEFAULT_STORE,
+					DEFAULT_STORE,
 					ksName
 			);
 			KeyStorePreferencesManager.setLastSelectedKeystore(aoks.getName());
 		}
 
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS, this.showExpiredCerts.isSelected());
+		PreferencesManager.putBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS, this.showExpiredCerts.isSelected());
 		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN, this.hideDniStartScreen.isSelected());
-		PreferencesManager.putBoolean(PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS, this.onlySignature.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS, this.onlyAlias.isSelected());
-		PreferencesManager.putBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE, this.skipAuthCertDnie.isSelected());
+		PreferencesManager.putBoolean(SIGN_ONLY_CERTS, this.onlySignature.isSelected());
+		PreferencesManager.putBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS, this.onlyAlias.isSelected());
+		PreferencesManager.putBoolean(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE, this.skipAuthCertDnie.isSelected());
 	}
 
 	void loadPreferences() {
 
-		final String ks = PreferencesManager.get(PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE);
+		final String ks = PreferencesManager.get(KeyStorePreferenceKeys.DEFAULT_STORE);
 
 		if (DEFAULT_VALUE.equals(ks)) {
 			this.keystores.setSelectedIndex(0);
@@ -981,10 +982,10 @@ final class PreferencesPanelKeystores extends JScrollPane {
 		this.keystores.repaint();
 		this.callsFromNavigator.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS));
 		this.hideDniStartScreen.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN));
-		this.showExpiredCerts.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS));
-		this.onlySignature.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS));
-		this.onlyAlias.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS));
-		this.skipAuthCertDnie.setSelected(PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE));
+		this.showExpiredCerts.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS));
+		this.onlySignature.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.SIGN_ONLY_CERTS));
+		this.onlyAlias.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS));
+		this.skipAuthCertDnie.setSelected(PreferencesManager.getBoolean(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE));
 
         revalidate();
         repaint();
@@ -1017,13 +1018,13 @@ final class PreferencesPanelKeystores extends JScrollPane {
 		}
 
 		// Eliminamos el resto de las opciones de configuracion
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE);
+		PreferencesManager.remove(KeyStorePreferenceKeys.DEFAULT_STORE);
 		PreferencesManager.remove(PreferencesManager.PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS);
 		PreferencesManager.remove(PreferencesManager.PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS);
-		PreferencesManager.remove(PreferencesManager.PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE);
+		PreferencesManager.remove(KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS);
+		PreferencesManager.remove(KeyStorePreferenceKeys.SIGN_ONLY_CERTS);
+		PreferencesManager.remove(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS);
+		PreferencesManager.remove(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE);
 
 		try {
 			PreferencesManager.flush();
@@ -1039,13 +1040,13 @@ final class PreferencesPanelKeystores extends JScrollPane {
 
     	final List<CertificateFilter> filters = new ArrayList<>();
 
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.SIGN_ONLY_CERTS)) {
     		filters.add(new KeyUsageFilter(KeyUsageFilter.SIGN_CERT_USAGE));
     	}
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE)) {
     		filters.add(new SkipAuthDNIeFilter());
     	}
-    	if (PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS)) {
+    	if (PreferencesManager.getBoolean(KeyStorePreferenceKeys.ALIAS_ONLY_CERTS)) {
     		filters.add(new PseudonymFilter(PseudonymFilter.VALUE_ONLY));
     	}
     	if (filters.size() > 1) {

@@ -31,6 +31,7 @@ import es.gob.afirma.keystores.KeystoreAlternativeException;
 import es.gob.afirma.keystores.SmartCardLockedException;
 import es.gob.afirma.keystores.mozilla.MozillaKeyStoreUtilities;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 
 /** Gestor simple de <code>KeyStores</code>. Obtiene o un <code>KeyStore</code> de DNIe
  * v&iacute;a controlador 100% Java o el <code>KeyStore</code> por defecto del sistema operativo.
@@ -330,7 +331,7 @@ public final class SimpleKeyStoreManager {
      * @return Almac&eacute;n de claves por defecto de la aplicaci&oacute;n. */
     public static AOKeyStore getDefaultKeyStoreType() {
     	AOKeyStore ks = null;
-    	final String savedStoreName = PreferencesManager.get(PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE);
+    	final String savedStoreName = PreferencesManager.get(KeyStorePreferenceKeys.DEFAULT_STORE);
     	if (savedStoreName != null && !PreferencesManager.VALUE_KEYSTORE_DEFAULT.equals(savedStoreName)) {
     		ks = getValidKeyStoreType(savedStoreName);
     	}

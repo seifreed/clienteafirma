@@ -34,6 +34,7 @@ import es.gob.afirma.ciphers.DesServerCipher;
 import es.gob.afirma.ciphers.ServerCipher;
 import es.gob.afirma.core.misc.Base64;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.ProxyPreferenceKeys;
 
 /** Utilidades para el manejo y establecimiento del <i>Proxy</i> de red para las
  * conexiones de la aplicaci&oacute;n.
@@ -99,15 +100,15 @@ public final class ProxyUtil {
     private static ProxyConfig.ConfigType getProxyType() {
 
     	ProxyConfig.ConfigType proxyType;
-    	final String proxyTypeString = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_TYPE);
+    	final String proxyTypeString = PreferencesManager.get(ProxyPreferenceKeys.PROXY_TYPE);
     	if (proxyTypeString == null) {
-    		final boolean proxySelected = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_GENERAL_PROXY_SELECTED);
+    		final boolean proxySelected = PreferencesManager.getBoolean(ProxyPreferenceKeys.PROXY_SELECTED);
     		if (!proxySelected) {
     			proxyType = ProxyConfig.ConfigType.SYSTEM;
     		}
     		else {
-    			final String proxyHost = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST);
-        		final String proxyPort = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_PORT);
+    			final String proxyHost = PreferencesManager.get(ProxyPreferenceKeys.PROXY_HOST);
+        		final String proxyPort = PreferencesManager.get(ProxyPreferenceKeys.PROXY_PORT);
         		if (proxyHost != null && !proxyHost.trim().isEmpty() &&
         				proxyPort != null && !proxyPort.trim().isEmpty()) {
         			proxyType = ProxyConfig.ConfigType.CUSTOM;
@@ -184,11 +185,11 @@ public final class ProxyUtil {
 
 	private static ProxySelector getCustomProxySelector() {
 
-		final String proxyHost = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_HOST);
-		final String proxyPort = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_PORT);
-		final String proxyUsername = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_USERNAME);
-		final String cipheredProxyPassword = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_PASSWORD);
-		String excludedUrls = PreferencesManager.get(PreferencesManager.PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS);
+		final String proxyHost = PreferencesManager.get(ProxyPreferenceKeys.PROXY_HOST);
+		final String proxyPort = PreferencesManager.get(ProxyPreferenceKeys.PROXY_PORT);
+		final String proxyUsername = PreferencesManager.get(ProxyPreferenceKeys.PROXY_USERNAME);
+		final String cipheredProxyPassword = PreferencesManager.get(ProxyPreferenceKeys.PROXY_PASSWORD);
+		String excludedUrls = PreferencesManager.get(ProxyPreferenceKeys.PROXY_EXCLUDED_URLS);
 
 		// Configuracion de host y puerto del proxy
 		System.setProperty("http.proxyHost", proxyHost); //$NON-NLS-1$

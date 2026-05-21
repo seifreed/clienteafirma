@@ -82,6 +82,7 @@ import es.gob.afirma.signvalidation.ValidateBinarySignature;
 import es.gob.afirma.signvalidation.ValidatePdfSignature;
 import es.gob.afirma.standalone.configurator.common.ConfigUpdaterManager;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.KeyStorePreferenceKeys;
 import es.gob.afirma.standalone.plugins.manager.PluginsManager;
 import es.gob.afirma.standalone.protocol.ProtocolInvocationLauncher;
 import es.gob.afirma.standalone.ui.ClosePanel;
@@ -308,7 +309,7 @@ public final class SimpleAfirma implements PropertyChangeListener, WindowListene
 
         // Si el almacen por defecto es el de Mozilla, intentamos una precarga temprana
         final String defaultKeyStore = PreferencesManager.get(
-        		PreferencesManager.PREFERENCE_KEYSTORE_DEFAULT_STORE);
+        		KeyStorePreferenceKeys.DEFAULT_STORE);
 
         // Si se ha hecho una precarga previa, puede darse el caso de que se haya cargado
         // el almacen que debe o que el almacen por defecto sea distinto
