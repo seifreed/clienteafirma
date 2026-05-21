@@ -174,136 +174,6 @@ public final class PreferencesManager {
     /** Idioma por defecto. */
     public static final String PREFERENCES_LOCALE = "default.locale"; //$NON-NLS-1$
 
-	/** Proteger cambios en preferencias.
-	 * Un valor de <code>true</code> en esta preferencia indica que deben limitarse las opciones de configuraci&oacute;n
-	 * mediante interfaz gr&aacute;fico, apareciendo de forma deshabilitada (solo para consulta).
-	 * Un valor de <code>false</code> habilitar&aacute; que cualquier opci&oacute;n de configuraci&oacute;n pueda ser
-	 * alterada por parte del usuario mediante el interfaz gr&aacute;fico. */
-	public static final String PREFERENCE_GENERAL_BLOCKED = GeneralPreferenceKeys.BLOCKED; //$NON-NLS-1$
-
-	/** Comprobar que la versi&oacute;n actual de Java est&aacute; soportada.
-	 * Un valor de <code>true</code> en esta preferencia hace que, al arrancar, la aplicaci&oacute;n compruebe autom&aacute;ticamente
-	 * si la versi&oacute;n de Java con la que se ejecuta la aplicaci&oacute;n est&aacute; entre las versiones soportadas. Un valor de
-	 * <code>false</code> har&aacute; que no se haga esta comprobaci&oacute;n. */
-	public static final String PREFERENCE_GENERAL_CHECK_JAVA_VERSION = GeneralPreferenceKeys.CHECK_JAVA_VERSION; //$NON-NLS-1$
-
-	/** Evitar la confirmaci&oacute;n al cerrar la aplicaci&oacute;n o no.
-	 * Un valor de <code>true</code> en esta preferencia permitir&aacute; cerrar la aplicaci&oacute;n sin ning&uacute;n di&aacute;logo
-	 * de advertencia. Un valor de <code>false</code> har&aacute; que se muestre un di&aacute;logo para que el usuario confirme que
-	 * realmente desea cerrar la aplicaci&oacute;n. */
-	public static final String PREFERENCE_GENERAL_OMIT_ASKONCLOSE = GeneralPreferenceKeys.OMIT_ASKONCLOSE; //$NON-NLS-1$
-
-	/** Buscar actualizaciones al arrancar.
-	 * Un valor de <code>true</code> en esta preferencia hace que, al arrancar, la aplicaci&oacute;n compruebe autom&aacute;ticamente
-	 * si hay publicadas versiones m&aacute;s actuales del aplicativo. Un valor de <code>false</code> har&aacute; que no se haga
-	 * esta comprobaci&oacute;n. */
-	public static final String PREFERENCE_GENERAL_UPDATECHECK = GeneralPreferenceKeys.UPDATECHECK; //$NON-NLS-1$
-
-	/** Mantiene habilitado el funcionamiento de JMultiCard.
-	 * Un valor de <code>true</code> en esta preferencia hace que la aplicacion deje el comportamiento
-	 * por defecto de JMulticard, que usaria las tarjetas DNIe y CERES. Un valor de <code>false</code>
-	 * har&aacute; que no se desactive el uso de JMulticard para estas tarjetas. */
-	public static final String PREFERENCE_GENERAL_ENABLED_JMULTICARD = GeneralPreferenceKeys.ENABLED_JMULTICARD; //$NON-NLS-1$
-
-	/**
-	 * Configura una propiedad que indica a la biblioteca WebSocket para la comunicaci&oacute;n con el
-	 * navegador que aplique un peque&ntilde;o retardo en las comunicaciones para as&iacute; evitar que
-	 * se bloquee el canal. Esto relantizar&aacute; las comunicaciones, lo cual es muy evidente conforme
-	 * se trabaje con ficheros m&aacute;s grandes. S&oacute;lo se recomienda el su uso de esta propiedad
-	 * cuando se use el cliente sobre VDI para evitar un mal mayor.
-	 */
-	public static final String PREFERENCE_GENERAL_VDI_OPTIMIZATION = GeneralPreferenceKeys.VDI_OPTIMIZATION; //$NON-NLS-1$
-
-	/**
-	 * Configura una propiedad para habilitar un di&aacute;logo de espera que indica la tarea que este ejecutando
-	 * Autofirma en ese mismo instante.
-	 */
-	public static final String PREFERENCE_GENERAL_ENABLE_PROGRESS_DIALOG = GeneralPreferenceKeys.ENABLE_PROGRESS_DIALOG; //$NON-NLS-1$
-
-	/** Algoritmo de huella para firma.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>SHA1</li>
-	 *  <li>SHA256</li>
-	 *  <li>SHA384</li>
-	 *  <li>SHA512</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_SIGNATURE_ALGORITHM = GeneralPreferenceKeys.SIGNATURE_ALGORITHM; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para documentos PDF.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>PAdes</li>
-	 *  <li>CAdes</li>
-	 *  <li>XAdes</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF = GeneralPreferenceKeys.DEFAULT_FORMAT_PDF; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para documentos OOXML de Microsoft Office.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>OOXML (Office Open XML)</li>
-	 *  <li>CAdES</li>
-	 *  <li>XAdES</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML = GeneralPreferenceKeys.DEFAULT_FORMAT_OOXML; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para Facturas Electr&oacute;nicas.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>FacturaE</li>
-	 *  <li>CAdES</li>
-	 *  <li>XAdES</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE = GeneralPreferenceKeys.DEFAULT_FORMAT_FACTURAE; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para documentos ODF de LibreOffice / OpenOffice.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>ODF (Open Document Format)</li>
-	 *  <li>CAdES</li>
-	 *  <li>XAdES</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF = GeneralPreferenceKeys.DEFAULT_FORMAT_ODF; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para documentos XML.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>CAdES</li>
-	 *  <li>XAdES</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_XML = GeneralPreferenceKeys.DEFAULT_FORMAT_XML; //$NON-NLS-1$
-
-	/** Formato de firma por defecto para ficheros binarios que no se adec&uacute;en a ninguna otra categor&iacute;a.
-	 * Esta preferencia debe tener uno de estos valores:
-	 * <ul>
-	 *  <li>CAdES</li>
-	 *  <li>XAdES</li>
-	 * </ul> */
-	public static final String PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN = GeneralPreferenceKeys.DEFAULT_FORMAT_BIN; //$NON-NLS-1$
-
-	/** Solicitar confirmaci&oacute;n antes de firmar.
-	 * Un valor de <code>true</code> en esta preferencia hace que se muestre un di&aacute;logo de
-	 * confirmaci&oacute;n con las implicaciones de firma al iniciar una firma desde la interfaz
-	 * de escritorio. */
-	public static final String PREFERENCE_GENERAL_CONFIRMTOSIGN = GeneralPreferenceKeys.CONFIRMTOSIGN; //$NON-NLS-1$
-
-	/** Permitir la multifirma de firmas inv&aacute;lidas.
-	 * Un valor de <code>true</code> en esta preferencia hace que se puedan multifirmar firmas a pesar
-	 * de haberse detectado que no son v&aacute;lidas. */
-	public static final String PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES = GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES; //$NON-NLS-1$
-
-	/** Indica si en los procesos de firma masiva se deben sobreescribir o no los ficheros que
-	 * se encuentren en el directorio de salida. */
-	public static final String PREFERENCE_GENERAL_MASSIVE_OVERWRITE = GeneralPreferenceKeys.MASSIVE_OVERWRITE; //$NON-NLS-1$
-
-
-	/** Indica si debe validarse el certificado SSL en las conexiones de red. */
-	public static final String PREFERENCE_GENERAL_SECURE_CONNECTIONS = GeneralPreferenceKeys.SECURE_CONNECTIONS; //$NON-NLS-1$
-
-	/** Lista de dominios seguros donde realizar conexiones SSL. */
-	public static final String PREFERENCE_GENERAL_SECURE_DOMAINS_LIST = GeneralPreferenceKeys.SECURE_DOMAINS_LIST; //$NON-NLS-1$
-
 	//**************** FIN PREFERENCIAS GENERALES ******************************************************************************
 	//**************************************************************************************************************************
 
@@ -312,18 +182,6 @@ public final class PreferencesManager {
 
 	/** Valor default para indicar que se desea seleccionar el almac&eacute;n de claves del sistema. */
 	public static final String VALUE_KEYSTORE_DEFAULT = "default"; //$NON-NLS-1$
-
-	/** Ruta del almac&eacute;n de claves local seleccionado por defecto. */
-	public static final String PREFERENCE_LOCAL_KEYSTORE_PATH = GeneralPreferenceKeys.LOCAL_KEYSTORE_PATH; //$NON-NLS-1$
-
-	/** Indica si se usa o no el certificado por defecto configurado en llamadas desde el navegador. */
-	public static final String PREFERENCE_USE_DEFAULT_STORE_IN_BROWSER_CALLS = GeneralPreferenceKeys.USE_DEFAULT_STORE_IN_BROWSER_CALLS; //$NON-NLS-1$
-
-	/** No mostrar la pantalla inicial de uso de DNIe.
-	 * Un valor de <code>true</code> en esta preferencia hace que nunca se muestre la pantalla inicial que sugiere al usuario
-	 * el uso directo del DNIe como almac&eacute;n de claves. Un valor de <code>false</code> har&aacute; que se muestre esta pantalla
-	 * al inicio siempre que se detecte un lector de tarjetas en el sistema. */
-	public static final String PREFERENCE_GENERAL_HIDE_DNIE_START_SCREEN = GeneralPreferenceKeys.HIDE_DNIE_START_SCREEN; //$NON-NLS-1$
 
 	//**************** FIN PREFERENCIAS DE ALMACENES DE CLAVES *****************************************************************
 	//**************************************************************************************************************************
@@ -746,17 +604,17 @@ public final class PreferencesManager {
 	 * @return {@code true} Si es una preferencia bloqueable, {@code false} en caso contrario
 	 */
 	public static boolean isProtectedPreference(final String key) {
-		return key.equals(PREFERENCE_GENERAL_UPDATECHECK)
-				|| key.equals(PREFERENCE_GENERAL_ENABLED_JMULTICARD)
-				|| key.equals(PREFERENCE_GENERAL_SIGNATURE_ALGORITHM)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_PDF)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_OOXML)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_FACTURAE)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_ODF)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_XML)
-				|| key.equals(PREFERENCE_GENERAL_DEFAULT_FORMAT_BIN)
-				|| key.equals(PREFERENCE_GENERAL_ALLOW_INVALID_SIGNATURES)
-				|| key.equals(PREFERENCE_GENERAL_SECURE_CONNECTIONS)
+		return key.equals(GeneralPreferenceKeys.UPDATECHECK)
+				|| key.equals(GeneralPreferenceKeys.ENABLED_JMULTICARD)
+				|| key.equals(GeneralPreferenceKeys.SIGNATURE_ALGORITHM)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_PDF)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_OOXML)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_FACTURAE)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_ODF)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_XML)
+				|| key.equals(GeneralPreferenceKeys.DEFAULT_FORMAT_BIN)
+				|| key.equals(GeneralPreferenceKeys.ALLOW_INVALID_SIGNATURES)
+				|| key.equals(GeneralPreferenceKeys.SECURE_CONNECTIONS)
 				|| key.equals(SignatureFormatPreferenceKeys.XADES_POLICY_IDENTIFIER)
 				|| key.equals(SignatureFormatPreferenceKeys.XADES_POLICY_HASH)
 				|| key.equals(SignatureFormatPreferenceKeys.XADES_POLICY_HASH_ALGORITHM)

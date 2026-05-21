@@ -37,10 +37,10 @@ import es.gob.afirma.standalone.configurator.common.PreferencesManager.Preferenc
 final class TestPreferencesManager {
 
 	/** Clave del catálogo de preferencias bloqueables —
-	 * referenciada al propio {@code PreferencesManager} para que los tests
+	 * referenciada a {@code GeneralPreferenceKeys} para que los tests
 	 * sobrevivan a renames. */
 	private static final String PROTECTED_KEY =
-			PreferencesManager.PREFERENCE_GENERAL_UPDATECHECK;
+			GeneralPreferenceKeys.UPDATECHECK;
 
 	/** Una clave arbitraria que el usuario puede establecer libremente
 	 * (no exclusiva de sistema, no protegida). */
