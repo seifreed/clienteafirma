@@ -322,25 +322,25 @@ public final class PreferencesManager {
 	/** Configuraci&oacute;n de <i>proxy</i> seleccionada.
 	 * Un valor de <code>true</code> en esta preferencia indica que debe usarse el <i>proxy</i> configurado,
 	 * y un valor de <code>false</code> que no usar&aacute; <i>proxy</i> en las conexiones de red. */
-	public static final String PREFERENCE_GENERAL_PROXY_SELECTED = "proxySelected"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_SELECTED = ProxyPreferenceKeys.PROXY_SELECTED;
 
 	/** Tipo de configuraci&oacute;n de proxy. */
-	public static final String PREFERENCE_GENERAL_PROXY_TYPE = "proxyType"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_TYPE = ProxyPreferenceKeys.PROXY_TYPE;
 
 	/** Host del servidor <i>proxy</i> configurado. */
-	public static final String PREFERENCE_GENERAL_PROXY_HOST = "proxyHost"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_HOST = ProxyPreferenceKeys.PROXY_HOST;
 
 	/** Puerto del servidor <i>proxy</i> configurado. */
-	public static final String PREFERENCE_GENERAL_PROXY_PORT = "proxyPort"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_PORT = ProxyPreferenceKeys.PROXY_PORT;
 
 	/** Nombre de usuario del servidor <i>proxy</i> configurado. */
-	public static final String PREFERENCE_GENERAL_PROXY_USERNAME = "proxyUsername"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_USERNAME = ProxyPreferenceKeys.PROXY_USERNAME;
 
 	/** Contrase&ntilde;a del servidor <i>proxy</i> configurado. */
-	public static final String PREFERENCE_GENERAL_PROXY_PASSWORD = "proxyPassword"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_PASSWORD = ProxyPreferenceKeys.PROXY_PASSWORD;
 
 	/** Listado de URLs excluidas del uso de proxy. */
-	public static final String PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS = "proxyExcludedUrls"; //$NON-NLS-1$
+	public static final String PREFERENCE_GENERAL_PROXY_EXCLUDED_URLS = ProxyPreferenceKeys.PROXY_EXCLUDED_URLS;
 
 	//**************** FIN PREFERENCIAS GENERALES ******************************************************************************
 	//**************************************************************************************************************************
@@ -598,7 +598,7 @@ public final class PreferencesManager {
 	//**************** PREFERENCIAS DE ALMACENES DE CLAVES *********************************************************************
 
 	/** Almac&eacute;n de claves por defecto. */
-	public static final String PREFERENCE_KEYSTORE_DEFAULT_STORE = "defaultKeystore"; //$NON-NLS-1$
+	public static final String PREFERENCE_KEYSTORE_DEFAULT_STORE = KeyStorePreferenceKeys.DEFAULT_STORE;
 
 	/** Valor default para indicar que se desea seleccionar el almac&eacute;n de claves del sistema. */
 	public static final String VALUE_KEYSTORE_DEFAULT = "default"; //$NON-NLS-1$
@@ -618,20 +618,20 @@ public final class PreferencesManager {
 	/** En firma, restringir que &uacute;nicamente se puedan usar certificados de firma.
 	 * Un valor de <code>true</code> en esta preferencia permitir&aacute; usar solo certificados espec&iacute;ficos
 	 * para firma en las firmas electr&oacute;nicas. */
-	public static final String PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS = "useOnlySignatureCertificates"; //$NON-NLS-1$
+	public static final String PREFERENCE_KEYSTORE_SIGN_ONLY_CERTS = KeyStorePreferenceKeys.SIGN_ONLY_CERTS;
 
 	/** Mostrar certificados caducados.
 	 * Un valor de <code>true</code> en esta preferencia hace que el di&aacute;logo de selecci&oacute;n
 	 * de certificados muestre los certificados caducados. */
-	public static final String PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS = "showExpiredCerts"; //$NON-NLS-1$
+	public static final String PREFERENCE_KEYSTORE_SHOWEXPIREDCERTS = KeyStorePreferenceKeys.SHOW_EXPIRED_CERTS;
 
 	/** En firma, restringir que &uacute;nicamente se puedan usar certificados de seud&oacute;nimo cuando estos est&eacute;n
 	 * disponibles. Un valor de <code>true</code> en esta preferencia permitir&aacute; usar solo  certificados de
 	 * seud&oacute;nimo cuando estos est&eacute;n disponibles.*/
-	public static final String PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS = "useOnlyAliasCertificates"; //$NON-NLS-1$
+	public static final String PREFERENCE_KEYSTORE_ALIAS_ONLY_CERTS = KeyStorePreferenceKeys.ALIAS_ONLY_CERTS;
 
 	/** Indica si omitir o no el certificado de autenticaci&oacute;n para DNIe. */
-	public static final String PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE = "skipAuthCertDnie"; //$NON-NLS-1$
+	public static final String PREFERENCE_KEYSTORE_SKIP_AUTH_CERT_DNIE = KeyStorePreferenceKeys.SKIP_AUTH_CERT_DNIE;
 
 	//**************** FIN PREFERENCIAS DE ALMACENES DE CLAVES *****************************************************************
 	//**************************************************************************************************************************
