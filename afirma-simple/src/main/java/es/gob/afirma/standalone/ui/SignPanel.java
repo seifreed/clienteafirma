@@ -86,6 +86,7 @@ import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirma;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 import es.gob.afirma.standalone.plugins.DataProcessAction;
 import es.gob.afirma.standalone.plugins.InputData;
 import es.gob.afirma.standalone.ui.SignOperationConfig.CryptoOperation;
@@ -279,11 +280,11 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
     		}
     		// Si no, se tomara de las preferencias
     		else {
-    			visibleSignature = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_VISIBLE);
+    			visibleSignature = PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_VISIBLE);
     			visibleStamp = false;
-    			final boolean allowCertifiedPdf = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_VISIBLE);
+    			final boolean allowCertifiedPdf = PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_VISIBLE);
     			if (allowCertifiedPdf) {
-    				certificationLevel = PreferencesManager.get(PreferencesManager.PREFERENCE_PADES_DEFAULT_CERTIFICATION_LEVEL);
+    				certificationLevel = PreferencesManager.get(SignatureFormatPreferenceKeys.PADES_DEFAULT_CERTIFICATION_LEVEL);
     			}
     		}
 
@@ -671,7 +672,7 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 			 SignValidity validity = null;
 			 final Properties validationParams = new Properties();
 
-			 final boolean needCheckPsa = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_CHECK_SHADOW_ATTACK);
+			 final boolean needCheckPsa = PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_CHECK_SHADOW_ATTACK);
 			 if (!needCheckPsa) {
 				 validationParams.put(PdfExtraParams.ALLOW_SHADOW_ATTACK, Boolean.TRUE.toString());
 			 }
@@ -880,13 +881,13 @@ public final class SignPanel extends JPanel implements LoadDataFileListener, Sig
 		for (final SignOperationConfig signConfig : signConfigs) {
 			if (signConfig.getFileType() == FileType.SIGN_CADES) {
 				if (cadesCryptoOp == null) {
-					cadesCryptoOp = getCryptoOperation(PreferencesManager.PREFERENCE_CADES_MULTISIGN);
+					cadesCryptoOp = getCryptoOperation(SignatureFormatPreferenceKeys.CADES_MULTISIGN);
 				}
 				signConfig.setCryptoOperation(cadesCryptoOp);
 			}
 			else if (signConfig.getFileType() == FileType.SIGN_XADES) {
 				if (xadesCryptoOp == null) {
-					xadesCryptoOp = getCryptoOperation(PreferencesManager.PREFERENCE_XADES_MULTISIGN);
+					xadesCryptoOp = getCryptoOperation(SignatureFormatPreferenceKeys.XADES_MULTISIGN);
 				}
 				signConfig.setCryptoOperation(xadesCryptoOp);
 			}

@@ -9,12 +9,12 @@
 
 package es.gob.afirma.standalone.ui.preferences;
 
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_IMPLICIT;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_MULTISIGN;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_POLICY_HASH;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_POLICY_HASH_ALGORITHM;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_POLICY_IDENTIFIER;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_CADES_POLICY_QUALIFIER;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_IMPLICIT;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_MULTISIGN;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_POLICY_HASH;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_POLICY_HASH_ALGORITHM;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_POLICY_IDENTIFIER;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.CADES_POLICY_QUALIFIER;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -61,6 +61,7 @@ import es.gob.afirma.core.ui.AOUIFactory;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.SimpleErrorCode;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 
 final class PreferencesPanelCades extends JScrollPane {
 
@@ -390,24 +391,24 @@ final class PreferencesPanelCades extends JScrollPane {
 	}
 
 	void savePreferences() {
-		PreferencesManager.putBoolean(PREFERENCE_CADES_IMPLICIT, this.signatureMode.isSelected());
+		PreferencesManager.putBoolean(CADES_IMPLICIT, this.signatureMode.isSelected());
 		final AdESPolicy cadesPolicy = this.cadesPolicyDlg.getSelectedPolicy();
 		if (cadesPolicy != null) {
-			PreferencesManager.put(PREFERENCE_CADES_POLICY_IDENTIFIER, cadesPolicy.getPolicyIdentifier());
-			PreferencesManager.put(PREFERENCE_CADES_POLICY_HASH, cadesPolicy.getPolicyIdentifierHash());
-			PreferencesManager.put(PREFERENCE_CADES_POLICY_HASH_ALGORITHM, cadesPolicy.getPolicyIdentifierHashAlgorithm());
+			PreferencesManager.put(CADES_POLICY_IDENTIFIER, cadesPolicy.getPolicyIdentifier());
+			PreferencesManager.put(CADES_POLICY_HASH, cadesPolicy.getPolicyIdentifierHash());
+			PreferencesManager.put(CADES_POLICY_HASH_ALGORITHM, cadesPolicy.getPolicyIdentifierHashAlgorithm());
 			if (cadesPolicy.getPolicyQualifier() != null) {
-				PreferencesManager.put(PREFERENCE_CADES_POLICY_QUALIFIER, cadesPolicy.getPolicyQualifier().toString());
+				PreferencesManager.put(CADES_POLICY_QUALIFIER, cadesPolicy.getPolicyQualifier().toString());
 			}
 			else {
-				PreferencesManager.remove(PREFERENCE_CADES_POLICY_QUALIFIER);
+				PreferencesManager.remove(CADES_POLICY_QUALIFIER);
 			}
 		}
 		else {
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_IDENTIFIER);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH_ALGORITHM);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_QUALIFIER);
+			PreferencesManager.remove(CADES_POLICY_IDENTIFIER);
+			PreferencesManager.remove(CADES_POLICY_HASH);
+			PreferencesManager.remove(CADES_POLICY_HASH_ALGORITHM);
+			PreferencesManager.remove(CADES_POLICY_QUALIFIER);
 		}
 
 		String multiSignValue;
@@ -418,13 +419,13 @@ final class PreferencesPanelCades extends JScrollPane {
 		} else {
 			multiSignValue = PreferencesManager.VALUE_MULTISIGN_COUNTERSIGN_TREE;
 		}
-		PreferencesManager.put(PreferencesManager.PREFERENCE_CADES_MULTISIGN, multiSignValue);
+		PreferencesManager.put(SignatureFormatPreferenceKeys.CADES_MULTISIGN, multiSignValue);
 
 		this.cadesPolicyDlg.saveCurrentPolicy();
 	}
 
 	void loadPreferences() {
-		this.signatureMode.setSelected(PreferencesManager.getBoolean(PREFERENCE_CADES_IMPLICIT));
+		this.signatureMode.setSelected(PreferencesManager.getBoolean(CADES_IMPLICIT));
 
         final List<PolicyItem> cadesPolicies = new ArrayList<>();
         cadesPolicies.add(
@@ -441,7 +442,7 @@ final class PreferencesPanelCades extends JScrollPane {
     		isBlocked()
         );
 
-        final String multiSign = PreferencesManager.get(PreferencesManager.PREFERENCE_CADES_MULTISIGN);
+        final String multiSign = PreferencesManager.get(SignatureFormatPreferenceKeys.CADES_MULTISIGN);
         if (multiSign != null) {
         	this.optionCoSign.setSelected(PreferencesManager.VALUE_MULTISIGN_COSIGN.equals(multiSign));
         	this.optionCounterSignLeafs.setSelected(PreferencesManager.VALUE_MULTISIGN_COUNTERSIGN_LEAFS.equals(multiSign));
@@ -459,16 +460,16 @@ final class PreferencesPanelCades extends JScrollPane {
 		if (!isBlocked()) {
 
 			// Eliminamos la configuracion actual
-			PreferencesManager.remove(PREFERENCE_CADES_IMPLICIT);
-			PreferencesManager.remove(PREFERENCE_CADES_MULTISIGN);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_IDENTIFIER);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH_ALGORITHM);
-			PreferencesManager.remove(PREFERENCE_CADES_POLICY_QUALIFIER);
+			PreferencesManager.remove(CADES_IMPLICIT);
+			PreferencesManager.remove(CADES_MULTISIGN);
+			PreferencesManager.remove(CADES_POLICY_IDENTIFIER);
+			PreferencesManager.remove(CADES_POLICY_HASH);
+			PreferencesManager.remove(CADES_POLICY_HASH_ALGORITHM);
+			PreferencesManager.remove(CADES_POLICY_QUALIFIER);
 
 			// Establecemos la configuracion (que sera la del sistema o la por defecto)
 
-			this.signatureMode.setSelected(PreferencesManager.getBoolean(PREFERENCE_CADES_IMPLICIT));
+			this.signatureMode.setSelected(PreferencesManager.getBoolean(CADES_IMPLICIT));
 
 			final List<PolicyItem> cadesPolicies = new ArrayList<>();
 			cadesPolicies.add(
@@ -487,7 +488,7 @@ final class PreferencesPanelCades extends JScrollPane {
 
 			this.currentPolicyValue.setText(this.cadesPolicyDlg.getSelectedPolicyName());
 
-			final String multiSign = PreferencesManager.get(PreferencesManager.PREFERENCE_CADES_MULTISIGN);
+			final String multiSign = PreferencesManager.get(SignatureFormatPreferenceKeys.CADES_MULTISIGN);
 			this.optionCoSign.setSelected(PreferencesManager.VALUE_MULTISIGN_COSIGN.equals(multiSign));
 			this.optionCounterSignLeafs.setSelected(PreferencesManager.VALUE_MULTISIGN_COUNTERSIGN_LEAFS.equals(multiSign));
 			this.optionCounterSignTree.setSelected(PreferencesManager.VALUE_MULTISIGN_COUNTERSIGN_TREE.equals(multiSign));
@@ -503,14 +504,14 @@ final class PreferencesPanelCades extends JScrollPane {
 
 		AdESPolicy adesPolicy = null;
 
-		final String policyIdentifier = PreferencesManager.get(PREFERENCE_CADES_POLICY_IDENTIFIER);
+		final String policyIdentifier = PreferencesManager.get(CADES_POLICY_IDENTIFIER);
 		if (policyIdentifier != null && !policyIdentifier.isEmpty()) {
 			try {
 				adesPolicy = new AdESPolicy(
 						policyIdentifier,
-						PreferencesManager.get(PREFERENCE_CADES_POLICY_HASH),
-						PreferencesManager.get(PREFERENCE_CADES_POLICY_HASH_ALGORITHM),
-						PreferencesManager.get(PREFERENCE_CADES_POLICY_QUALIFIER)
+						PreferencesManager.get(CADES_POLICY_HASH),
+						PreferencesManager.get(CADES_POLICY_HASH_ALGORITHM),
+						PreferencesManager.get(CADES_POLICY_QUALIFIER)
 						);
 			}
 			catch (final Exception e) {
@@ -535,13 +536,13 @@ final class PreferencesPanelCades extends JScrollPane {
 		// Si no, establecemos la configuracion por defecto
 		else {
 			try {
-				final String policyIdentifier = PreferencesManager.get(PREFERENCE_CADES_POLICY_IDENTIFIER);
+				final String policyIdentifier = PreferencesManager.get(CADES_POLICY_IDENTIFIER);
 				if (policyIdentifier != null && !policyIdentifier.isEmpty()) {
 					adesPolicy = new AdESPolicy(
 							policyIdentifier,
-							PreferencesManager.get(PREFERENCE_CADES_POLICY_HASH),
-							PreferencesManager.get(PREFERENCE_CADES_POLICY_HASH_ALGORITHM),
-							PreferencesManager.get(PREFERENCE_CADES_POLICY_QUALIFIER));
+							PreferencesManager.get(CADES_POLICY_HASH),
+							PreferencesManager.get(CADES_POLICY_HASH_ALGORITHM),
+							PreferencesManager.get(CADES_POLICY_QUALIFIER));
 				}
 				this.cadesPolicyDlg.loadPolicy(adesPolicy);
 			}
@@ -591,19 +592,19 @@ final class PreferencesPanelCades extends JScrollPane {
 				this.currentPolicyValue.setText(this.cadesPolicyDlg.getSelectedPolicyName());
 				final AdESPolicy cadesPolicy = this.cadesPolicyDlg.getSelectedPolicy();
 				if (cadesPolicy != null) {
-					PreferencesManager.put(PREFERENCE_CADES_POLICY_IDENTIFIER, cadesPolicy.getPolicyIdentifier());
-					PreferencesManager.put(PREFERENCE_CADES_POLICY_HASH, cadesPolicy.getPolicyIdentifierHash());
-					PreferencesManager.put(PREFERENCE_CADES_POLICY_HASH_ALGORITHM, cadesPolicy.getPolicyIdentifierHashAlgorithm());
+					PreferencesManager.put(CADES_POLICY_IDENTIFIER, cadesPolicy.getPolicyIdentifier());
+					PreferencesManager.put(CADES_POLICY_HASH, cadesPolicy.getPolicyIdentifierHash());
+					PreferencesManager.put(CADES_POLICY_HASH_ALGORITHM, cadesPolicy.getPolicyIdentifierHashAlgorithm());
 					if (cadesPolicy.getPolicyQualifier() != null) {
-						PreferencesManager.put(PREFERENCE_CADES_POLICY_QUALIFIER, cadesPolicy.getPolicyQualifier().toString());
+						PreferencesManager.put(CADES_POLICY_QUALIFIER, cadesPolicy.getPolicyQualifier().toString());
 					} else {
-						PreferencesManager.remove(PREFERENCE_CADES_POLICY_QUALIFIER);
+						PreferencesManager.remove(CADES_POLICY_QUALIFIER);
 					}
 				} else {
-					PreferencesManager.remove(PREFERENCE_CADES_POLICY_IDENTIFIER);
-					PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH);
-					PreferencesManager.remove(PREFERENCE_CADES_POLICY_HASH_ALGORITHM);
-					PreferencesManager.remove(PREFERENCE_CADES_POLICY_QUALIFIER);
+					PreferencesManager.remove(CADES_POLICY_IDENTIFIER);
+					PreferencesManager.remove(CADES_POLICY_HASH);
+					PreferencesManager.remove(CADES_POLICY_HASH_ALGORITHM);
+					PreferencesManager.remove(CADES_POLICY_QUALIFIER);
 				}
 
 				this.cadesPolicyDlg.saveCurrentPolicy();

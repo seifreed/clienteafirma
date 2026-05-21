@@ -9,16 +9,16 @@
 
 package es.gob.afirma.standalone.ui.preferences;
 
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_POLICY;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_POLICY_IDENTIFIER;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_POLICY_QUALIFIER;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE;
-import static es.gob.afirma.standalone.configurator.common.PreferencesManager.PREFERENCE_FACTURAE_SIGNER_ROLE;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_POLICY;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER_HASH;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_POLICY_QUALIFIER;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_CITY;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_COUNTRY;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_PROVINCE;
+import static es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys.FACTURAE_SIGNER_ROLE;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -46,6 +46,7 @@ import es.gob.afirma.core.signers.AdESPolicy;
 import es.gob.afirma.core.ui.AOUIFactory;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 
 /** Pesta&ntilde;a de configuraci&oacute;n de las preferencias de facturaE.
  * @author Mariano Mart&iacute;nez. */
@@ -288,43 +289,43 @@ final class PreferencesPanelFacturaE extends JScrollPane {
 	/** Guarda las preferencias de FacturaE. */
 	void savePreferences() {
 
-		PreferencesManager.put(PREFERENCE_FACTURAE_SIGNER_ROLE, ((RoleItem) this.facturaeRol.getSelectedItem()).getValue());
+		PreferencesManager.put(FACTURAE_SIGNER_ROLE, ((RoleItem) this.facturaeRol.getSelectedItem()).getValue());
 
-		PreferencesManager.put(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY, this.facturaeSignatureProductionCity.getText());
-		PreferencesManager.put(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE, this.facturaeSignatureProductionProvince.getText());
-		PreferencesManager.put(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE, this.facturaeSignatureProductionPostalCode.getText());
-		PreferencesManager.put(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY, this.facturaeSignatureProductionCountry.getText());
+		PreferencesManager.put(FACTURAE_SIGNATURE_PRODUCTION_CITY, this.facturaeSignatureProductionCity.getText());
+		PreferencesManager.put(FACTURAE_SIGNATURE_PRODUCTION_PROVINCE, this.facturaeSignatureProductionProvince.getText());
+		PreferencesManager.put(FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE, this.facturaeSignatureProductionPostalCode.getText());
+		PreferencesManager.put(FACTURAE_SIGNATURE_PRODUCTION_COUNTRY, this.facturaeSignatureProductionCountry.getText());
 
 		final AdESPolicy facturaePolicy = this.facturaePolicyPanel.getSelectedPolicy();
 		if (facturaePolicy != null) {
 			if (this.facturaePolicyPanel.getCurrentPolicyItem().toString().equals(SimpleAfirmaMessages.getString("PreferencesPanelFacturaE.1"))) { //$NON-NLS-1$
-					PreferencesManager.put(PreferencesManager.PREFERENCE_FACTURAE_POLICY, POLICY_FACTURAE_30_NAME);
+					PreferencesManager.put(SignatureFormatPreferenceKeys.FACTURAE_POLICY, POLICY_FACTURAE_30_NAME);
 			}
 			else if (this.facturaePolicyPanel.getCurrentPolicyItem().toString().equals(SimpleAfirmaMessages.getString("PreferencesPanelFacturaE.2"))) { //$NON-NLS-1$
-				PreferencesManager.put(PreferencesManager.PREFERENCE_FACTURAE_POLICY, POLICY_FACTURAE_31_NAME);
+				PreferencesManager.put(SignatureFormatPreferenceKeys.FACTURAE_POLICY, POLICY_FACTURAE_31_NAME);
 			}
-			PreferencesManager.put(PREFERENCE_FACTURAE_POLICY_IDENTIFIER, facturaePolicy.getPolicyIdentifier());
-			PreferencesManager.put(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH, facturaePolicy.getPolicyIdentifierHash());
-			PreferencesManager.put(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM, facturaePolicy.getPolicyIdentifierHashAlgorithm());
+			PreferencesManager.put(FACTURAE_POLICY_IDENTIFIER, facturaePolicy.getPolicyIdentifier());
+			PreferencesManager.put(FACTURAE_POLICY_IDENTIFIER_HASH, facturaePolicy.getPolicyIdentifierHash());
+			PreferencesManager.put(FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM, facturaePolicy.getPolicyIdentifierHashAlgorithm());
 			if (facturaePolicy.getPolicyQualifier() != null) {
-				PreferencesManager.put(PREFERENCE_FACTURAE_POLICY_QUALIFIER, facturaePolicy.getPolicyQualifier().toString());
+				PreferencesManager.put(FACTURAE_POLICY_QUALIFIER, facturaePolicy.getPolicyQualifier().toString());
 			}
 			else {
-				PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_QUALIFIER);
+				PreferencesManager.remove(FACTURAE_POLICY_QUALIFIER);
 			}
 		}
 		else {
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_QUALIFIER);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER_HASH);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM);
+			PreferencesManager.remove(FACTURAE_POLICY_QUALIFIER);
 		}
 		this.facturaePolicyPanel.saveCurrentPolicy();
 	}
 
 	void loadPreferences() {
 
-		final String signerRoleValue = PreferencesManager.get(PREFERENCE_FACTURAE_SIGNER_ROLE);
+		final String signerRoleValue = PreferencesManager.get(FACTURAE_SIGNER_ROLE);
 
 		for (final RoleItem item : this.roleItems) {
 			if (item.getValue().equals(signerRoleValue)) {
@@ -333,19 +334,19 @@ final class PreferencesPanelFacturaE extends JScrollPane {
 		}
 
 		this.facturaeSignatureProductionCity.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_CITY)
 		);
 
 		this.facturaeSignatureProductionProvince.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_PROVINCE)
 		);
 
 		this.facturaeSignatureProductionPostalCode.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE)
 		);
 
 		this.facturaeSignatureProductionCountry.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_COUNTRY)
 		);
 		final List<PolicyItem> facturaePolicies = new ArrayList<>();
 
@@ -387,41 +388,41 @@ final class PreferencesPanelFacturaE extends JScrollPane {
 	void restorePreferences() {
 
 		// Eliminamos la configuracion actual
-		PreferencesManager.remove(PREFERENCE_FACTURAE_SIGNER_ROLE);
-		PreferencesManager.remove(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY);
-		PreferencesManager.remove(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE);
-		PreferencesManager.remove(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE);
-		PreferencesManager.remove(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY);
+		PreferencesManager.remove(FACTURAE_SIGNER_ROLE);
+		PreferencesManager.remove(FACTURAE_SIGNATURE_PRODUCTION_CITY);
+		PreferencesManager.remove(FACTURAE_SIGNATURE_PRODUCTION_PROVINCE);
+		PreferencesManager.remove(FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE);
+		PreferencesManager.remove(FACTURAE_SIGNATURE_PRODUCTION_COUNTRY);
 
 		// Establecemos la configuracion (que sera la del sistema o la por defecto)
 
 		this.facturaeRol.setSelectedItem(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNER_ROLE)
+			PreferencesManager.get(FACTURAE_SIGNER_ROLE)
 		);
 
 		this.facturaeSignatureProductionCity.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_CITY)
 		);
 
 		this.facturaeSignatureProductionProvince.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_PROVINCE)
 		);
 
 		this.facturaeSignatureProductionPostalCode.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE)
 		);
 
 		this.facturaeSignatureProductionCountry.setText(
-			PreferencesManager.get(PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY)
+			PreferencesManager.get(FACTURAE_SIGNATURE_PRODUCTION_COUNTRY)
 		);
 
 		if (!isBlocked()) {
 
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM);
-			PreferencesManager.remove(PREFERENCE_FACTURAE_POLICY_QUALIFIER);
+			PreferencesManager.remove(FACTURAE_POLICY);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER_HASH);
+			PreferencesManager.remove(FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM);
+			PreferencesManager.remove(FACTURAE_POLICY_QUALIFIER);
 
 			final List<PolicyItem> facturaePolicies = new ArrayList<>();
 			facturaePolicies.add(
@@ -464,7 +465,7 @@ final class PreferencesPanelFacturaE extends JScrollPane {
 	 * @return Pol&iacute;tica de firma configurada. */
 	private static AdESPolicy getFacturaEPreferedPolicy() {
 
-		final String policy = PreferencesManager.get(PreferencesManager.PREFERENCE_FACTURAE_POLICY);
+		final String policy = PreferencesManager.get(SignatureFormatPreferenceKeys.FACTURAE_POLICY);
 		if (policy.equals(POLICY_FACTURAE_30_NAME)) {
 			return POLICY_FACTURAE_30;
 		}
@@ -486,7 +487,7 @@ final class PreferencesPanelFacturaE extends JScrollPane {
 		}
 		// Si no, establecemos la configuracion por defecto
 		else {
-			final String policy = PreferencesManager.get(PreferencesManager.PREFERENCE_FACTURAE_POLICY);
+			final String policy = PreferencesManager.get(SignatureFormatPreferenceKeys.FACTURAE_POLICY);
 			if (policy.equals(POLICY_FACTURAE_30_NAME)) {
 				adesPolicy = POLICY_FACTURAE_30;
 			}

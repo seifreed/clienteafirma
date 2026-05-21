@@ -41,6 +41,7 @@ import es.gob.afirma.signers.pades.common.PdfExtraParams;
 import es.gob.afirma.standalone.LookAndFeelManager;
 import es.gob.afirma.standalone.SimpleAfirmaMessages;
 import es.gob.afirma.standalone.configurator.common.PreferencesManager;
+import es.gob.afirma.standalone.configurator.common.SignatureFormatPreferenceKeys;
 import es.gob.afirma.standalone.ui.SignOperationConfig.CryptoOperation;
 import es.gob.afirma.standalone.ui.preferences.AgePolicy;
 import es.gob.afirma.standalone.ui.preferences.FormatItem;
@@ -314,7 +315,7 @@ public class SignatureConfigInfoPanel extends JPanel {
         	// Check para la generacion de firma visible PDF
             this.pdfVisible = new JCheckBox(
         		SimpleAfirmaMessages.getString("SignPanel.44"), //$NON-NLS-1$
-        		PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_VISIBLE)
+        		PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_VISIBLE)
         	);
             this.accesibleDescription += SimpleAfirmaMessages.getString("SignPanel.44"); //$NON-NLS-1$
             if (!LookAndFeelManager.WINDOWS_HIGH_CONTRAST) {
@@ -328,7 +329,7 @@ public class SignatureConfigInfoPanel extends JPanel {
             // Check para agregar una imagen al PDF antes de la firma
             this.pdfStamp = new JCheckBox(
             		SimpleAfirmaMessages.getString("SignPanel.120"), //$NON-NLS-1$
-            		PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_STAMP)
+            		PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_STAMP)
             	);
             this.accesibleDescription += SimpleAfirmaMessages.getString("SignPanel.120"); //$NON-NLS-1$
             if (!LookAndFeelManager.WINDOWS_HIGH_CONTRAST) {
@@ -370,7 +371,7 @@ public class SignatureConfigInfoPanel extends JPanel {
 
             this.pdfCertifiedSignatureLevel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            final boolean certifiedSignatureAllowed = PreferencesManager.getBoolean(PreferencesManager.PREFERENCE_PADES_CHECK_ALLOW_CERTIFIED_PDF);
+            final boolean certifiedSignatureAllowed = PreferencesManager.getBoolean(SignatureFormatPreferenceKeys.PADES_CHECK_ALLOW_CERTIFIED_PDF);
             final boolean signed = config.getSignValidity() != null;
 
             this.pdfCertifiedSignature.setVisible(certifiedSignatureAllowed);
@@ -378,7 +379,7 @@ public class SignatureConfigInfoPanel extends JPanel {
 
             if (certifiedSignatureAllowed){
 
-            	final String defaultCertLevel = PreferencesManager.get(PreferencesManager.PREFERENCE_PADES_DEFAULT_CERTIFICATION_LEVEL);
+            	final String defaultCertLevel = PreferencesManager.get(SignatureFormatPreferenceKeys.PADES_DEFAULT_CERTIFICATION_LEVEL);
 
                 if (signed){
             		this.pdfCertifiedSignature.setSelected(false);
