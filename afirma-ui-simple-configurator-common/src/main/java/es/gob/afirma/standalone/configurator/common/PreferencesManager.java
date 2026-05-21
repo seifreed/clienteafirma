@@ -639,10 +639,10 @@ public final class PreferencesManager {
 	//**************************************************************************************************************************
 	//**************** PREFERENCIAS UNICAMENTE DE SISTEMA **********************************************************************
 
-	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_URL = "configFileUrl"; //$NON-NLS-1$
-	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_SHA256 = "configFileSHA256"; //$NON-NLS-1$
-	private static final String SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG = "allowUpdateConfig"; //$NON-NLS-1$
-	private static final String SYSTEM_PREFERENCE_CONFIGURATION_DATE = "configDate"; //$NON-NLS-1$
+	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_URL = UpdateConfigurationManager.CONFIG_FILE_URL;
+	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_SHA256 = UpdateConfigurationManager.CONFIG_FILE_SHA256;
+	private static final String SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG = UpdateConfigurationManager.ALLOW_UPDATE_CONFIG;
+	private static final String SYSTEM_PREFERENCE_CONFIGURATION_DATE = UpdateConfigurationManager.CONFIGURATION_DATE;
 
 	private static final String[] SYSTEM_EXCLUSIVE_PREFERENCES = {
 			SYSTEM_PREFERENCE_CONFIG_FILE_URL,
