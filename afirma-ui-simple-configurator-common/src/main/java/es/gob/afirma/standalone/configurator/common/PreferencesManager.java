@@ -9,10 +9,7 @@
 
 package es.gob.afirma.standalone.configurator.common;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -69,8 +66,6 @@ public final class PreferencesManager {
 
 	private static final String UPDATED_SYSTEM_PREFERENCE_NODE = "/es/gob/afirma/standalone/ui/systempreferences"; //$NON-NLS-1$
 
-	private static final String INTERNAL_SYSTEM_PREFERENCE_NODE = "/es/gob/afirma/standalone/ui/internalpreferences"; //$NON-NLS-1$
-
 	/** Preferencias con la configuraci&oacute;n de la aplicaci&oacute;n aplicada por el usuario. */
 	private static Preferences USER_PREFERENCES;
 
@@ -89,15 +84,6 @@ public final class PreferencesManager {
 	 * en las preferencias del usuario.
 	 */
 	private static Preferences REAL_SYSTEM_PREFERENCES;
-
-	/** Preferencias internas de configuraci&oacute;n. */
-	private static Preferences INTERNAL_PREFERENCES;
-
-	/**
-	 * Configuraci&oacute;n actual de las preferencias internas de configuraci&oacute;n. Esta contiene las preferencias
-	 * del sistema actualizadas, con las preferencias obtenidas a nivel de usuario.
-	 */
-	private static Properties INTERNAL_PREFERENCES_DATA;
 
 	// =================================================================
 	// Seam testable (Oleada 9 Fase A, 2026-05-20). Dos suppliers
@@ -125,31 +111,30 @@ public final class PreferencesManager {
 	/** Suministrador del nodo raíz de sistema. Sustituible solo en tests. */
 	static volatile java.util.function.Supplier<Preferences> SYSTEM_ROOT_SUPPLIER = Preferences::systemRoot;
 
-	private static String relativize(final String absolutePath) {
+	// Helpers package-private para que UpdateConfigurationManager (mismo
+	// paquete) comparta el seam sin duplicar suppliers ni lógica.
+	static String relativize(final String absolutePath) {
 		return absolutePath.startsWith("/") ? absolutePath.substring(1) : absolutePath; //$NON-NLS-1$
 	}
 
-	private static Preferences userNode(final String absolutePath) {
+	static Preferences userNode(final String absolutePath) {
 		return USER_ROOT_SUPPLIER.get().node(relativize(absolutePath));
 	}
 
-	private static Preferences systemNode(final String absolutePath) {
+	static Preferences systemNode(final String absolutePath) {
 		return SYSTEM_ROOT_SUPPLIER.get().node(relativize(absolutePath));
 	}
 
-	private static boolean userNodeExists(final String absolutePath) throws BackingStoreException {
+	static boolean userNodeExists(final String absolutePath) throws BackingStoreException {
 		return USER_ROOT_SUPPLIER.get().nodeExists(relativize(absolutePath));
 	}
 
-	private static boolean systemNodeExists(final String absolutePath) throws BackingStoreException {
+	static boolean systemNodeExists(final String absolutePath) throws BackingStoreException {
 		return SYSTEM_ROOT_SUPPLIER.get().nodeExists(relativize(absolutePath));
 	}
 
 	private static final String TRUE_VALUE = "true"; //$NON-NLS-1$
 	private static final String FALSE_VALUE = "false"; //$NON-NLS-1$
-
-
-	private static final String PREFIX_HTTPS = "https://"; //$NON-NLS-1$
 
 	/** Origen del valor de las preferencias. */
 	public enum PreferencesSource {
@@ -636,18 +621,6 @@ public final class PreferencesManager {
 	//**************** FIN PREFERENCIAS DE ALMACENES DE CLAVES *****************************************************************
 	//**************************************************************************************************************************
 
-	//**************************************************************************************************************************
-	//**************** PREFERENCIAS UNICAMENTE DE SISTEMA **********************************************************************
-
-	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_URL = UpdateConfigurationManager.CONFIG_FILE_URL;
-	private static final String SYSTEM_PREFERENCE_CONFIG_FILE_SHA256 = UpdateConfigurationManager.CONFIG_FILE_SHA256;
-	private static final String SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG = UpdateConfigurationManager.ALLOW_UPDATE_CONFIG;
-	private static final String SYSTEM_PREFERENCE_CONFIGURATION_DATE = UpdateConfigurationManager.CONFIGURATION_DATE;
-
-	private static final String[] SYSTEM_EXCLUSIVE_PREFERENCES = {
-			SYSTEM_PREFERENCE_CONFIG_FILE_URL,
-			SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG,
-	};
 
 	//**************** FIN PREFERENCIAS UNICAMENTE DE SISTEMA ******************************************************************
 	//**************************************************************************************************************************
@@ -671,7 +644,7 @@ public final class PreferencesManager {
 	//**************** FIN PREFERENCIAS PARA ADMINISTRADORES *******************************************************************
 	//**************************************************************************************************************************
 
-	private static void init() {
+	static void init() {
 
 		// No hacemos nada si ya estaban inicializados los objetos
 		if (initialized) {
@@ -695,7 +668,7 @@ public final class PreferencesManager {
 
 			// Si hay preferencias del sistema y se permiten actualizar, comprobamos si hay alguna version actualizada
 			configUpdatedSystemPreferences = configSystemPreferences != null
-					&& isAutommaticUpdateConfigAllowed()
+					&& UpdateConfigurationManager.isAutommaticUpdateConfigAllowed()
 					&& userNodeExists(UPDATED_SYSTEM_PREFERENCE_NODE)
 					? userNode(UPDATED_SYSTEM_PREFERENCE_NODE)
 					: null;
@@ -715,15 +688,8 @@ public final class PreferencesManager {
 			REAL_SYSTEM_PREFERENCES = SYSTEM_PREFERENCES;
 		}
 
-		// Las preferencias internas siempre seran las del sistema (aunque despues se tomen datos del usuario).
-		// Si hay que editarlas en algun momento ya se cambiara si es necesario.
-		INTERNAL_PREFERENCES = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
-		try {
-			INTERNAL_PREFERENCES_DATA = loadInternalPreferencesData();
-		} catch (final Exception e) {
-			LOGGER.log(Level.WARNING, "Error al cargar las propiedades internas de configuracion del sistema", e); //$NON-NLS-1$
-			INTERNAL_PREFERENCES_DATA = null;
-		}
+		// Inicializa el estado del sub-manager de actualización de configuración.
+		UpdateConfigurationManager.init();
 
 		// Cargamos los valores por defecto de la aplicacion
 		DEFAULT_PREFERENCES = new Properties();
@@ -740,60 +706,6 @@ public final class PreferencesManager {
 		// Marcamos la clase como inicializada
 		initialized = true;
 	}
-
-	/**
-	 * Indica si una preferencia es exclusiva de sistema (el usuario no podra sobreescribirla.
-	 * @param key Nombre de la preferencia.
-	 * @return {@code true} si es exclusiva de sistema, {@code false} en caso contrario.
-	 */
-	private static boolean isSystemConfigPreference(final String key) {
-		for (final String k : SYSTEM_EXCLUSIVE_PREFERENCES) {
-			if (k.equalsIgnoreCase(key)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Carga las preferencias internas activas.
-	 * @throws BackingStoreException Cuando falla la carga de los datos.
-	 */
-	private static Properties loadInternalPreferencesData() throws BackingStoreException {
-
-		Properties preferencesData = null;
-
-		// Cargamos las preferencias internas establecidas a nivel de sistema
-		if (systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
-			preferencesData = new Properties();
-			final Preferences internalSystemNode = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
-			try {
-				for (final String key : internalSystemNode.keys()) {
-					preferencesData.setProperty(key, internalSystemNode.get(key, null));
-				}
-			}
-			catch (final Exception e) {
-				// A veces e nodo de preferencias no existe y aun asi pasa la prueba de nodeExists
-				// y luego falla al intentar recuperar sus claves. Ignoramos este error
-				return null;
-			}
-
-			// Cargamos las preferencias cargadas a nivel de usuario, con cuidado de no pisar
-			// aquellas exclusivas de sistema
-			if (userNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
-				final Preferences internalUserNode = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
-				for (final String key : internalUserNode.keys()) {
-					if (!isSystemConfigPreference(key)) {
-						preferencesData.setProperty(key, internalUserNode.get(key, null));
-					}
-				}
-			}
-		}
-		return preferencesData;
-	}
-
-
-	private static final String CONFIGURATION_DATE_FORMAT = "YYYYMMdd"; //$NON-NLS-1$
 
 	/** Recupera la cadena con el valor de una propiedad de configuraci&oacute;n. La propiedad se
 	 * buscar&aacute;, por orden, en las preferencia del usuario, del sistema o en la configuraci&oacute;n
@@ -837,7 +749,7 @@ public final class PreferencesManager {
 		case SYSTEM:
 			return SYSTEM_PREFERENCES != null ? SYSTEM_PREFERENCES.get(key, null) : null;
 		case SYSTEM_INTERNAL:
-			return INTERNAL_PREFERENCES_DATA != null ? INTERNAL_PREFERENCES_DATA.getProperty(key, null) : null;
+			return UpdateConfigurationManager.getInternalProperty(key);
 		default:
 		case DEFAULT:
 			return DEFAULT_PREFERENCES.getProperty(key);
@@ -882,9 +794,7 @@ public final class PreferencesManager {
 		case SYSTEM:
 			return SYSTEM_PREFERENCES != null ? SYSTEM_PREFERENCES.getBoolean(key, false) : false;
 		case SYSTEM_INTERNAL:
-			return INTERNAL_PREFERENCES_DATA != null
-				? Boolean.parseBoolean(INTERNAL_PREFERENCES_DATA.getProperty(key, Boolean.FALSE.toString()))
-				: false;
+			return UpdateConfigurationManager.getInternalBoolean(key);
 		default:
 		case DEFAULT:
 			return Boolean.parseBoolean(DEFAULT_PREFERENCES.getProperty(key));
@@ -972,7 +882,7 @@ public final class PreferencesManager {
 			REAL_SYSTEM_PREFERENCES = SYSTEM_PREFERENCES;
 		}
 		SYSTEM_PREFERENCES = userNode(UPDATED_SYSTEM_PREFERENCE_NODE);
-		INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
+		UpdateConfigurationManager.unlockToUserNode();
 	}
 
 	/**
@@ -1201,105 +1111,38 @@ public final class PreferencesManager {
 	}
 
 	static boolean isNewConfigFile(final ConfigDataInfo updatedConfigData) {
-		final String currentConfigFileHash = get(SYSTEM_PREFERENCE_CONFIG_FILE_SHA256, PreferencesSource.SYSTEM_INTERNAL);
-		return currentConfigFileHash == null || !currentConfigFileHash.equals(updatedConfigData.getHash());
+		return UpdateConfigurationManager.isNewConfigFile(updatedConfigData);
 	}
 
 	/**
 	 * Actualiza la informaci&oacute;n de los datos de configuraci&oacute;n usados, pero ni la ruta
 	 * ni si configura la actualizaci&oacute;n autom&aacute;tica.
-	 * @param configDataInfo
+	 * @param configDataInfo Informaci&oacute;n del fichero de configuraci&oacute;n.
 	 */
 	static void setConfigFileInfo(final ConfigDataInfo configDataInfo) {
-		setConfigFileInfo(null,  false, configDataInfo);
+		UpdateConfigurationManager.setConfigFileInfo(configDataInfo);
 	}
 
-
+	/**
+	 * Establece la informaci&oacute;n completa del fichero de configuraci&oacute;n remoto.
+	 * @param url URL del fichero (puede ser {@code null}).
+	 * @param allowUpdates {@code true} para habilitar la actualizaci&oacute;n autom&aacute;tica.
+	 * @param configDataInfo Informaci&oacute;n del fichero (hash, etc.).
+	 */
 	public static void setConfigFileInfo(final String url, final boolean allowUpdates, final ConfigDataInfo configDataInfo) {
-
-		init();
-
-
-		try {
-			if (url != null) {
-				INTERNAL_PREFERENCES.put(SYSTEM_PREFERENCE_CONFIG_FILE_URL, url);
-			}
-			if (allowUpdates && hasHttpsSchema(url)) {
-				INTERNAL_PREFERENCES.putBoolean(SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG, true);
-			}
-			else {
-				INTERNAL_PREFERENCES.remove(SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG);
-			}
-			INTERNAL_PREFERENCES.put(SYSTEM_PREFERENCE_CONFIG_FILE_SHA256, configDataInfo.getHash());
-
-			loadInternalPreferencesData();
-		}
-		catch (final Exception e) {
-			if (!INTERNAL_PREFERENCES.isUserNode()) {
-				INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
-				setConfigFileInfo(url, allowUpdates, configDataInfo);
-				return;
-			}
-			LOGGER.log(Level.WARNING, "No se ha podido establecer la informacion de configuracion interna del sistema", e); //$NON-NLS-1$
-		}
-
-
+		UpdateConfigurationManager.setConfigFileInfo(url, allowUpdates, configDataInfo);
 	}
 
 	static void setConfigCheckDate() {
-
-		init();
-
-		final String formatedDate = new SimpleDateFormat(CONFIGURATION_DATE_FORMAT).format(new Date());
-		try {
-			INTERNAL_PREFERENCES.put(SYSTEM_PREFERENCE_CONFIGURATION_DATE, formatedDate);
-
-			loadInternalPreferencesData();
-		}
-		catch (final Exception e) {
-			if (!INTERNAL_PREFERENCES.isUserNode()) {
-				INTERNAL_PREFERENCES = userNode(INTERNAL_SYSTEM_PREFERENCE_NODE);
-				setConfigCheckDate();
-				return;
-			}
-			LOGGER.log(Level.WARNING, "No se ha podido establecer la fecha de configuracion interna del sistema", e); //$NON-NLS-1$
-		}
-	}
-
-	private static boolean isAutommaticUpdateConfigAllowed() {
-		try {
-			return systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)
-					&& systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).getBoolean(SYSTEM_PREFERENCE_ALLOW_UPDATE_CONFIG, false);
-		}
-		catch (final Exception e) {
-			LOGGER.log(Level.WARNING, "No se ha podido comprobar si esta activa la actualizacion automatica de la configuracion", e); //$NON-NLS-1$
-			return false;
-		}
+		UpdateConfigurationManager.setConfigCheckDate();
 	}
 
 	static boolean needCheckConfigUpdates() {
-
-		final boolean updateConfigAllowed = isAutommaticUpdateConfigAllowed();
-		if (!updateConfigAllowed) {
-			return false;
-		}
-
-		final String configUrl = getConfigFileUrl();
-		if (!hasHttpsSchema(configUrl)) {
-			return false;
-		}
-
-		final String configurationDate = get(SYSTEM_PREFERENCE_CONFIGURATION_DATE, PreferencesSource.SYSTEM_INTERNAL);
-		final String currentDate = new SimpleDateFormat(CONFIGURATION_DATE_FORMAT).format(new Date());
-		return configurationDate == null || currentDate.compareTo(configurationDate) > 0;
-	}
-
-	private static boolean hasHttpsSchema(final String url) {
-		return url != null && url.toLowerCase(Locale.US).startsWith(PREFIX_HTTPS);
+		return UpdateConfigurationManager.needCheckConfigUpdates();
 	}
 
 	static String getConfigFileUrl() {
-		return get(SYSTEM_PREFERENCE_CONFIG_FILE_URL, PreferencesSource.SYSTEM_INTERNAL);
+		return UpdateConfigurationManager.getConfigFileUrl();
 	}
 
 	/**
@@ -1316,14 +1159,10 @@ public final class PreferencesManager {
 			REAL_SYSTEM_PREFERENCES.removeNode();
 			removeEmptyTree(parent);
 		}
-		if (systemNodeExists(INTERNAL_SYSTEM_PREFERENCE_NODE)) {
-			final Preferences parent = systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).parent();
-			systemNode(INTERNAL_SYSTEM_PREFERENCE_NODE).removeNode();
-			removeEmptyTree(parent);
-		}
+		UpdateConfigurationManager.removeInternalNode();
 	}
 
-	private static void removeEmptyTree(final Preferences node) throws BackingStoreException {
+	static void removeEmptyTree(final Preferences node) throws BackingStoreException {
 
 		init();
 
