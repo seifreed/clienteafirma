@@ -349,10 +349,10 @@ public final class PreferencesManager {
 	//************************* PREFERENCIAS DE FIRMAS XAdES *******************************************************************
 
 	/** Identificador de la pol&iacute;tica de firma para XAdES. Debe ser un OID.*/
-	public static final String PREFERENCE_XADES_POLICY_IDENTIFIER = "xadesPolicyIdentifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_POLICY_IDENTIFIER = SignatureFormatPreferenceKeys.XADES_POLICY_IDENTIFIER;
 
 	/** Huella digital del identificador de la pol&iacute;tica de firma para XAdES. Debe estar en base64.*/
-	public static final String PREFERENCE_XADES_POLICY_HASH = "xadesPolicyIdentifierHash"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_POLICY_HASH = SignatureFormatPreferenceKeys.XADES_POLICY_HASH;
 
 	/** Algoritmo de la huella digital del identificador de la pol&iacute;tica de firma para XAdES.
 	 * Esta preferencia debe tener uno de estos valores:
@@ -362,10 +362,10 @@ public final class PreferencesManager {
 	 *  <li>SHA-384</li>
 	 *  <li>SHA-256</li>
 	 * </ul> */
-	public static final String PREFERENCE_XADES_POLICY_HASH_ALGORITHM = "xadesPolicyIdentifierHashAlgorithm"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_POLICY_HASH_ALGORITHM = SignatureFormatPreferenceKeys.XADES_POLICY_HASH_ALGORITHM;
 
 	/** Calificador de la pol&iacute;tica de firma para XAdES. Debe ser una URL.*/
-	public static final String PREFERENCE_XADES_POLICY_QUALIFIER = "xadesPolicyQualifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_POLICY_QUALIFIER = SignatureFormatPreferenceKeys.XADES_POLICY_QUALIFIER;
 
 	/** Formato de las firmas XAdES.
 	 * Esta preferencia debe tener uno de estos valores:
@@ -374,25 +374,25 @@ public final class PreferencesManager {
 	 *  <li>XAdES Enveloping</li>
 	 *  <li>XAdES Enveloped</li>
 	 * </ul> */
-	public static final String PREFERENCE_XADES_SIGN_FORMAT = "xadesSignFormat"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGN_FORMAT = SignatureFormatPreferenceKeys.XADES_SIGN_FORMAT;
 
 	/** Tipo de multifirma a realizar. */
-	public static final String PREFERENCE_XADES_MULTISIGN = "xadesMultisign";  //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_MULTISIGN = SignatureFormatPreferenceKeys.XADES_MULTISIGN;
 
 	/** Ciudad de firma para firmas XAdES. */
-	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_CITY = "xadesSignatureProductionCity"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_CITY = SignatureFormatPreferenceKeys.XADES_SIGNATURE_PRODUCTION_CITY;
 
 	/** Provincia de firma para firmas XAdES. */
-	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_PROVINCE = "xadesSignatureProductionProvince"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_PROVINCE = SignatureFormatPreferenceKeys.XADES_SIGNATURE_PRODUCTION_PROVINCE;
 
 	/** C&oacute;digo de firma para firmas XAdES. */
-	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_POSTAL_CODE = "xadesSignatureProductionPostalCode"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_POSTAL_CODE = SignatureFormatPreferenceKeys.XADES_SIGNATURE_PRODUCTION_POSTAL_CODE;
 
 	/** Pa&iacute;s de firma para firmas XAdES. */
-	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_COUNTRY = "xadesSignatureProductionCountry"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGNATURE_PRODUCTION_COUNTRY = SignatureFormatPreferenceKeys.XADES_SIGNATURE_PRODUCTION_COUNTRY;
 
 	/** Cargo supuesto para el firmante en firmas XAdES. */
-	public static final String PREFERENCE_XADES_SIGNER_CLAIMED_ROLE = "xadesSignerClaimedRole"; //$NON-NLS-1$
+	public static final String PREFERENCE_XADES_SIGNER_CLAIMED_ROLE = SignatureFormatPreferenceKeys.XADES_SIGNER_CLAIMED_ROLE;
 
 
 	//************************* FIN PREFERENCIAS DE FIRMAS XAdES ***************************************************************
@@ -407,13 +407,13 @@ public final class PreferencesManager {
 	 *  <li>PAdES-BES</li>
 	 *  <li>PAdES B&aacute;sico</li>
 	 * </ul>*/
-	public static final String PREFERENCE_PADES_FORMAT = "padesBasicFormat"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_FORMAT = SignatureFormatPreferenceKeys.PADES_FORMAT;
 
 	/** Identificador de la pol&iacute;tica de firma para PAdES. Debe ser un OID.*/
-	public static final String PREFERENCE_PADES_POLICY_IDENTIFIER = "padesPolicyIdentifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_POLICY_IDENTIFIER = SignatureFormatPreferenceKeys.PADES_POLICY_IDENTIFIER;
 
 	/** Huella digital del identificador de la pol&iacute;tica de firma para PAdES. Debe estar en base64.*/
-	public static final String PREFERENCE_PADES_POLICY_HASH = "padesPolicyIdentifierHash"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_POLICY_HASH = SignatureFormatPreferenceKeys.PADES_POLICY_HASH;
 
 	/** Algoritmo de la huella digital del identificador de la pol&iacute;tica de firma para PAdES.
 	 *  Esta preferencia debe tener uno de estos valores:
@@ -423,36 +423,36 @@ public final class PreferencesManager {
 	 *  <li>SHA-384</li>
 	 *  <li>SHA-256</li>
 	 * </ul> */
-	public static final String PREFERENCE_PADES_POLICY_HASH_ALGORITHM = "padesPolicyIdentifierHashAlgorithm"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_POLICY_HASH_ALGORITHM = SignatureFormatPreferenceKeys.PADES_POLICY_HASH_ALGORITHM;
 
 	/** Calificador de la pol&iacute;tica de firma para PAdES. Debe ser una URL.*/
-	public static final String PREFERENCE_PADES_POLICY_QUALIFIER = "padesPolicyQualifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_POLICY_QUALIFIER = SignatureFormatPreferenceKeys.PADES_POLICY_QUALIFIER;
 
 	/** Si est&aacute; establecido a <code>true</code> se pide al usuario que determine mediante di&aacute;logos
 	 * gr&aacute;ficos los par&aacute;metros de una firma visible PDF y se inserta como tal en el
 	 * documento. */
-	public static final String PREFERENCE_PADES_VISIBLE = "padesVisibleSignature"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_VISIBLE = SignatureFormatPreferenceKeys.PADES_VISIBLE;
 
 	/** Si est&aacute; establecido a <code>true</code> se ofuscan los identificadores de usuario del CN
 	 * y DN del certificado antes de mostrarlos en la firma visible del PDF. */
-	public static final String PREFERENCE_PADES_OBFUSCATE_CERT_INFO = "padesObfuscateCertInfo"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_OBFUSCATE_CERT_INFO = SignatureFormatPreferenceKeys.PADES_OBFUSCATE_CERT_INFO;
 
 	/** Si est&aacute; establecido a <code>true</code> se pide al usuario que determine mediante di&aacute;logos
 	 * gr&aacute;ficos los par&aacute;metros de una marca visible en PDF y se inserta como tal en el
 	 * documento. */
-	public static final String PREFERENCE_PADES_STAMP = "padesVisibleStamp"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_STAMP = SignatureFormatPreferenceKeys.PADES_STAMP;
 
 	/**
 	 * Si est&aacute; establecido a <code>true</code> se comprobar&aacute;n posibles PDF Shadow Attacks
 	 * si se establece a <code>false</code>, no se realizar&aacute; la comprobaci&oacute;n.
 	 */
-	public static final String PREFERENCE_PADES_CHECK_SHADOW_ATTACK = "allowShadowAttack"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_CHECK_SHADOW_ATTACK = SignatureFormatPreferenceKeys.PADES_CHECK_SHADOW_ATTACK;
 
 	/**
 	 * Si est&aacute; establecido a <code>true</code> se permite generar PDF certificados
 	 * si se establece a <code>false</code>, no se permite generar pdfs certificados.
 	 */
-	public static final String PREFERENCE_PADES_CHECK_ALLOW_CERTIFIED_PDF = "allowCertifiedPDF"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_CHECK_ALLOW_CERTIFIED_PDF = SignatureFormatPreferenceKeys.PADES_CHECK_ALLOW_CERTIFIED_PDF;
 
 	/**
 	 * Tipos de firma pdf certificadas.
@@ -464,17 +464,17 @@ public final class PreferencesManager {
 	 *  <li>3: Certificada com&uacute;n</li>
 	 * </ul>
 	 */
-	public static final String PREFERENCE_PADES_DEFAULT_CERTIFICATION_LEVEL = "padesCertificationLevel"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_DEFAULT_CERTIFICATION_LEVEL = SignatureFormatPreferenceKeys.PADES_DEFAULT_CERTIFICATION_LEVEL;
 
 
 	/** Motivo de la firma en firmas PAdES. */
-	public static final String PREFERENCE_PADES_SIGN_REASON = "padesSignReason"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_SIGN_REASON = SignatureFormatPreferenceKeys.PADES_SIGN_REASON;
 
 	/** Ciudad de firma para firmas PAdES. */
-	public static final String PREFERENCE_PADES_SIGN_PRODUCTION_CITY = "padesSignProductionCity"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_SIGN_PRODUCTION_CITY = SignatureFormatPreferenceKeys.PADES_SIGN_PRODUCTION_CITY;
 
 	/** Contacto del firmante en firmas PAdES. */
-	public static final String PREFERENCE_PADES_SIGNER_CONTACT = "padesSignerContact"; //$NON-NLS-1$
+	public static final String PREFERENCE_PADES_SIGNER_CONTACT = SignatureFormatPreferenceKeys.PADES_SIGNER_CONTACT;
 
 	//************************* FIN PREFERENCIAS DE FIRMAS PAdES ***************************************************************
 	//**************************************************************************************************************************
@@ -483,10 +483,10 @@ public final class PreferencesManager {
 	//************************* PREFERENCIAS DE FIRMAS CAdES *******************************************************************
 
 	/** Identificador de la pol&iacute;tica de firma para CAdES. Debe ser un OID.*/
-	public static final String PREFERENCE_CADES_POLICY_IDENTIFIER = "cadesPolicyIdentifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_POLICY_IDENTIFIER = SignatureFormatPreferenceKeys.CADES_POLICY_IDENTIFIER;
 
 	/** Huella digital del identificador de la pol&iacute;tica de firma para CAdES. */
-	public static final String PREFERENCE_CADES_POLICY_HASH = "cadesPolicyIdentifierHash"; //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_POLICY_HASH = SignatureFormatPreferenceKeys.CADES_POLICY_HASH;
 
 	/** Algoritmo de la huella digital del identificador de la pol&iacute;tica de firma para CAdES.
 	 * Esta preferencia debe tener uno de estos valores:
@@ -496,17 +496,17 @@ public final class PreferencesManager {
 	 *  <li>SHA-384</li>
 	 *  <li>SHA-256</li>
 	 * </ul> */
-	public static final String PREFERENCE_CADES_POLICY_HASH_ALGORITHM = "cadesPolicyIdentifierHashAlgorithm"; //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_POLICY_HASH_ALGORITHM = SignatureFormatPreferenceKeys.CADES_POLICY_HASH_ALGORITHM;
 
 	/** Calificador de la pol&iacute;tica de firma para CAdES. Debe ser una URL.*/
-	public static final String PREFERENCE_CADES_POLICY_QUALIFIER = "cadesPolicyQualifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_POLICY_QUALIFIER = SignatureFormatPreferenceKeys.CADES_POLICY_QUALIFIER;
 
 	/** Si est&aacute; establecido a <code>true</code> la firma CAdES se realizar&aacute; en modo impl&iacute;cito (<i>attached</i>),
 	 *  si est&aacute; establecido a <code>false</code> se realizar&aacute; en modo (<i>detached</i>). */
-	public static final String PREFERENCE_CADES_IMPLICIT = "cadesImplicitMode"; //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_IMPLICIT = SignatureFormatPreferenceKeys.CADES_IMPLICIT;
 
 	/** Tipo de multifirmas CAdES. */
-	public static final String PREFERENCE_CADES_MULTISIGN = "cadesMultisign";  //$NON-NLS-1$
+	public static final String PREFERENCE_CADES_MULTISIGN = SignatureFormatPreferenceKeys.CADES_MULTISIGN;
 
 
 	//************************* FIN PREFERENCIAS DE FIRMAS CAdES ***************************************************************
@@ -521,13 +521,13 @@ public final class PreferencesManager {
 	 *  <li>Pol&iacute;tica de Factura Electr&oacute;nica 3.0</li>
 	 *  <li>Pol&iacute;tica de Factura Electr&oacute;nica 3.1</li>
 	 * </ul> */
-	public static final String PREFERENCE_FACTURAE_POLICY = "facturaEPolicy"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_POLICY = SignatureFormatPreferenceKeys.FACTURAE_POLICY;
 
 	/** Identificador de la pol&iacute;tica de firma para FacturaE. Debe ser un OID.*/
-	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER = "facturaePolicyIdentifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER = SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER;
 
 	/** Huella digital del identificador de la pol&iacute;tica de firma para FacturaE. Debe estar en base64.*/
-	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH = "facturaePolicyIdentifierHash"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH = SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER_HASH;
 
 	/** Algoritmo de la huella digital del identificador de la pol&iacute;tica de firma para FacturaE.
 	 * Esta preferencia debe tener uno de estos valores:
@@ -537,10 +537,10 @@ public final class PreferencesManager {
 	 *  <li>SHA-384</li>
 	 *  <li>SHA-256</li>
 	 * </ul> */
-	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM = "facturaePolicyIdentifierHashAlgorithm"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM = SignatureFormatPreferenceKeys.FACTURAE_POLICY_IDENTIFIER_HASH_ALGORITHM;
 
 	/** Calificador de la pol&iacute;tica de firma para FacturaE. Debe ser una URL. */
-	public static final String PREFERENCE_FACTURAE_POLICY_QUALIFIER = "facturaePolicyQualifier"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_POLICY_QUALIFIER = SignatureFormatPreferenceKeys.FACTURAE_POLICY_QUALIFIER;
 
 	/** Papel del firmante de las facturas.
 	 * Esta preferencia debe tener uno de estos valores:
@@ -549,19 +549,19 @@ public final class PreferencesManager {
 	 *  <li>Receptor</li>
 	 *  <li>Tercero</li>
 	 * </ul> */
-	public static final String PREFERENCE_FACTURAE_SIGNER_ROLE = "facturaeSignerRole"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_SIGNER_ROLE = SignatureFormatPreferenceKeys.FACTURAE_SIGNER_ROLE;
 
 	/** Ciudad de firma para firmas FacturaE. */
-	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY = "facturaeSignatureProductionCity"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_CITY = SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_CITY;
 
 	/** Provincia de firma para firmas FacturaE. */
-	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE = "facturaeSignatureProductionProvince"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_PROVINCE = SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_PROVINCE;
 
 	/** C&oacute;digo de firma para firmas FacturaE. */
-	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE = "facturaeSignatureProductionPostalCode"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE = SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_POSTAL_CODE;
 
 	/** Pa&iacute;s de firma para firmas FacturaE. */
-	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY = "facturaeSignatureProductionCountry"; //$NON-NLS-1$
+	public static final String PREFERENCE_FACTURAE_SIGNATURE_PRODUCTION_COUNTRY = SignatureFormatPreferenceKeys.FACTURAE_SIGNATURE_PRODUCTION_COUNTRY;
 
 
 	//**************** FIN PREFERENCIAS DE FACTURAS ELECTRONICAS ***************************************************************
@@ -571,25 +571,25 @@ public final class PreferencesManager {
 	//**************** PREFERENCIAS DE FIRMA VISIBLE EN PDF ********************************************************************
 
 	/** Texto contenido en la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_LAYER2TEXT = "pdfLayer2Text"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_LAYER2TEXT = SignatureFormatPreferenceKeys.PDF_SIGN_LAYER2TEXT;
 
 	/** Fuente utilizada en el texto de la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTFAMILY = "pdfLayer2FontFamily"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTFAMILY = SignatureFormatPreferenceKeys.PDF_SIGN_LAYER2FONTFAMILY;
 
 	/** Tamaño de la fuente utilizada en el texto de la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTSIZE = "pdfLayer2FontSize"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTSIZE = SignatureFormatPreferenceKeys.PDF_SIGN_LAYER2FONTSIZE;
 
 	/** Estilo de la fuente utilizada en el texto de la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTSTYLE = "pdfLayer2FontStyle"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTSTYLE = SignatureFormatPreferenceKeys.PDF_SIGN_LAYER2FONTSTYLE;
 
 	/** Color de la fuente utilizada en el texto de la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTCOLOR = "pdfLayer2FontColor"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_LAYER2FONTCOLOR = SignatureFormatPreferenceKeys.PDF_SIGN_LAYER2FONTCOLOR;
 
 	/** Indica el &aacute;ngulo que se debe rotar la firma.*/
-	public static final String PREFERENCE_PDF_SIGN_SIGNATUREROTATION = "pdfSignatureRotation"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_SIGNATUREROTATION = SignatureFormatPreferenceKeys.PDF_SIGN_SIGNATUREROTATION;
 
 	/** Imagen de fondo de la firma visible en pdf.*/
-	public static final String PREFERENCE_PDF_SIGN_IMAGE = "pdfSignatureImage"; //$NON-NLS-1$
+	public static final String PREFERENCE_PDF_SIGN_IMAGE = SignatureFormatPreferenceKeys.PDF_SIGN_IMAGE;
 
 	//**************** FIN PREFERENCIAS DE FIRMA VISIBLE EN PDF ****************************************************************
 	//**************************************************************************************************************************
