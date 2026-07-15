@@ -3,7 +3,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>afirma-server-triphase-signer</artifactId>
-	<version>${triphase.service.version}</version>
+	<version>3.0.0</version>
 	<packaging>war</packaging>
 	
 	<name>afirma-server-triphase-signer</name>

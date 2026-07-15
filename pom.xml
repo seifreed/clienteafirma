@@ -46,9 +46,6 @@
 		<jdk.version>21</jdk.version>
 		<clienteafirma.version>1.9.1</clienteafirma.version>
 		<afirma.legible.version>1_9_1</afirma.legible.version>
-		<!-- triphase.service 3.x: jakarta.servlet (Tomcat 10.1+ / Jetty 12+).
-		     Bumped from 2.9.1 in M3.2 (2026-05-07). Breaking change vs Tomcat 9. -->
-		<triphase.service.version>3.0.0</triphase.service.version>
 		<jmulticard.version>2.1</jmulticard.version>
 		
 		<!-- M3.5 BLOCKED: afirma-lib-itext is a hard fork (com.aowagie.*) with

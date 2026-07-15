@@ -66,7 +66,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Mutation testing | — | **PIT 1.20.5** + `pitest-junit5-plugin` bajo `-Pmutation` |
 | Fuzzing | — | **Jazzer 0.24.0** bajo `-Pfuzz` (módulo `afirma-fuzz`, 3 harnesses) |
 | `javax.servlet:servlet-api` (3 WARs) | 2.5 (2007) | **`jakarta.servlet:jakarta.servlet-api:6.1.0`** (target Tomcat 10.1+ / Jetty 12+) |
-| `triphase.service.version` | 2.9.1 | **3.0.0** (major bump por breaking jakarta) |
+| `afirma-server-triphase-signer` | 2.9.1 | **3.0.0** (major bump por breaking jakarta) |
 | `SECURITY.md`, `CONTRIBUTING.md` | — | Presentes con SLA y matriz de soporte |
 | Workflows GitHub Actions | — | `build.yml` (matrix Linux/Win/macOS), `codeql.yml`, `renovate.json`, `dependabot.yml` |
 | Windows x86 (32-bit) | Soportado | **Eliminado en 1.10.0** (Adoptium Temurin 21 no se distribuye para x86) |
