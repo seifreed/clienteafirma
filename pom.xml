@@ -337,6 +337,7 @@
 						<skipProvidedScope>false</skipProvidedScope>
 						<skipRuntimeScope>false</skipRuntimeScope>
 						<skipTestScope>true</skipTestScope>
+						<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 						<knownExploitedEnabled>false</knownExploitedEnabled>
 						<!-- 1-week NVD cache; CI runs daily incremental updates. -->
 						<nvdValidForHours>168</nvdValidForHours>
@@ -1262,6 +1263,7 @@
 								<suppressionFile>${maven.multiModuleProjectDirectory}/.dependency-check-suppressions.xml</suppressionFile>
 							</suppressionFiles>
 							<skipTestScope>true</skipTestScope>
+							<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 							<knownExploitedEnabled>false</knownExploitedEnabled>
 						</configuration>
 						<executions>

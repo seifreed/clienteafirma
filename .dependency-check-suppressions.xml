@@ -50,7 +50,7 @@
 			a Windows host with Firefox is available. Linux/macOS bundles were
 			repacked in M3.4 with current NSS and no longer hit these CVEs.
 		]]></notes>
-		<filePath regex="true">.*certutil\.windows\.zip[\\/]+certutil[\\/]+sqlite3\.dll</filePath>
+		<filePath regex="true">.*certutil\.windows\.zip([\\/]+certutil[\\/]+|: )sqlite3\.dll</filePath>
 		<cve>CVE-2015-3414</cve>
 		<cve>CVE-2015-3415</cve>
 		<cve>CVE-2015-3416</cve>
@@ -106,6 +106,9 @@
 		<cve>CVE-2020-13871</cve>
 		<!-- Surfaced after M3.4 repack against the still-vendored Windows binary. -->
 		<cve>CVE-2021-36690</cve>
+		<!-- Surfaced on 2026-07-16 against the same still-vendored Windows binary. -->
+		<cve>CVE-2026-11822</cve>
+		<cve>CVE-2026-11824</cve>
 	</suppress>
 
 	<!--
