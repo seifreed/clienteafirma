@@ -81,7 +81,7 @@
 			<plugin>
 			  <groupId>org.codehaus.mojo</groupId>
 			  <artifactId>build-helper-maven-plugin</artifactId>
-			  <version>1.12</version>
+			  <version>3.6.1</version>
 			  <executions>
 			    <execution>
 			      <id>timestamp-property</id>
@@ -112,7 +112,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.2.3</version>
+				<version>3.5.1</version>
 				<configuration>  
 					<archive>  
 						<addMavenDescriptor>false</addMavenDescriptor> 
