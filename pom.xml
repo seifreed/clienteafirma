@@ -619,6 +619,84 @@
 			</build>
 		</profile>
 
+		<!-- ===== Quality gate bloqueante =====
+		     Stack aplicable: Maven/Java. Python no existe en el arbol mantenido,
+		     asi que no se configuran bandit/ruff/pip-audit. -->
+		<profile>
+			<id>quality-gate</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+						<configuration>
+							<failOnViolation>true</failOnViolation>
+							<failsOnError>true</failsOnError>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkstyle-gate</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-pmd-plugin</artifactId>
+						<configuration>
+							<failOnViolation>true</failOnViolation>
+							<skipPmdError>false</skipPmdError>
+						</configuration>
+						<executions>
+							<execution>
+								<id>pmd-gate</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+						<configuration>
+							<failOnError>true</failOnError>
+						</configuration>
+						<executions>
+							<execution>
+								<id>spotbugs-gate</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!-- ===== Security gate bloqueante ===== -->
+		<profile>
+			<id>security-gate</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<configuration>
+							<failOnError>true</failOnError>
+							<failBuildOnCVSS>7</failBuildOnCVSS>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 		<!-- ===== Construccion por defecto ===== -->
 		<profile>
 			<id>env-dev</id>

@@ -61,11 +61,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-depcheck-
 
-      - name: Build (compile + SBOM + dep-check, no tests)
+      - name: Build (compile + SBOM + security gate, no tests)
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: >
-          mvn -B -ntp -Denv=install -DskipTests
+          mvn -B -ntp -Denv=install -Psecurity-gate -DskipTests
           -DnvdApiKey="$NVD_API_KEY"
           clean verify
 
@@ -124,3 +124,31 @@ jobs:
 
       - name: Run tests
         run: mvn -B -ntp -Denv=install -Ddependency-check.skip=true test
+
+  quality:
+    name: Quality gate (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ubuntu-24.04-quality-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ubuntu-24.04-quality-maven-
+            ubuntu-24.04-maven-
+
+      - name: Run quality gate
+        run: >
+          mvn -B -ntp -Denv=install -Pquality-gate
+          -DskipTests -Ddependency-check.skip=true
+          verify
