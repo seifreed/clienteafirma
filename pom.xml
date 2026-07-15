@@ -789,6 +789,40 @@
 			<id>autofirma</id>
 			<modules>
 				<!-- Modulos core -->
+				<module>afirma-core</module>
+				<module>afirma-core-keystores</module>
+				<module>afirma-core-prefs</module>
+				<module>afirma-crypto-batch-client</module>
+				<module>afirma-crypto-cadestri-client</module>
+				<module>afirma-crypto-core-pkcs7</module>
+				<module>afirma-crypto-cms</module>
+				<module>afirma-crypto-cades</module>
+				<module>afirma-crypto-cades-multi</module>
+				<module>afirma-crypto-cipher2</module>
+				<module>afirma-crypto-core-pkcs7-tsp</module>
+				<module>afirma-crypto-core-xml</module>
+				<module>afirma-crypto-odf</module>
+				<module>afirma-crypto-padestri-client</module>
+				<module>afirma-crypto-pdf-common</module>
+				<module>afirma-crypto-pdf</module>
+				<module>afirma-crypto-validation</module>
+				<module>afirma-crypto-xades</module>
+				<module>afirma-crypto-xadestri-client</module>
+				<module>afirma-crypto-jades</module>
+				<module>afirma-trust-tsl</module>
+				<module>afirma-eudiw-bridge</module>
+				<module>afirma-crypto-xmlsignature</module>
+				<module>afirma-crypto-ooxml</module>
+				<module>afirma-keystores-filters</module>
+				<module>afirma-keystores-mozilla</module>
+				<module>afirma-keystores-jmulticard-ui</module>
+				<module>afirma-ui-utils</module>
+				<module>afirma-core-massive</module>
+				<module>afirma-server-triphase-signer-cache</module>
+				<module>afirma-server-triphase-signer-core</module>
+				<module>afirma-server-triphase-signer-document</module>
+				<module>afirma-simple-plugins</module>
+				<module>afirma-simple-plugins-manager</module>
 				<module>afirma-ui-simple-configurator-common</module>
 				<module>afirma-ui-core-jse</module>
 				<module>afirma-ui-core-jse-keystores</module>
