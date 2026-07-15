@@ -18,13 +18,13 @@ public final class AOTreeModel {
     /** Crea un &aacute;rbol en el que cualquier nodo puede tener hijos.
      * @param root La ra&iacute;z del &aacute;rbol */
     public AOTreeModel(final AOTreeNode root) {
-        this.root = root;
+        this.root = AOTreeNode.copyOf(root);
     }
 
     /** Returns the root of the tree. Returns null only if the tree has no nodes.
      * @return the root of the tree */
     public Object getRoot() {
-        return this.root;
+        return AOTreeNode.copyOf(this.root);
     }
 
     /** Returns the child of <I>parent</I> at index <I>index</I> in the parent's

@@ -35,6 +35,21 @@ public final class AOTreeNode {
         this.userObject = userObject;
     }
 
+    private AOTreeNode(final AOTreeNode node, final AOTreeNode parent) {
+        this.parent = parent;
+        this.userObject = node.userObject;
+        if (node.children != null) {
+            this.children = new ArrayList<>(node.children.size());
+            for (final AOTreeNode child : node.children) {
+                this.children.add(new AOTreeNode(child, this));
+            }
+        }
+    }
+
+    static AOTreeNode copyOf(final AOTreeNode node) {
+        return node != null ? new AOTreeNode(node, null) : null;
+    }
+
     //
     // Primitives
     //
@@ -93,13 +108,13 @@ public final class AOTreeNode {
      * messaged from anywhere else.
      * @param newParent
      *        this node's new parent */
-    public void setParent(final AOTreeNode newParent) {
+    private void setParent(final AOTreeNode newParent) {
         this.parent = newParent;
     }
 
     /** Returns this node's parent or null if this node has no parent.
      * @return this node's parent TreeNode, or null if this node has no parent */
-    public AOTreeNode getParent() {
+    private AOTreeNode getParent() {
         return this.parent;
     }
 
