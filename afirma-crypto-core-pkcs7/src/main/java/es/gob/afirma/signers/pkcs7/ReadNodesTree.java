@@ -86,7 +86,7 @@ public final class ReadNodesTree {
         // LEEMOS EL FICHERO QUE NOS INTRODUCEN
     	final ASN1Sequence dsq;
     	try (
-			final ASN1InputStream is = new ASN1InputStream(data);
+			final ASN1InputStream is = new ASN1InputStream(data, true);
 		) {
     		dsq = (ASN1Sequence) is.readObject();
     	}

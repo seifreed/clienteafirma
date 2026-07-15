@@ -11,8 +11,6 @@ package es.gob.afirma.signers.xml.dereference;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 import javax.xml.crypto.Data;
@@ -43,15 +41,6 @@ public class CustomUriDereferencer implements URIDereferencer {
 
 	private static final String ID = "Id"; //$NON-NLS-1$
 
-	private static final String DEFAULT_SUN_XML_SIGNATURE_INPUT_CLASSNAME = "com.sun.org.apache.xml.internal.security.signature.XMLSignatureInput"; //$NON-NLS-1$
-	private static final String DEFAULT_APACHE_XML_SIGNATURE_INPUT_CLASSNAME =               "org.apache.xml.security.signature.XMLSignatureInput"; //$NON-NLS-1$
-
-	private static final String DEFAULT_SUN_OCTET_STREAM_DATA =           "org.jcp.xml.dsig.internal.dom.ApacheOctetStreamData"; //$NON-NLS-1$
-	private static final String DEFAULT_APACHE_OCTET_STREAM_DATA = "org.apache.jcp.xml.dsig.internal.dom.ApacheOctetStreamData"; //$NON-NLS-1$
-
-	private static final String DEFAULT_SUN_NODESET_DATA =           "org.jcp.xml.dsig.internal.dom.ApacheNodeSetData"; //$NON-NLS-1$
-	private static final String DEFAULT_APACHE_NODESET_DATA = "org.apache.jcp.xml.dsig.internal.dom.ApacheNodeSetData"; //$NON-NLS-1$
-
 	private final URIDereferencer defaultUriDereferencer;
 
 	private static final Logger LOGGER = Logger.getLogger("es.gob.afirma"); //$NON-NLS-1$
@@ -60,34 +49,6 @@ public class CustomUriDereferencer implements URIDereferencer {
 	public CustomUriDereferencer() {
 		this.defaultUriDereferencer = Utils.getDOMFactory().getURIDereferencer();
 	}
-
-	private static Class<?> getNodesetDataClass() throws ClassNotFoundException {
-		try {
-			return Class.forName(DEFAULT_APACHE_NODESET_DATA);
-		}
-		catch (final Exception | Error e) {
-			return Class.forName(DEFAULT_SUN_NODESET_DATA);
-		}
-	}
-
-	private static Class<?> getOctetStreamDataClass() throws ClassNotFoundException {
-		try {
-			return Class.forName(DEFAULT_APACHE_OCTET_STREAM_DATA);
-		}
-		catch (final Exception | Error e) {
-			return Class.forName(DEFAULT_SUN_OCTET_STREAM_DATA);
-		}
-	}
-
-	private static Class<?> getXmlSignatureInputClass() throws ClassNotFoundException {
-		try {
-			return Class.forName(DEFAULT_APACHE_XML_SIGNATURE_INPUT_CLASSNAME);
-		}
-		catch (final Exception | Error e) {
-			return Class.forName(DEFAULT_SUN_XML_SIGNATURE_INPUT_CLASSNAME);
-		}
-	}
-
 
 	@Override
 	public Data dereference(final URIReference domRef, final XMLCryptoContext context) throws URIReferenceException {
@@ -186,20 +147,11 @@ public class CustomUriDereferencer implements URIDereferencer {
     	return getElementById(doc, id);
 	}
 
-	protected static Data getStreamData(final Node targetNode) throws IOException {
+	public static Data getStreamData(final Node targetNode) throws IOException {
 		try {
-			final Class<?> xmlSignatureInputClass = getXmlSignatureInputClass();
-			final Constructor<?> xmlSignatureInputConstructor = xmlSignatureInputClass.getConstructor(Node.class);
-			final Object in = xmlSignatureInputConstructor.newInstance(targetNode);
-
-			final Method isOctetStreamMethod = xmlSignatureInputClass.getMethod("isOctetStream"); //$NON-NLS-1$
-			if (((Boolean) isOctetStreamMethod.invoke(in)).booleanValue()) {
-				final Class<?> octetStreamDataClass = getOctetStreamDataClass();
-				final Constructor<?> octetStreamDataConstructor = octetStreamDataClass.getConstructor(in.getClass());
-				return (Data) octetStreamDataConstructor.newInstance(in);
-			}
-			final Constructor<?> nodeSetDataConstructor = getNodesetDataClass().getConstructor(in.getClass());
-			return (Data) nodeSetDataConstructor.newInstance(in);
+			return new org.apache.jcp.xml.dsig.internal.dom.ApacheNodeSetData(
+				new org.apache.xml.security.signature.XMLSignatureNodeInput(targetNode)
+			);
 		}
 		catch (final Exception ioe) {
 			throw new IOException(ioe);

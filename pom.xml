@@ -208,15 +208,9 @@
 			</dependency>
 			
 			<dependency>
-				<!-- Apache Santuario pinned to the latest 3.0.x patch (3.0.6, 2026-05-07).
-				     4.0 removed the public XMLSignatureInput(Node) constructor that
-				     CustomUriDereferencer.java:192 invokes by reflection, breaking 6
-				     XAdES regression tests. Migration to 4.x requires refactoring the
-				     dereferencer dual-path (JDK-internal vs Apache) and is tracked as
-				     its own item in the roadmap (post-M3.5). -->
 				<groupId>org.apache.santuario</groupId>
 				<artifactId>xmlsec</artifactId>
-				<version>3.0.6</version>
+				<version>4.0.4</version>
 			</dependency>
 
 			<dependency>
