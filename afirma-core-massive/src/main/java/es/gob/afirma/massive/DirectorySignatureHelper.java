@@ -175,7 +175,7 @@ public class DirectorySignatureHelper {
      * del formato de firma con el que estemos realizando la operaci&oacute;n.
      * Cualquier formato de firma, cofirma o contrafirma del formato que estemos
      * usando se considerar&aacute; fichero de firma. <br>
-     * <h2>Nomenclatura de ficheros</h2> Cuando ya exista un fichero con el
+     * <h4>Nomenclatura de ficheros</h4> Cuando ya exista un fichero con el
      * nombre de la firma que deseamos crear, al nuevo fichero de firma se le
      * agregar&aacute;, previamente a su extensi&oacute;n de firma, una cadena
      * con un &iacute;ndice en forma del n&uacute;mero natural m&aacute;s bajo
@@ -311,7 +311,7 @@ public class DirectorySignatureHelper {
      * del formato de firma con el que estemos realizando la operaci&oacute;n.
      * Cualquier formato de firma, cofirma o contrafirma del formato que estemos
      * usando se considerar&aacute; fichero de firma. <br>
-     * <h2>Nomenclatura de ficheros</h2> Cuando ya exista un fichero con el
+     * <h4>Nomenclatura de ficheros</h4> Cuando ya exista un fichero con el
      * nombre de la firma que deseamos crear, al nuevo fichero de firma se le
      * agregar&aacute;, previamente a su extensi&oacute;n de firma, una cadena
      * con un &iacute;ndice en forma del n&uacute;mero natural m&aacute;s bajo
