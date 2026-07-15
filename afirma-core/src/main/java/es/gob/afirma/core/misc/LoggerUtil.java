@@ -87,6 +87,6 @@ public final class LoggerUtil {
     		return new String(Arrays.copyOfRange(content, 0, 200)) + "..."; //$NON-NLS-1$
     	}
 
-    	return new String(content);
+    	return content != null ? new String(content) : null;
     }
 }

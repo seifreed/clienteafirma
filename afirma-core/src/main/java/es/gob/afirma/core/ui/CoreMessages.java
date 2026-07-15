@@ -119,8 +119,9 @@ public final class CoreMessages {
 					return '!' + key + '!';
 				}          	
         	}
-        	
-			return '!' + key + '!';  
+        	else {
+				return '!' + key + '!';
+        	}
         }
 
         if (params != null) {

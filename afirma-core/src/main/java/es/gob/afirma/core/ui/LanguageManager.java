@@ -219,11 +219,13 @@ public class LanguageManager {
 				}
 
 				if (entry.isDirectory()) {
-					outputFile.mkdirs();
+					if (!outputFile.mkdirs() && !outputFile.isDirectory()) {
+						throw new IOException("No se pudo crear el directorio: " + LoggerUtil.getCleanUserHomePath(outputFile.getAbsolutePath())); //$NON-NLS-1$
+					}
 				} else {
 					final File parentDir = new File(outputFile.getParent());
-					if (!parentDir.exists()) {
-						parentDir.mkdirs();
+					if (!parentDir.exists() && !parentDir.mkdirs()) {
+						throw new IOException("No se pudo crear el directorio: " + LoggerUtil.getCleanUserHomePath(parentDir.getAbsolutePath())); //$NON-NLS-1$
 					}
 
 					try (FileOutputStream fos = new FileOutputStream(outputFile)) {
@@ -240,14 +242,19 @@ public class LanguageManager {
 			LOGGER.log(Level.WARNING, "No se ha podido descomprimir el fichero de idioma", e); //$NON-NLS-1$
 		}
 
-		zipFile.delete();
+		if (!zipFile.delete()) {
+			LOGGER.warning("No se pudo eliminar el fichero temporal de idioma: " + LoggerUtil.getCleanUserHomePath(zipFile.getAbsolutePath())); //$NON-NLS-1$
+		}
 	}
 
     public static Locale [] getImportedLocales() {
     	Locale [] result = null;
     	if (languagesDir.exists()) {
 	    	final File [] localeDirs = languagesDir.listFiles();
-	    	result =  new Locale[languagesDir.listFiles().length];
+	    	if (localeDirs == null) {
+	    		return new Locale[0];
+	    	}
+	    	result =  new Locale[localeDirs.length];
 	    	for (int i = 0; i < localeDirs.length; i++) {
 	            if (localeDirs[i].isDirectory()) {
 	            	final String[] parts = localeDirs[i].getName().split("_", 2); //$NON-NLS-1$

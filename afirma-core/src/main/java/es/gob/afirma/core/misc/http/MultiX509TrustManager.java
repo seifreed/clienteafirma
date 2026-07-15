@@ -13,7 +13,7 @@ public class MultiX509TrustManager implements X509TrustManager {
 	private final X509TrustManager[] tms;
 
 	public MultiX509TrustManager(final X509TrustManager[] tms) {
-		this.tms = tms;
+		this.tms = tms.clone();
 	}
 
 	@Override

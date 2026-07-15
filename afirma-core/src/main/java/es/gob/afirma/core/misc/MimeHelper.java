@@ -71,7 +71,7 @@ public final class MimeHelper {
             throw new IllegalArgumentException("No se han indicado los datos que se desean analizar"); //$NON-NLS-1$
         }
 
-        this.data = data;
+        this.data = data.clone();
         this.mimeInfo = new MimeInfo();
 
         try {

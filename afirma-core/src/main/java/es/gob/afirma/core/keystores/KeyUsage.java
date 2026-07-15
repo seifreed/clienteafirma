@@ -9,6 +9,7 @@
 package es.gob.afirma.core.keystores;
 
 import java.security.cert.X509Certificate;
+import java.util.Objects;
 
 import es.gob.afirma.core.ui.CoreMessages;
 
@@ -115,7 +116,7 @@ public final class KeyUsage {
 		}
 		if (me !=null && other != null) {
 			for (int i = 0; i < me.length; i++) {
-				if (other[i] != me[i]) {
+				if (!Objects.equals(other[i], me[i])) {
 					return false;
 				}
 			}
@@ -137,7 +138,7 @@ public final class KeyUsage {
 			return false;
 		}
 		for (int i=0;i<me.length;i++) {
-			if (other[i] != null && other[i] != me[i]) {
+			if (other[i] != null && !Objects.equals(other[i], me[i])) {
 				return false;
 			}
 		}

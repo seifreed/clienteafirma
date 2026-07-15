@@ -31,9 +31,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 
@@ -155,7 +157,7 @@ public final class AOFileUtils {
 			);
     		reader.parse(new InputSource(new ByteArrayInputStream(data)));
     	}
-    	catch (final Exception e) {
+    	catch (final IOException | ParserConfigurationException | SAXException e) {
     		return false;
     	}
     	return true;
@@ -171,9 +173,12 @@ public final class AOFileUtils {
 
 		// Hacemos un establecimiento basico de permisos
 		try {
-			file.setReadable(true, false);
-			file.setWritable(true, false);
-			file.setExecutable(true, false);
+			if (!file.setReadable(true, false) || !file.setWritable(true, false) || !file.setExecutable(true, false)) {
+				LOGGER.warning(
+					"No se pudieron establecer todos los permisos del archivo " //$NON-NLS-1$
+							+ LoggerUtil.getCleanUserHomePath(file.getAbsolutePath())
+				);
+			}
 		}
 		catch (final Exception e) {
 			LOGGER.log(Level.WARNING,

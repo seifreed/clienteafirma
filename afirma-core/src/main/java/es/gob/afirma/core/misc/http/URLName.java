@@ -54,6 +54,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.BitSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /** The name of a URL. This class represents a URL name and also provides the
@@ -374,14 +375,13 @@ final class URLName {
 				// else, if not both null
 			}
 		}
-		else if (this.host != u2.host) {
+		else if (!Objects.equals(this.host, u2.host)) {
 			return false;
 		}
 		// at this point, hosts match
 
 		// compare usernames
-		if (!(this.username == u2.username || this.username != null
-				&& this.username.equals(u2.username))) {
+		if (!Objects.equals(this.username, u2.username)) {
 			return false;
 		}
 

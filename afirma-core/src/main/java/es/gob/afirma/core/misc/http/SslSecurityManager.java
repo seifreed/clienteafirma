@@ -71,7 +71,7 @@ public final class SslSecurityManager {
 
 	private static final SecureRandom secureRandom = new SecureRandom();
 
-	private static boolean afirmaTrustStoreConfigured = false;
+	private static volatile boolean afirmaTrustStoreConfigured = false;
 
 	private SslSecurityManager() {
 		// No instanciable

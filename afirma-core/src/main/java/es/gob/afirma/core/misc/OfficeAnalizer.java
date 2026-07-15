@@ -277,7 +277,7 @@ public final class OfficeAnalizer {
 				result = isOOXMLFile(zipFile);
 			}
     	}
-    	catch (final Exception e) {
+    	catch (final IOException e) {
     		result = false;
 		}
 
@@ -370,7 +370,7 @@ public final class OfficeAnalizer {
 				result = isODFFile(zipFile);
 			}
     	}
-    	catch (final Exception e) {
+    	catch (final IOException e) {
     		result = false;
 		}
 

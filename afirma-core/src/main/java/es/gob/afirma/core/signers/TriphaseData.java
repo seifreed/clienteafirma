@@ -77,7 +77,7 @@ public final class TriphaseData {
 					"El diccionario de propiedades de la firma no puede ser nulo" //$NON-NLS-1$
 				);
 			}
-			this.dict = d;
+			this.dict = new ConcurrentHashMap<>(d);
 			this.id = i != null ? i : UUID.randomUUID().toString();
 			this.signatureId = signatureId;
 		}
@@ -207,7 +207,11 @@ public final class TriphaseData {
 	/** Obtiene todas las firmas de la sesi&oacute;n.
 	 * @return Lista con todas las firmas de la sesi&oacute;n. */
 	public List<TriSign> getTriSigns() {
-		return this.signs;
+		final List<TriSign> result = new ArrayList<>(this.signs.size());
+		for (final TriSign ts : this.signs) {
+			result.add(new TriSign(ts));
+		}
+		return result;
 	}
 
 	/** Construye unos datos de sesi&oacute;n trif&aacute;sica vac&iacute;os. */
@@ -228,7 +232,7 @@ public final class TriphaseData {
 	 * @param signs Lista de firmas individuales..
 	 * @param fmt Formato de las firmas. */
 	public TriphaseData(final List<TriSign> signs, final String fmt) {
-		this.signs = signs;
+		this.signs = new ArrayList<>(signs);
 		this.format = fmt;
 	}
 

@@ -38,14 +38,14 @@ public class SSLErrorProcessor implements HttpErrorProcessor {
 
 	private static boolean showingConfirmDialog = false;
 
-	private boolean blockAutoImportTrustedCerts = false;
+	private volatile boolean blockAutoImportTrustedCerts = false;
 
 	static final String TRUSTED_KS_PWD = "changeit"; //$NON-NLS-1$
 
 	private boolean initialized = false;
-	private boolean cancelled = false;
+	private volatile boolean cancelled = false;
 	private static boolean previouslyCancelled = false;
-	private boolean headless;
+	private volatile boolean headless;
 
 	public SSLErrorProcessor() {
 		this.headless = false;

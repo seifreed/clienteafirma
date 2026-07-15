@@ -1,6 +1,6 @@
 package es.gob.afirma.core;
 
-public class ErrorCode {
+public final class ErrorCode {
 
 	public static final String ERROR_HARDWARE = "1"; //$NON-NLS-1$
 	public static final String ERROR_INTERNAL = "2"; //$NON-NLS-1$
@@ -15,7 +15,7 @@ public class ErrorCode {
 
 	private final String code;
 
-	private String description;
+	private final String description;
 
 	public ErrorCode(final String code) {
 		this(code, null);
@@ -51,10 +51,6 @@ public class ErrorCode {
 
 	public String getDescription() {
 		return this.description;
-	}
-
-	public void setDescription(final String description) {
-		this.description = description;
 	}
 
 	@Override

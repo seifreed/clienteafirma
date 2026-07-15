@@ -35,7 +35,9 @@ public class TrustStoreManager {
 	private KeyStore ks;
 	private final File tsPath;
 
-	private static TrustStoreManager instance = null;
+	private static final Object INSTANCE_LOCK = new Object();
+
+	private static volatile TrustStoreManager instance = null;
 
 	/**
 	 * Obtiene la instancia &uacute;nica de la clase gestor del almac&eacute;n de confianza.
@@ -53,7 +55,11 @@ public class TrustStoreManager {
 	 */
 	public static TrustStoreManager getInstance(final Object parent) {
 		if (instance == null) {
-			instance = new TrustStoreManager(parent);
+			synchronized (INSTANCE_LOCK) {
+				if (instance == null) {
+					instance = new TrustStoreManager(parent);
+				}
+			}
 		}
 		return instance;
 	}
@@ -165,7 +171,7 @@ public class TrustStoreManager {
 	 */
 	private void store() throws KeyStoreException, IOException {
 
-		synchronized(instance) {
+		synchronized(INSTANCE_LOCK) {
 			try (OutputStream fos = new FileOutputStream(this.tsPath);
 					OutputStream bos = new BufferedOutputStream(fos);) {
 				this.ks.store(bos, TRUSTED_KS_PWD);
