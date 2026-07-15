@@ -343,7 +343,15 @@ public final class ProtocolInvocationUriParser {
 
 		Logger.getLogger("es.gob.afirma").info("URI recibida: " + (uri.length() <= 300 ? uri : uri.substring(0, 300) + "...")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-		String path = uri.substring(uri.indexOf("://") + "://".length(), uri.indexOf('?') != -1 ? uri.indexOf('?') : uri.length()); //$NON-NLS-1$ //$NON-NLS-2$
+		final int schemaSeparatorPos = uri.indexOf("://"); //$NON-NLS-1$
+		if (schemaSeparatorPos < 0) {
+			throw new IllegalArgumentException("La URI no contiene esquema"); //$NON-NLS-1$
+		}
+		final int queryPos = uri.indexOf('?');
+		if (queryPos != -1 && queryPos < schemaSeparatorPos) {
+			throw new IllegalArgumentException("La URI contiene parametros antes del esquema"); //$NON-NLS-1$
+		}
+		String path = uri.substring(schemaSeparatorPos + "://".length(), queryPos != -1 ? queryPos : uri.length()); //$NON-NLS-1$
 		if (path.endsWith("/")) { //$NON-NLS-1$
 			path = path.substring(0, path.length() - 1);
 		}

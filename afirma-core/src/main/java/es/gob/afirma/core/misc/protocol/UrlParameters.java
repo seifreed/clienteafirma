@@ -375,9 +375,12 @@ public abstract class UrlParameters {
 	 * @param cipherKeyDES Clave DES.
 	 * @return Configuraci&oacute;n de cifrado de entrada junto con la clave DES.
 	 */
-	private static byte[] addLegacyDesConfig(final byte[] config, final String cipherKeyDES) {
+	private static byte[] addLegacyDesConfig(final byte[] config, final String cipherKeyDES) throws IOException {
 
 		String configJson = new String(config);
+		if (!configJson.endsWith("}")) { //$NON-NLS-1$
+			throw new IOException("La configuracion de cifrado no contiene un objeto JSON valido"); //$NON-NLS-1$
+		}
 		configJson = configJson.substring(0, configJson.length() - 1)
 				+ ",legacydes:\"" + cipherKeyDES + "\"}"; //$NON-NLS-1$ //$NON-NLS-2$
 
