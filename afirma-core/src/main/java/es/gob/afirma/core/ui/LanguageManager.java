@@ -44,7 +44,7 @@ public class LanguageManager {
 
 	private static File languagesDir;
 
-	public static final Locale [] AFIRMA_DEFAULT_LOCALES = {
+	private static final Locale [] AFIRMA_DEFAULT_LOCALES = {
 	    	new Locale("es", "ES"), //$NON-NLS-1$ //$NON-NLS-2$     
 	        new Locale("ca", "ES"), //$NON-NLS-1$ //$NON-NLS-2$
 	        new Locale("gl", "ES"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -55,6 +55,10 @@ public class LanguageManager {
 
 	public static void init(final File langDir) {
 		languagesDir = langDir;
+	}
+
+	public static Locale[] getAfirmaDefaultLocales() {
+		return AFIRMA_DEFAULT_LOCALES.clone();
 	}
 
 	/**
@@ -289,7 +293,7 @@ public class LanguageManager {
      */
     public static boolean isDefaultLocale(final Locale locale) {
     	boolean result = false;
-    	for (final Locale l : AFIRMA_DEFAULT_LOCALES) {
+    	for (final Locale l : getAfirmaDefaultLocales()) {
     		if (l.equals(locale)) {
     			result = true;
     		}

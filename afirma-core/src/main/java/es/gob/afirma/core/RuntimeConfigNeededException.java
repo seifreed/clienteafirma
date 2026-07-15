@@ -6,7 +6,7 @@ package es.gob.afirma.core;
  * configuraci&oacute;n puede ser un dato o una confirmaci&oacute;n y una aplicaci&oacute;n que tenga la capacidad
  * deber&iacute; proporcionar los medios necesarios para obtener esta confirmaci&oacute;n.
  */
-public class RuntimeConfigNeededException extends AOException {
+public abstract class RuntimeConfigNeededException extends AOException {
 
 	/** Serial Id. */
 	private static final long serialVersionUID = 6782826789825877195L;

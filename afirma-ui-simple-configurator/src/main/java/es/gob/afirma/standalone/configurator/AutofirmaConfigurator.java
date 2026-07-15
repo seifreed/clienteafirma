@@ -368,7 +368,7 @@ public class AutofirmaConfigurator implements ConsoleListener {
 
 	private static boolean checkExistsLocale(final Locale locale) {
 		boolean existsLocale = false;
-		for (final Locale l : LanguageManager.AFIRMA_DEFAULT_LOCALES) {
+		for (final Locale l : LanguageManager.getAfirmaDefaultLocales()) {
 			if (locale.equals(l)) {
 				existsLocale = true;
 			}

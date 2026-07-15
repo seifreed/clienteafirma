@@ -248,11 +248,11 @@ public abstract class UrlParameters {
 	}
 
 	void setCipherConfig(final byte[] cipherConfig) {
-		this.cipherConfig = cipherConfig;
+		this.cipherConfig = cipherConfig != null ? cipherConfig.clone() : null;
 	}
 
 	public byte [] getCipherConfig() {
-		return this.cipherConfig;
+		return this.cipherConfig != null ? this.cipherConfig.clone() : null;
 	}
 
 	void setServiceTimeout(final int serviceTimeout) {

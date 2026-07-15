@@ -268,13 +268,14 @@ public final class MainMenu extends JMenuBar {
         		};
 
         String localeConf = PreferencesManager.get(PreferencesManager.PREFERENCES_LOCALE);
+        final Locale[] defaultLocales = LanguageManager.getAfirmaDefaultLocales();
         // Si no hay ninguno configurado, por defecto estara seleccionado el espanol
         if (localeConf == null) {
-        	localeConf = LanguageManager.AFIRMA_DEFAULT_LOCALES[0].toString();
+        	localeConf = defaultLocales[0].toString();
         }
 
         for (int i = 0; i < defaultLanguages.length; i++) {
-            final Locale locale = LanguageManager.AFIRMA_DEFAULT_LOCALES[i];
+            final Locale locale = defaultLocales[i];
             final LocaleOption localeOption = new LocaleOption(defaultLanguages[i], locale);
             final JRadioButtonMenuItem langItem = new JRadioButtonMenuItem(localeOption.toString());
             langItem.putClientProperty("localeData", localeOption); //$NON-NLS-1$

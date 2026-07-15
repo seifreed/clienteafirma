@@ -365,7 +365,7 @@ public final class UrlParametersToSign extends UrlParameters {
 	}
 
 	public Map<String, String> getAnotherParams() {
-		return this.anotherParams;
+		return new HashMap<>(this.anotherParams);
 	}
 
 	/**

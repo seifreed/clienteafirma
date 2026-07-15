@@ -270,13 +270,12 @@ public final class Platform {
         if (!Platform.getOS().equals(Platform.OS.WINDOWS)) {
             return File.separator;
         }
-        final String systemRoot = System.getProperty("SystemRoot"); //$NON-NLS-1$
+        String systemRoot = System.getProperty("SystemRoot"); //$NON-NLS-1$
         if (systemRoot == null) {
-            final String defaultSystemRoot = "C:\\WINDOWS"; //$NON-NLS-1$
-            final File winSys32 = new File(defaultSystemRoot + "\\system32"); //$NON-NLS-1$
-            if (winSys32.isDirectory()) {
-                return defaultSystemRoot;
-            }
+        	systemRoot = System.getenv("SystemRoot"); //$NON-NLS-1$
+        }
+        if (systemRoot == null) {
+        	systemRoot = System.getenv("windir"); //$NON-NLS-1$
         }
         if (systemRoot == null) {
             LOGGER

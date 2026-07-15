@@ -359,7 +359,7 @@ public final class UrlParametersToSignAndSave extends UrlParameters {
 	 * @return Colecci&oacute;n con los par&aacute;metros no reconocidos (podr&iacute;an reconocerlos los <i>plugins</i>).
 	 */
 	public Map<String, String> getAnotherParams() {
-		return this.anotherParams;
+		return new HashMap<>(this.anotherParams);
 	}
 
 	/**
