@@ -1,3 +1,4 @@
+---
 name: Build
 
 # PR gate. Compiles the env-install profile, runs tests on Linux,
@@ -5,7 +6,7 @@ name: Build
 # uploads everything as artifacts. The dep-check SARIF feeds the
 # Security tab via codeql-action/upload-sarif.
 
-on:
+"on":
   pull_request:
   push:
     branches:

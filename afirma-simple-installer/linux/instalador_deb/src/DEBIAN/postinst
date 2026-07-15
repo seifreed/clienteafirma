@@ -6,8 +6,8 @@ java -jar /usr/lib/Autofirma/autofirmaConfigurador.jar
 echo "Generacion de certificados"
 
 if [ -f "/usr/lib/Autofirma/script.sh" ]; then
-chmod +x /usr/lib/Autofirma/script.sh
-/usr/lib/Autofirma/script.sh
+	chmod +x /usr/lib/Autofirma/script.sh
+	/usr/lib/Autofirma/script.sh
 
 fi
 
@@ -19,7 +19,7 @@ openssl x509 -inform der -in /usr/lib/Autofirma/Autofirma_ROOT.cer -out /usr/lib
 mv /usr/lib/Autofirma/Autofirma_ROOT.pem /usr/lib/Autofirma/Autofirma_ROOT.crt
 
 if [ -d "/usr/share/ca-certificates/Autofirma" ]; then
-rm -R /usr/share/ca-certificates/Autofirma/
+	rm -R /usr/share/ca-certificates/Autofirma/
 fi
 
 mkdir /usr/share/ca-certificates/Autofirma/
@@ -30,17 +30,17 @@ echo "Instalacion del certificado CA en el almacenamiento del sistema"
 
 # Enlazamos el fichero de asociacion del protocolo "afirma" en Firefox
 # para que aplique a otros navegadores
-if [ -d /etc/icecat ] ; then
-   if [ ! -d /etc/icecat/pref ] ; then
-      mkdir /etc/icecat/pref
-   fi
-   ln -s /etc/firefox/pref/Autofirma.js /etc/icecat/pref/Autofirma.js
+if [ -d /etc/icecat ]; then
+	if [ ! -d /etc/icecat/pref ]; then
+		mkdir /etc/icecat/pref
+	fi
+	ln -s /etc/firefox/pref/Autofirma.js /etc/icecat/pref/Autofirma.js
 fi
-if [ -d /etc/firefox-esr ] ; then
-   if [ ! -d /etc/firefox-esr/pref ] ; then
-      mkdir /etc/firefox-esr/pref
-   fi
-   ln -s /etc/firefox/pref/Autofirma.js /etc/firefox-esr/pref/Autofirma.js
+if [ -d /etc/firefox-esr ]; then
+	if [ ! -d /etc/firefox-esr/pref ]; then
+		mkdir /etc/firefox-esr/pref
+	fi
+	ln -s /etc/firefox/pref/Autofirma.js /etc/firefox-esr/pref/Autofirma.js
 fi
 
 # Definimos la aplicacion autofirma como la de por defecto para abrir los x/handler (no es necesario porque se define en el fichero de control)
@@ -50,4 +50,3 @@ fi
 rm /usr/lib/Autofirma/script.sh
 rm /usr/lib/Autofirma/Autofirma_ROOT.crt
 exit 0
-

@@ -107,4 +107,4 @@ cosign verify-blob \
 
 Reporters who help improve Autofirma will be credited here unless they prefer to remain anonymous.
 
-_(empty so far)_
+No entries yet.

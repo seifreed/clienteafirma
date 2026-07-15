@@ -22,7 +22,7 @@
     Prerequisite: Firefox installed locally (or any other directory containing
     a recent NSS toolkit binary).
 
-    M3.4 — Autofirma modernization, 2026-05-07. Replaces the 2010-era binaries.
+    M3.4 - Autofirma modernization, 2026-05-07. Replaces the 2010-era binaries.
 
 .EXAMPLE
     .\scripts\repack-nss-windows.ps1
@@ -59,9 +59,9 @@ $Required = @(
 $WorkDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP "nss-win-$([Guid]::NewGuid().ToString('N').Substring(0,8))")
 $Stage   = New-Item -ItemType Directory -Path (Join-Path $WorkDir 'certutil')
 
-Write-Host ">>> Firefox root: $FirefoxRoot"
-Write-Host ">>> Working dir:  $WorkDir"
-Write-Host ">>> Output:       $Output"
+Write-Output ">>> Firefox root: $FirefoxRoot"
+Write-Output ">>> Working dir:  $WorkDir"
+Write-Output ">>> Output:       $Output"
 
 $Missing = @()
 foreach ($name in $Required) {
@@ -89,10 +89,10 @@ if ($Missing.Count -gt 0) {
     Write-Warning "Some certutil features may fail at runtime."
 }
 
-Write-Host ">>> Bundle contents:"
+Write-Output ">>> Bundle contents:"
 Get-ChildItem $Stage | Format-Table Name, Length, LastWriteTime
 
 Compress-Archive -Path (Join-Path $WorkDir 'certutil') -DestinationPath $Output -Force
-Write-Host ">>> Wrote: $Output"
+Write-Output ">>> Wrote: $Output"
 
 Remove-Item -Recurse -Force $WorkDir

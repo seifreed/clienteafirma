@@ -13,11 +13,13 @@ inside is responsible for the long list of suppressions in
 
 These scripts produce fresh bundles from upstream sources. They are NOT invoked
 during `mvn package`; they are release/maintenance tooling. Run them when:
+
 - the bundled NSS is older than ~2 years, or
 - a new Autofirma release ships, or
 - a downstream CVE in NSS/SQLite is published.
 
 After running, copy the produced `certutil.<os>.zip` into both:
+
 - `afirma-ui-simple-configurator/src/main/resources/<os>/`
 - `afirma-simple/src/main/resources/<os>/`
 

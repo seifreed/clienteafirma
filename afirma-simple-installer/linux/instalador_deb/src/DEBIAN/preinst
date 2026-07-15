@@ -1,7 +1,7 @@
 #!/bin/sh
 # Cerramos el navegador Firefox para instalar correctamente los certificados
 if pgrep firefox; then
-pkill firefox;
+	pkill firefox
 fi
 
 # Creamos los directorios necesarios para no obtener errores durante la instalacion

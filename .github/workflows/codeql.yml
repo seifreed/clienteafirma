@@ -1,9 +1,10 @@
+---
 name: CodeQL
 
 # Static analysis (SAST) for Java. Runs on every PR and push to master, plus
 # a weekly scheduled scan to catch new query rules without a code change.
 
-on:
+"on":
   pull_request:
   push:
     branches:

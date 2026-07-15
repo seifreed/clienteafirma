@@ -11,7 +11,7 @@ así como los archivos de idioma personalizados (`.nlf` y `.nsh`) necesarios par
 - **NSIS instalado en**: `C:\Program Files (x86)\NSIS`
 - **Estructura de carpetas esperada**:
 
-```
+```text
 NSIS/
 ├── instalar-nsis-completo.bat
 ├── plugins/
@@ -47,7 +47,7 @@ Una vez descargados, copia los archivos correspondientes a la carpeta `plugins/`
 > y reemplaza la línea que define `PLUGINS_SRC` con la ruta absoluta donde se encuentren.  
 > Ejemplo:
 >
-> ```
+> ```batch
 > set PLUGINS_SRC=C:\Users\usuario\Descargas\nsis-plugins
 > ```
 
