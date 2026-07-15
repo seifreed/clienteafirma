@@ -115,7 +115,7 @@ public final class Plist
 	 *
 	 * @param o the object to convert, must be Integer, Double, String, Date, Boolean, byte[],
 	 * Map or List.
-	 * @return an <tt>XmlElement</tt> containing the serialized version of the object.
+	 * @return an {@code XmlElement} containing the serialized version of the object.
 	 */
 	public static XmlElement objectToXml(final Object o)
 	{
