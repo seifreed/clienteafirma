@@ -50,9 +50,9 @@
 		</dependency>
 
 		<dependency>
-    		<groupId>org.json</groupId>
-    		<artifactId>json</artifactId>
-    		<version>20231013</version>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20260522</version>
 		</dependency>
 		
 		<dependency>

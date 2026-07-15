@@ -63,18 +63,21 @@
 		<!-- BouncyCastle (replaces SpongyCastle 1.58.0.0 from 2018, M3.3 2026-05-07).
 		     Provider name changes from "SC" to "BC". The bcutil-jdk18on artifact
 		     is required since BC 1.71+ which split utility classes out of bcprov. -->
-		<bouncycastle.version>1.84</bouncycastle.version>
+		<bouncycastle.version>1.85</bouncycastle.version>
 		
-		<!-- Plugins refreshed 2026-05-07 against Maven Central latest stable. -->
+		<!-- Plugins refreshed 2026-07-15 against Maven Central latest stable. -->
 		<maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
 		<maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
 		<maven-source-plugin.version>3.4.0</maven-source-plugin.version>
 		<maven-release-plugin.version>3.3.1</maven-release-plugin.version>
 		<maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-		<central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+		<maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+		<maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
+		<maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+		<central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
 
 		<!-- supply-chain / CRA tooling -->
-		<cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
+		<cyclonedx-maven-plugin.version>2.9.2</cyclonedx-maven-plugin.version>
 		<!-- dependency-check 12.x: drop Java 8 baseline, NVD model upgrades.
 		     Compatible with our JDK 21 + suppressions schema 1.3. -->
 		<dependency-check-maven.version>12.2.2</dependency-check-maven.version>
@@ -87,14 +90,14 @@
 		     plugin (also supports JUnit 4 via the vintage engine path, no JUnit 5
 		     migration required at this stage).
 		     Jazzer: fuzz harness module under `-Pfuzz`, see `afirma-fuzz`. -->
-		<!-- M4: Nimbus JOSE+JWT 9.48 (2025-04). Backbone of JAdES (compact JWS),
+		<!-- M4: Nimbus JOSE+JWT. Backbone of JAdES (compact JWS),
 		     SD-JWT VC (issuer-signed JWT + disclosures via com.nimbusds.sd_jwt),
 		     and OID4VP (OAuth 2.0 + JWT request objects). Requires Java 11+. -->
-		<nimbus-jose-jwt.version>9.48</nimbus-jose-jwt.version>
+		<nimbus-jose-jwt.version>10.9.1</nimbus-jose-jwt.version>
 
-		<jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
-		<pitest-maven.version>1.20.5</pitest-maven.version>
-		<pitest-junit5-plugin.version>1.2.2</pitest-junit5-plugin.version>
+		<jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+		<pitest-maven.version>1.25.7</pitest-maven.version>
+		<pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
 		<jazzer.version>0.24.0</jazzer.version>
 
 		<!-- M3.6 lint gates (Oleada 10, 2026-05-20). Wired in <pluginManagement>
@@ -103,23 +106,23 @@
 		     so a baseline can be measured before any rule is escalated to a build
 		     gate (planned for M3.7+). Configuration files live at the repo root:
 		     checkstyle-rules.xml, pmd-ruleset.xml, spotbugs-exclude.xml. -->
-		<spotless-maven-plugin.version>2.46.1</spotless-maven-plugin.version>
+		<spotless-maven-plugin.version>3.8.0</spotless-maven-plugin.version>
 		<maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-		<checkstyle.version>10.21.4</checkstyle.version>
-		<maven-pmd-plugin.version>3.27.0</maven-pmd-plugin.version>
-		<pmd.version>7.14.0</pmd.version>
-		<spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
-		<spotbugs.version>4.9.3</spotbugs.version>
+		<checkstyle.version>13.8.0</checkstyle.version>
+		<maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
+		<pmd.version>7.26.0</pmd.version>
+		<spotbugs-maven-plugin.version>4.10.3.0</spotbugs-maven-plugin.version>
+		<spotbugs.version>4.10.3</spotbugs.version>
 
 		<!-- Reproducible build timestamp (CRA art. 13). Bump on each release. -->
-		<project.build.outputTimestamp>2026-05-07T00:00:00Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2026-07-15T00:00:00Z</project.build.outputTimestamp>
 
 		<!-- test-dependencies. JUnit 5 (Jupiter) is the new default; junit-vintage-engine
 		     keeps the existing 146 JUnit 4 Test*.java suites running unchanged on the
 		     JUnit Platform. Once a test file imports org.junit.jupiter.api.Test and
 		     converts assertions, it runs natively on Jupiter. M3.6 (2026-05-07). -->
 		<junit.version>4.13.2</junit.version>
-		<junit-jupiter.version>5.13.2</junit-jupiter.version>
+		<junit-jupiter.version>6.1.2</junit-jupiter.version>
 	</properties>
 
 	<dependencyManagement>
@@ -289,8 +292,18 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>${maven-enforcer-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.3.0</version>
+					<version>${maven-jar-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${maven-surefire-plugin.version}</version>
 				</plugin>
 				<!-- CycloneDX SBOM (CRA art. 13). Activated under env-install / env-deploy. -->
 				<plugin>
@@ -480,6 +493,25 @@
 		<!-- JaCoCo runs on every build (default + every profile) so coverage data
 		     accumulates without requiring a special profile. -->
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>require-supported-maven</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>[3.6.3,)</version>
+								</requireMavenVersion>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
