@@ -31,12 +31,7 @@ public abstract class RuntimeConfigNeededException extends AOException {
 	 * @throws NullPointerException Si el par&aacute;metro {@code #requestType} es nulo.
 	 */
 	protected RuntimeConfigNeededException(final String msg, final RequestType requestType, final String requestorText, final String param, final ErrorCode errorCode) {
-		super(msg, errorCode);
-
-		if (requestType == null) {
-			throw new NullPointerException("El tipo de datos solicitados no puede ser nulo"); //$NON-NLS-1$
-		}
-
+		super(checkRequestType(msg, requestType), errorCode);
 		this.requestType = requestType;
 		this.requestorText = requestorText;
 		this.param = param;
@@ -55,15 +50,17 @@ public abstract class RuntimeConfigNeededException extends AOException {
 	 * @throws NullPointerException Si el par&aacute;metro {@code #requestType} es nulo.
 	 */
 	protected RuntimeConfigNeededException(final String msg, final RequestType requestType, final String requestorText, final String param, final ErrorCode errorCode, final Throwable e) {
-		super(msg, e, errorCode);
-
-		if (requestType == null) {
-			throw new NullPointerException("El tipo de datos solicitados no puede ser nulo"); //$NON-NLS-1$
-		}
-
+		super(checkRequestType(msg, requestType), e, errorCode);
 		this.requestType = requestType;
 		this.requestorText = requestorText;
 		this.param = param;
+	}
+
+	private static String checkRequestType(final String msg, final RequestType requestType) {
+		if (requestType == null) {
+			throw new NullPointerException("El tipo de datos solicitados no puede ser nulo"); //$NON-NLS-1$
+		}
+		return msg;
 	}
 
 	/**
