@@ -27,14 +27,14 @@
 		<dependency>
 			<groupId>com.twelvemonkeys.imageio</groupId>
 			<artifactId>imageio-jpeg</artifactId>
-			<version>3.11.0</version>
+			<version>3.14.0</version>
 		</dependency>
 		
 		<!-- Incluimos el puente de logs de Java para SLF4J para evitar que se use otro. -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
 		    <artifactId>slf4j-simple</artifactId>
-		    <version>1.7.36</version>
+		    <version>2.0.18</version>
 		</dependency>
 
 		<dependency>
@@ -250,9 +250,9 @@
 		</dependency>
 		
 		<dependency>
-  			<groupId>org.apache.pdfbox</groupId>
-  			<artifactId>pdfbox</artifactId>
-  			<version>2.0.25</version>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.8</version>
   			<exclusions>
   				<exclusion>
            			<groupId>org.bouncycastle</groupId>
@@ -273,14 +273,14 @@
 		<dependency>
 		    <groupId>org.bidib.com.github.markusbernhardt</groupId>
 		    <artifactId>proxy-vole</artifactId>
-		    <version>1.0.18</version>
+		    <version>2.0.1</version>
 		</dependency>
 
 		<!-- Libreria "Java Native Access" -->
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
-			<version>5.13.0</version>
+			<version>5.19.1</version>
 		</dependency>
 		
 		<!--  Dependencias para pruebas -->

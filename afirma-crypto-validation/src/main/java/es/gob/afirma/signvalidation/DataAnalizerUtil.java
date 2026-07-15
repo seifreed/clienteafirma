@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -274,8 +275,8 @@ public final class DataAnalizerUtil {
 	 */
 	public static SignValidity checkPdfShadowAttack(final byte[] actualdata, final InputStream lastReviewData, final String pagesToCheck) throws IOException {
 
-		try (final PDDocument actualDoc = PDDocument.load(actualdata);
-				final PDDocument lastReviewDoc = PDDocument.load(lastReviewData)) {
+		try (final PDDocument actualDoc = Loader.loadPDF(actualdata);
+				final PDDocument lastReviewDoc = Loader.loadPDF(lastReviewData.readAllBytes())) {
 
 			final PDFRenderer actualPdfRenderer = new PDFRenderer(actualDoc);
 			final PDFRenderer lastReviewPdfRenderer = new PDFRenderer(lastReviewDoc);

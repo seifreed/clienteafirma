@@ -10,11 +10,11 @@
 package es.gob.afirma.standalone.ui.pdf;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -30,7 +30,7 @@ final class Pdf2ImagesConverter {
 	 * la generaci&oacute;n de las im&aacute;genes. */
 	static List<BufferedImage> pdf2Images(final byte[] inPdf) throws IOException {
 		List<BufferedImage> pagesAsImages;
-		try (final PDDocument document = PDDocument.load(new ByteArrayInputStream(inPdf))) {
+		try (final PDDocument document = Loader.loadPDF(inPdf)) {
 			final PDFRenderer pdfRenderer = new PDFRenderer(document);
 			pagesAsImages = new ArrayList<>(document.getNumberOfPages());
 			for (int i = 0; i < document.getNumberOfPages(); i++) {
@@ -54,7 +54,7 @@ final class Pdf2ImagesConverter {
 	static List<BufferedImage> pdf2ImagesUsefulSections(final byte[] inPdf, final char[] passwordChars, final int currentPage) throws IOException {
 		List<BufferedImage> pagesAsImages;
 		final String password = passwordChars != null ? new String(passwordChars) : null;
-		try (final PDDocument document = PDDocument.load(new ByteArrayInputStream(inPdf), password)) {
+		try (final PDDocument document = Loader.loadPDF(inPdf, password)) {
 			final PDFRenderer pdfRenderer = new PDFRenderer(document);
 			pagesAsImages = new ArrayList<>(document.getNumberOfPages());
 			for (int i = 0; i < document.getNumberOfPages(); i++) {
@@ -77,7 +77,7 @@ final class Pdf2ImagesConverter {
 	 * @throws IOException Cuando falla la carga del documento como PDF o
 	 *                     la generaci&oacute;n de las im&aacute;genes. */
 	static void updateUsefulSections(final byte[] inPdf, final int currentPage, final List<BufferedImage> pagesAsImages) throws IOException {
-		try (final PDDocument document = PDDocument.load(new ByteArrayInputStream(inPdf))) {
+		try (final PDDocument document = Loader.loadPDF(inPdf)) {
 			final PDFRenderer pdfRenderer = new PDFRenderer(document);
 			final int numPages = document.getNumberOfPages();
 			for (int i = 0; i < numPages; i++) {
