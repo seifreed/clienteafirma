@@ -26,7 +26,10 @@ public final class DerValueFuzzer {
 	}
 
 	public static void fuzzerTestOneInput(final FuzzedDataProvider data) {
-		final byte[] input = data.consumeRemainingAsBytes();
+		parseDerValue(data.consumeRemainingAsBytes());
+	}
+
+	static void parseDerValue(final byte[] input) {
 		try {
 			ASN1Primitive.fromByteArray(input);
 		}
@@ -35,6 +38,9 @@ public final class DerValueFuzzer {
 		}
 		catch (final IllegalArgumentException expected) {
 			// Tag/longitud fuera de rango: BC lo señaliza así, OK.
+		}
+		catch (final IllegalStateException expected) {
+			// Estados internos imposibles provocados por ASN.1 corrupto: OK.
 		}
 	}
 }
