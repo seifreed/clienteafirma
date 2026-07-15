@@ -47,7 +47,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
-| **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit 5 | ✅ Completado — JaCoCo siempre activo; PIT bajo `-Pmutation` con `pitest-junit5-plugin`; Jazzer bajo `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`); JUnit Platform 5.13.2 + Jupiter + Vintage Engine en classpath de tests (los 146 `Test*.java` JUnit 4 corren sin tocarse, vía Vintage; nuevos tests usan `org.junit.jupiter.api.*` directamente). |
+| **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit | ✅ Completado — JaCoCo siempre activo; PIT bajo `-Pmutation` con `pitest-junit5-plugin`; Jazzer bajo `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`); JUnit Platform 6.1.2 + Jupiter + Vintage Engine en classpath de tests (los 146 `Test*.java` JUnit 4 corren sin tocarse, vía Vintage; nuevos tests usan `org.junit.jupiter.api.*` directamente). |
 | **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | 🟡 Esqueleto fase 1 — `afirma-crypto-jades` (B-B compact JWS), `afirma-trust-tsl` (parser ETSI TS 119 612 + verificador XMLDSig + `TrustListService`), `afirma-eudiw-bridge` (OID4VP `AuthorizationRequest`, SD-JWT VC parser, cliente HTTP), `EudiwProtocolHandler` para `afirma://eudiw-present`. Niveles JAdES T/LT/LTA, integración con LOTL real, JAR/JARM, DCQL nativo, conformance EU Reference Wallet y coordinación móvil pendientes (TODO M4.x). |
 
 ### Diferencias principales frente al upstream
@@ -55,15 +55,15 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Área | Upstream (1.9.1) | Este fork (1.10-dev) |
 | --- | --- | --- |
 | Compile target | Java&nbsp;1.8 | **Java&nbsp;21 LTS** (`<release>21</release>`) |
-| Cripto provider | SpongyCastle 1.58.0.0 (2018, sin mantenimiento) | **BouncyCastle 1.84** (`bcprov-jdk18on` + `bcpkix-jdk18on` + `bcutil-jdk18on`); 72 archivos `.java` migrados |
-| `xmlsec` (Apache Santuario) | 3.0.5 | **3.0.6** (4.0.x bloqueado por API removal en `XMLSignatureInput(Node)`) |
+| Cripto provider | SpongyCastle 1.58.0.0 (2018, sin mantenimiento) | **BouncyCastle 1.85** (`bcprov-jdk18on` + `bcpkix-jdk18on` + `bcutil-jdk18on`); 72 archivos `.java` migrados |
+| `xmlsec` (Apache Santuario) | 3.0.5 | **4.0.4** con dereferenciadores migrados a `XMLSignatureNodeInput` |
 | `dependency-check-maven` | — | **12.2.2** con `failBuildOnCVSS=7` en `env-deploy` |
-| `cyclonedx-maven-plugin` | — | **2.9.1** generando SBOM CycloneDX&nbsp;1.5 por módulo |
+| `cyclonedx-maven-plugin` | — | **2.9.2** generando SBOM CycloneDX&nbsp;1.5 por módulo |
 | `maven-release-plugin` | 2.5.3 (2015) | **3.3.1** |
 | `org.mozilla:rhino-runtime` (transitivo) | 1.7.13 (CVE-2025-66453) | **1.7.15.1** (forzado en `dependencyManagement`) |
-| Plataforma de tests | `junit:junit:4.13.2` aislada | **JUnit Platform 5.13.2** (Jupiter + Vintage); JUnit 4 corre vía Vintage sin tocar tests existentes |
-| Coverage | — | **JaCoCo 0.8.13** activo siempre; reportes en `<módulo>/target/site/jacoco/` |
-| Mutation testing | — | **PIT 1.20.5** + `pitest-junit5-plugin` bajo `-Pmutation` |
+| Plataforma de tests | `junit:junit:4.13.2` aislada | **JUnit Platform 6.1.2** (Jupiter + Vintage); JUnit 4 corre vía Vintage sin tocar tests existentes |
+| Coverage | — | **JaCoCo 0.8.15** activo siempre; reportes en `<módulo>/target/site/jacoco/` |
+| Mutation testing | — | **PIT 1.25.7** + `pitest-junit5-plugin 1.2.3` bajo `-Pmutation` |
 | Fuzzing | — | **Jazzer 0.24.0** bajo `-Pfuzz` (módulo `afirma-fuzz`, 3 harnesses) |
 | `javax.servlet:servlet-api` (3 WARs) | 2.5 (2007) | **`jakarta.servlet:jakarta.servlet-api:6.1.0`** (target Tomcat 10.1+ / Jetty 12+) |
 | `afirma-server-triphase-signer` | 2.9.1 | **3.0.0** (major bump por breaking jakarta) |
