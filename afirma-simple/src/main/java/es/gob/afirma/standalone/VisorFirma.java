@@ -21,7 +21,6 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.Locale;
 
-import javax.swing.JApplet;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -34,7 +33,7 @@ import es.gob.afirma.standalone.ui.VisorPanel;
 
 /** Ventana para la visualizaci&oacute;n de datos de firma.
  * @author Carlos Gamuci. */
-public class VisorFirma extends JApplet implements WindowListener {
+public class VisorFirma extends JPanel implements WindowListener {
 
     /** Serial ID */
     private static final long serialVersionUID = 7060676034863587322L;

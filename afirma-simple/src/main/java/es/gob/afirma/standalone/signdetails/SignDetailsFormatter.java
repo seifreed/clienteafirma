@@ -25,7 +25,7 @@ public class SignDetailsFormatter {
     public static final String CONTACT_INFO_METADATA = SimpleAfirmaMessages.getString("ValidationInfoDialog.20"); //$NON-NLS-1$
     public static final String LOCALITY_METADATA = SimpleAfirmaMessages.getString("ValidationInfoDialog.23"); //$NON-NLS-1$
 
-    static Integer signerIndex = new Integer(1);
+    static Integer signerIndex = Integer.valueOf(1);
 
     private static String signFormat;
 
@@ -95,7 +95,7 @@ public class SignDetailsFormatter {
 			result += parseSignersTree((AOTreeNode) signersTree.getRoot());
 			result += "</ul></p></div>"; //$NON-NLS-1$
 		}
-		signerIndex = new Integer(1);
+		signerIndex = Integer.valueOf(1);
 		final String generalValidationDesc = generalValidation.get(0).validityTypeToString();
 		result += "<p><b>" + SimpleAfirmaMessages.getString("ValidationInfoDialog.50") + "</b>: " + generalValidationDesc + "</p>";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		boolean isULAdded = false;

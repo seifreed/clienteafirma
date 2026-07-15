@@ -277,7 +277,7 @@ final class ProtocolInvocationLauncherErrorManager {
 	private static final ProtocolVersion PROTOCOL_VERSION_WITH_ERROR_CODES = ProtocolVersion.getInstance(ProtocolVersion.VERSION_4_1);
 	
 	static void showError(final ProtocolVersion protocolVersion, final ErrorCode errorCode) {
-		showError(protocolVersion, errorCode, null);
+		showError(protocolVersion, errorCode, (String[]) null);
 	}
 
 	static void showError(final ProtocolVersion protocolVersion, final ErrorCode errorCode, String ... params) {

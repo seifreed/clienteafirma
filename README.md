@@ -78,7 +78,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 - **M3.6 — migración progresiva JUnit 4 → Jupiter (no bloqueante).** El JUnit Platform 5.13.2 ya está disponible en el classpath de tests vía `junit-bom` y los 146 `Test*.java` siguen ejecutando sin cambios a través de `junit-vintage-engine`. Cuando se quiera modernizar un test concreto basta con cambiar las imports a `org.junit.jupiter.api.*` y las aserciones a `org.junit.jupiter.api.Assertions.*`. Hecho como prueba de vida en `afirma-core/.../TestBase64.java`. No hay urgencia; convertir cuando se toque cada test por otro motivo.
 - **M4 — fase 2 (después de fase 1).** Lo que la sesión 2026-05-07 dejó pendiente:
   - **JAdES T/LT/LTA:** integración con TSA real (timestamp), conexión con `afirma-trust-tsl` para LT/LTA, soporte JSON Serialization además del compact actual. Bloqueante: política sobre TSA (decisión CTT).
-  - **TSL/LOTL real:** descarga periódica de la LOTL (https://ec.europa.eu/tools/lotl/eu-lotl.xml), pin del certificado de firma de la Comisión, persistencia local de la cache, refresh policy 24h.
+  - **TSL/LOTL real:** descarga periódica de la LOTL (<https://ec.europa.eu/tools/lotl/eu-lotl.xml>), pin del certificado de firma de la Comisión, persistencia local de la cache, refresh policy 24h.
   - **OID4VP completo:** soporte JAR (RFC 9101), JARM (RFC 9207), DCQL nativo (draft-23 §6) en lugar del legacy `presentation_definition_uri`.
   - **SD-JWT VC verificación:** validar Issuer-signed JWT contra `TrustListService`, recalcular hashes de cada disclosure, comprobar Key Binding JWT (audience, nonce, signature).
   - **Cableado dispatcher:** integrar `EudiwProtocolHandler` dentro de `ProtocolInvocationLauncher.launch(...)`.
@@ -254,7 +254,7 @@ Cualquier cambio en `TriphaseData`, los `*-tri-client` o `afirma-server-triphase
 
 ## Familias de firma soportadas
 
-```
+```text
 Sobres CAdES        CAdES, ASiC-CAdES, cofirmas, contrafirmas
 Sobres XAdES        XAdES, ASiC-XAdES, FacturaE
 Sobres XMLDSig      XMLdSig (sin atributos AdES)
