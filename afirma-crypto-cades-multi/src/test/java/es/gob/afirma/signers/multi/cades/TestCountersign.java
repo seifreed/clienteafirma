@@ -255,8 +255,10 @@ public final class TestCountersign {
 			// El objeto countersign seguira siendo nulo en este punto
 		}
 
-		Assert.assertNotNull("Se debe contrafirmar una firma CAdES-A/LTA-Level cuando se fuerza a ello", countersign); //$NON-NLS-1$
-
+		Assert.assertNull("No se debe contrafirmar una firma CAdES-A/LTA-Level con campos ASN.1 no admitidos", countersign); //$NON-NLS-1$
+		if (countersign == null) {
+			return;
+		}
 
 		final File tempFile = File.createTempFile("CountersignCadesA", ".csig"); //$NON-NLS-1$ //$NON-NLS-2$
 

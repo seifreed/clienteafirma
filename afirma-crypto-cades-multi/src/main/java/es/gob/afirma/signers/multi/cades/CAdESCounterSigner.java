@@ -30,6 +30,7 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.BERSet;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.cms.Attribute;
@@ -119,7 +120,7 @@ final class CAdESCounterSigner {
      * @param p1Signer Firmador para la generaci&oacute;n del PKCS#1.
      */
     CAdESCounterSigner(final AOPkcs1Signer p1Signer) {
-    	this.ss = p1Signer != null ? p1Signer : new AOPkcs1Signer();
+	this.ss = p1Signer != null ? p1Signer : new AOPkcs1Signer();
     }
 
     /** Crea una contrafirma a partir de los datos del firmante, el archivo que se firma y
@@ -148,12 +149,12 @@ final class CAdESCounterSigner {
                                                                                     CertificateException,
                                                                                     AOException {
         // Leemos los datos originales (la firma que nos llega)
-    	final ASN1Sequence dsq;
-    	try (
-			final ASN1InputStream is = new ASN1InputStream(signature);
+	final ASN1Sequence dsq;
+	try (
+			final ASN1InputStream is = new ASN1InputStream(signature, true);
 		) {
-    		dsq = (ASN1Sequence) is.readObject();
-    	}
+		dsq = (ASN1Sequence) is.readObject();
+	}
         final Enumeration<?> pkcs7RootSequenceElements = dsq.getObjects();
 
         // Pasamos el primer elemento de la secuencia original, que es el OID de SignedData
@@ -178,10 +179,10 @@ final class CAdESCounterSigner {
         // Creamos el que sera el nuevo conjunto SignerInfos (SET de muchos SignerInfo), para lo que agregamos
         // a los actuales los nuevos
         final ASN1EncodableVector newSignerInfos = counterSignSignerInfos(
-    		originalSignerInfosFromSignedData,
-    		algorithm,
-    		key,
-    		certChain,
+		originalSignerInfosFromSignedData,
+		algorithm,
+		key,
+		certChain,
             config,
             targetType
         );
@@ -189,14 +190,17 @@ final class CAdESCounterSigner {
         // Construimos y devolvemos la nueva firma (atributo identificador del signedData mas el propio signedData).
         // Esta firma sera igual a la anterior pero con el conjunto de certificados actualizados con los nuevos y la
         // nueva estructura de SignerInfos. Incluimos el listado de CRLs, aunque este puede no estar completo
+        final boolean allowSignLts = Boolean.parseBoolean(
+		config.getExtraParams() != null ? config.getExtraParams().getProperty(CAdESExtraParams.ALLOW_SIGN_LTS_SIGNATURES) : null
+		);
         return new ContentInfo(
-    		PKCSObjectIdentifiers.signedData,
-    		new SignedData(
+		PKCSObjectIdentifiers.signedData,
+		new SignedData(
 				signedData.getDigestAlgorithms(),
                 signedData.getEncapContentInfo(),
                 certificates,
-                signedData.getCRLs(),
-                new DERSet(newSignerInfos)
+                allowSignLts ? null : signedData.getCRLs(),
+                new BERSet(newSignerInfos)
 			)
 		).getEncoded(ASN1Encoding.DER);
 
@@ -224,19 +228,19 @@ final class CAdESCounterSigner {
                                                                                                   CertificateException,
                                                                                                   AOException {
         // Vector donde almacenaremos la nueva estructura de SignerInfo
-    	final ASN1EncodableVector counterSigners = new ASN1EncodableVector();
+	final ASN1EncodableVector counterSigners = new ASN1EncodableVector();
 
-    	// Recorremos todos los SignerInfo y llamamos a un metodo que los recorrera recursivamente cada uno
+	// Recorremos todos los SignerInfo y llamamos a un metodo que los recorrera recursivamente cada uno
         for (int i = 0; i < signerInfosRaiz.size(); i++) {
             final SignerInfo si = SignerInfo.getInstance(
-        		signerInfosRaiz.getObjectAt(i)
-    		);
+		signerInfosRaiz.getObjectAt(i)
+		);
             counterSigners.add(
-        		counterSignSignerInfo(
-        			si,
-        			algorithm,
-        			key,
-        			certChain,
+		counterSignSignerInfo(
+			si,
+			algorithm,
+			key,
+			certChain,
                     config,
                     targetType
                 )
@@ -273,8 +277,8 @@ final class CAdESCounterSigner {
                                                                                                           IOException,
                                                                                                           CertificateException,
                                                                                                           AOException {
-    	// Base para el nuevo SET de SignerInfos
-    	final List<Attribute> newUnauthenticatedAttributesList = new ArrayList<>();
+	// Base para el nuevo SET de SignerInfos
+	final List<Attribute> newUnauthenticatedAttributesList = new ArrayList<>();
         final ASN1EncodableVector signerInfosU = new ASN1EncodableVector();
 
         // Es hoja?
@@ -282,54 +286,55 @@ final class CAdESCounterSigner {
 
         // Comprobamos si tiene atributos no firmados y los recorremos
         if (signerInfo.getUnauthenticatedAttributes() != null) {
-        	final Properties xParams = config.getExtraParams();
+	final Properties xParams = config.getExtraParams();
             final Enumeration<?> unauthenticatedAttributes = signerInfo.getUnauthenticatedAttributes().getObjects();
             while (unauthenticatedAttributes.hasMoreElements()) {
 
-            	final Attribute unauthenticatedAttribute = Attribute.getInstance(unauthenticatedAttributes.nextElement());
+	final Attribute unauthenticatedAttribute = Attribute.getInstance(unauthenticatedAttributes.nextElement());
 
                 // Si es un atributo no soportado, no podremos realizar la firma y se lanzara una excepcion
 
-            	final String allowSignLts = xParams != null ?
-            			xParams.getProperty(CAdESExtraParams.ALLOW_SIGN_LTS_SIGNATURES) : null;
-        		if (allowSignLts == null || !Boolean.parseBoolean(allowSignLts)) {
-        			try {
-        				CAdESMultiUtil.checkUnsupported(unauthenticatedAttribute.getAttrType());
-        			}
-        			catch (final SigningLTSException e) {
-        				// Si se indico expresamente que no se debia permitir la cofirma de
-        				// firmas de archivo, se lanza una excepcion bloqueando la ejecucion.
-        				// Si no, se informa debidamente para que se consulte al usuario
-        				if (allowSignLts != null) {
-        					e.setDenied(true);
-        				}
-        				throw e;
-        			}
-        		}
+	final String allowSignLts = xParams != null ?
+			xParams.getProperty(CAdESExtraParams.ALLOW_SIGN_LTS_SIGNATURES) : null;
+	final boolean longTermAttribute = CAdESMultiUtil.isLongTermAttribute(unauthenticatedAttribute.getAttrType());
+		if (allowSignLts == null || !Boolean.parseBoolean(allowSignLts)) {
+			try {
+				CAdESMultiUtil.checkUnsupported(unauthenticatedAttribute.getAttrType());
+			}
+			catch (final SigningLTSException e) {
+				// Si se indico expresamente que no se debia permitir la cofirma de
+				// firmas de archivo, se lanza una excepcion bloqueando la ejecucion.
+				// Si no, se informa debidamente para que se consulte al usuario
+				if (allowSignLts != null) {
+					e.setDenied(true);
+				}
+				throw e;
+			}
+		}
 
                 // Si es una contrafirma, la analizamos para saber si procesar su contenido y agregar nuevas contrafirmas
                 if (CAdESMultiUtil.isCounterSignature(unauthenticatedAttribute.getAttrType())) {
 
-                	isLeaf = false;
+	isLeaf = false;
 
-                	// Obtenemos el listado de SignerInfos y los procesamos recursivamente
-                	final List<SignerInfo> signerInfos = getSignerInfoFromUnauthenticatedAttributes(unauthenticatedAttribute);
+	// Obtenemos el listado de SignerInfos y los procesamos recursivamente
+	final List<SignerInfo> signerInfos = getSignerInfoFromUnauthenticatedAttributes(unauthenticatedAttribute);
                     for (final SignerInfo si : signerInfos) {
                         signerInfosU.add(
-                    		counterSignSignerInfo(
-                				si,
-                				algorithm,
-                				key,
-                				certChain,
-                				config,
-                				targetType
-            				)
-                		);
+		counterSignSignerInfo(
+				si,
+				algorithm,
+				key,
+				certChain,
+				config,
+				targetType
+				)
+		);
                     }
                 }
                 // Si es cualquier otro atributo no firmado soportado, lo agregamos al listado de salida
-                else {
-                	newUnauthenticatedAttributesList.add(unauthenticatedAttribute);
+                else if (!longTermAttribute) {
+	newUnauthenticatedAttributesList.add(unauthenticatedAttribute);
                 }
             }
         }
@@ -350,8 +355,8 @@ final class CAdESCounterSigner {
 
         // Agregamos la contrafirma encontrada (que incluira sus nodos internos)
         newUnauthenticatedAttributesList.add(
-        		new Attribute(CMSAttributes.counterSignature, new DERSet(signerInfosU)) // Se marca como contrafirma en sus atributos no firmados
-        		);
+		new Attribute(CMSAttributes.counterSignature, new DERSet(signerInfosU)) // Se marca como contrafirma en sus atributos no firmados
+		);
 
         // Creamos el signer info con los nodos encontrados
 		return new SignerInfo(
@@ -360,8 +365,8 @@ final class CAdESCounterSigner {
 		    signerInfo.getAuthenticatedAttributes(),
 		    signerInfo.getDigestEncryptionAlgorithm(),
 		    signerInfo.getEncryptedDigest(),
-		    new DERSet(
-		    	newUnauthenticatedAttributesList.toArray(new ASN1Encodable[newUnauthenticatedAttributesList.size()])
+		    new BERSet(
+				newUnauthenticatedAttributesList.toArray(new ASN1Encodable[newUnauthenticatedAttributesList.size()])
 		    )
 		);
 
@@ -381,14 +386,14 @@ final class CAdESCounterSigner {
      * @throws AOException Cuando ocurre un error durante la generacion de PKCS#1 de la firma.
      */
     private SignerInfo signSignerInfo(
-    		final SignerInfo si,
-    		final String signatureAlgorithm,
-    		final PrivateKey key,
-    		final java.security.cert.Certificate[] certChain,
-    		final CAdESParameters config
-    		) throws NoSuchAlgorithmException, IOException, CertificateException, AOException {
+		final SignerInfo si,
+		final String signatureAlgorithm,
+		final PrivateKey key,
+		final java.security.cert.Certificate[] certChain,
+		final CAdESParameters config
+		) throws NoSuchAlgorithmException, IOException, CertificateException, AOException {
 
-    	// Realizamos los cambios de configuracion que corresponden a las contrafirmas
+	// Realizamos los cambios de configuracion que corresponden a las contrafirmas
 
         // La firma se realiza sobre una firma previa
         config.setContentData(si.getEncryptedDigest().getOctets());
@@ -399,14 +404,14 @@ final class CAdESCounterSigner {
         // En las contrafirmas BES, el tipo declarado en el contentHint siempre
         // sera Data y no contendra descripcion
         if (AOSignConstants.SIGN_PROFILE_ADVANCED.equals(config.getProfileSet())) {
-        	config.setContentTypeOid(PKCSObjectIdentifiers.data.toString());
-        	config.setContentDescription(null);
+	config.setContentTypeOid(PKCSObjectIdentifiers.data.toString());
+	config.setContentDescription(null);
         }
         // En las contrafirmas Baseline, las contrafirmas no deben incluir el
         // atributo ContentHint
         else if (AOSignConstants.SIGN_PROFILE_BASELINE.equals(config.getProfileSet())){
-        	config.setContentTypeOid(null);
-        	config.setContentDescription(null);
+	config.setContentTypeOid(null);
+	config.setContentDescription(null);
         }
 
         // authenticatedAttributes
@@ -418,14 +423,14 @@ final class CAdESCounterSigner {
         final ASN1Set signedAttr = SigUtils.getAttributeSet(new AttributeTable(signedAttributes));
 
         final ASN1OctetString signValue = new DEROctetString(
-        		pkcs1Sign(
-        				signedAttr.getEncoded(ASN1Encoding.DER),
-        				signatureAlgorithm,
-        				key,
-        				certChain,
-        				config.getExtraParams()
-        				)
-        		);
+		pkcs1Sign(
+				signedAttr.getEncoded(ASN1Encoding.DER),
+				signatureAlgorithm,
+				key,
+				certChain,
+				config.getExtraParams()
+				)
+		);
 
         // Identificamos el algoritmo
         final String digestAlgorithm = AOSignConstants.getDigestAlgorithmName(signatureAlgorithm);
@@ -443,11 +448,11 @@ final class CAdESCounterSigner {
         // 5. SIGNERINFO
         // raiz de la secuencia de SignerInfo
         final TBSCertificate tbs = TBSCertificate.getInstance(
-    		ASN1Primitive.fromByteArray(((X509Certificate)certChain[0]).getTBSCertificate())
+		ASN1Primitive.fromByteArray(((X509Certificate)certChain[0]).getTBSCertificate())
 		);
         final IssuerAndSerialNumber encSid = new IssuerAndSerialNumber(
-    		X500Name.getInstance(tbs.getIssuer()),
-    		tbs.getSerialNumber().getValue()
+		X500Name.getInstance(tbs.getIssuer()),
+		tbs.getSerialNumber().getValue()
 		);
 
         final SignerIdentifier identifier = new SignerIdentifier(encSid);
@@ -459,21 +464,21 @@ final class CAdESCounterSigner {
 
     private static List<SignerInfo> getSignerInfoFromUnauthenticatedAttributes(final Attribute unauthenticatedAttribute) {
 
-    	final ArrayList<SignerInfo> signerInfos = new ArrayList<>();
+	final ArrayList<SignerInfo> signerInfos = new ArrayList<>();
 
-    	// El atributo tiene dentro un SignerInfos, que es un SET de SignerInfo
+	// El atributo tiene dentro un SignerInfos, que es un SET de SignerInfo
         final ASN1Set values = unauthenticatedAttribute.getAttrValues();
 
         // Recorremos los SignerInfo del SignerInfos de forma recursiva
         final Enumeration<?> eAtributesData = values.getObjects();
         while (eAtributesData.hasMoreElements()) {
-        	try {
-        		signerInfos.add(SignerInfo.getInstance(eAtributesData.nextElement()));
-        	}
-        	catch(final Exception e) {
-        		// Ignoramos los objetos que no sea SignedInfo
-        		continue;
-        	}
+	try {
+		signerInfos.add(SignerInfo.getInstance(eAtributesData.nextElement()));
+	}
+	catch(final Exception e) {
+		// Ignoramos los objetos que no sea SignedInfo
+		continue;
+	}
         }
 
         return signerInfos;
@@ -488,10 +493,10 @@ final class CAdESCounterSigner {
      * @return Firma de los atributos.
      * @throws AOException En caso de cualquier otro tipo de error */
     private byte[] pkcs1Sign(final byte[] data,
-    		                 final String signatureAlgorithm,
-    		                 final PrivateKey key,
-    		                 final java.security.cert.Certificate[] certChain,
-    		                 final Properties extraParams) throws AOException {
+		                 final String signatureAlgorithm,
+		                 final PrivateKey key,
+		                 final java.security.cert.Certificate[] certChain,
+		                 final Properties extraParams) throws AOException {
 		return this.ss.sign(data, signatureAlgorithm, key, certChain, extraParams);
     }
 }

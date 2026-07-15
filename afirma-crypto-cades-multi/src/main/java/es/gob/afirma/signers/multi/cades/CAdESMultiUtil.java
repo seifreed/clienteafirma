@@ -25,7 +25,9 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERSet;
+import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.cms.SignerInfo;
 import org.bouncycastle.asn1.cms.SignedData;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Certificate;
@@ -93,9 +95,20 @@ public final class CAdESMultiUtil {
 			signedData = new CMSSignedData(signedDataBytes);
 		}
 		catch (final CMSException e) {
-			throw new AOInvalidSignatureFormatException(
-				"La firma proporcionada no es un SignedData compatible CMS: " + e, e //$NON-NLS-1$
-			);
+			try {
+				checkLongTermAttributes(readData(signedDataBytes));
+				throw new AOInvalidSignatureFormatException(
+					"La firma proporcionada no es un SignedData compatible CMS: " + e, e //$NON-NLS-1$
+				);
+			}
+			catch (final SigningLTSException ltsException) {
+				throw ltsException;
+			}
+			catch (final IOException | RuntimeException ioe) {
+				throw new AOInvalidSignatureFormatException(
+					"La firma proporcionada no es un SignedData compatible CMS: " + e, e //$NON-NLS-1$
+				);
+			}
 		}
 		checkLongTermAttributes(signedData);
 	}
@@ -109,19 +122,31 @@ public final class CAdESMultiUtil {
 	}
 
     private static void checkLongTermAttributes(final SignerInformation signerInformation) throws SigningLTSException {
-    	final AttributeTable at = signerInformation.getUnsignedAttributes();
-    	if (at != null) {
+	final AttributeTable at = signerInformation.getUnsignedAttributes();
+	if (at != null) {
 
-    		// Identificados si la firma es de archivo
-    		for (final ASN1ObjectIdentifier unsupOid : LONG_TERM_ATTRIBUTES) {
-    			if (at.get(unsupOid) != null) {
-        			throw new SigningLTSException(
-    					"No se permite la multifirma de firmas con atributos longevos (encontrado OID=" + unsupOid + ")" //$NON-NLS-1$ //$NON-NLS-2$
-    				);
-    			}
-    		}
-    	}
+		// Identificados si la firma es de archivo
+		for (final ASN1ObjectIdentifier unsupOid : LONG_TERM_ATTRIBUTES) {
+			if (at.get(unsupOid) != null) {
+			throw new SigningLTSException(
+					"No se permite la multifirma de firmas con atributos longevos (encontrado OID=" + unsupOid + ")" //$NON-NLS-1$ //$NON-NLS-2$
+				);
+			}
+		}
+	}
     }
+
+	private static void checkLongTermAttributes(final SignedData signedData) throws SigningLTSException {
+		final ASN1Set signerInfos = signedData.getSignerInfos();
+		for (int i = 0; i < signerInfos.size(); i++) {
+			final ASN1Set unsignedAttributes = SignerInfo.getInstance(signerInfos.getObjectAt(i)).getUnauthenticatedAttributes();
+			if (unsignedAttributes != null) {
+				for (int j = 0; j < unsignedAttributes.size(); j++) {
+					checkUnsupported(Attribute.getInstance(unsignedAttributes.getObjectAt(j)).getAttrType());
+				}
+			}
+		}
+	}
 
     /**
      * Comprueba si un atributo es de los que impiden agregar nuevas firmas sobre una anterior.
@@ -129,17 +154,24 @@ public final class CAdESMultiUtil {
      * @throws SigningLTSException Cuando el atributo impide agregar nuevas firmas.
      */
     static void checkUnsupported(final ASN1ObjectIdentifier oid) throws  SigningLTSException {
-    	for (final ASN1ObjectIdentifier unsupOid : LONG_TERM_ATTRIBUTES) {
-    		if (unsupOid.equals(oid)) {
-    			throw new SigningLTSException(
-					"No se soportan multifirmas de firmas con atributos longevos (encontrado OID=" + oid + ")" //$NON-NLS-1$ //$NON-NLS-2$
-				);
-    		}
-    	}
+	if (isLongTermAttribute(oid)) {
+		throw new SigningLTSException(
+				"No se soportan multifirmas de firmas con atributos longevos (encontrado OID=" + oid + ")" //$NON-NLS-1$ //$NON-NLS-2$
+			);
+	}
+    }
+
+    static boolean isLongTermAttribute(final ASN1ObjectIdentifier oid) {
+	for (final ASN1ObjectIdentifier unsupOid : LONG_TERM_ATTRIBUTES) {
+		if (unsupOid.equals(oid)) {
+			return true;
+		}
+	}
+	return false;
     }
 
     public static boolean isCounterSignature(final ASN1ObjectIdentifier oid) {
-    	return PKCSObjectIdentifiers.pkcs_9_at_counterSignature.equals(oid);
+	return PKCSObjectIdentifiers.pkcs_9_at_counterSignature.equals(oid);
     }
 
 
@@ -152,7 +184,7 @@ public final class CAdESMultiUtil {
 	static SignedData readData(final byte[] signature) throws IOException {
 		final ASN1Sequence dsq;
 		try (
-			final ASN1InputStream is = new ASN1InputStream(signature);
+			final ASN1InputStream is = new ASN1InputStream(signature, true);
 		) {
 			dsq = (ASN1Sequence) is.readObject();
 		}

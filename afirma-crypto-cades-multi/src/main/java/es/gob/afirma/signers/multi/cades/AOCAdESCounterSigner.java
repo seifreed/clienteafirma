@@ -15,6 +15,8 @@ import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.Properties;
 
+import org.bouncycastle.asn1.ASN1ParsingException;
+
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.ErrorCode;
 import es.gob.afirma.core.SigningLTSException;
@@ -88,7 +90,7 @@ public class AOCAdESCounterSigner implements AOCounterSigner {
         // Si se indico que debia generarse la contrafirma con una fecha
         // concreta, la usamos
         if (this.date != null) {
-        	config.setSigningTime(this.date);
+	config.setSigningTime(this.date);
         }
 
         // Creamos el contrafirmador
@@ -102,35 +104,38 @@ public class AOCAdESCounterSigner implements AOCounterSigner {
         // CASO DE CONTRAFIRMA DE ARBOL U HOJAS (Por defecto)
         byte[] dataSigned = null;
         try {
-        	dataSigned = cadesCountersigner.counterSign(
-        			algorithm,
-        			sign,
-        			targetType != null ? targetType : CounterSignTarget.LEAFS,
+	dataSigned = cadesCountersigner.counterSign(
+			algorithm,
+			sign,
+			targetType != null ? targetType : CounterSignTarget.LEAFS,
 					key,
 					cChain,
 					config
-        	);
+	);
         }
         catch (final AOException e) {
 			throw e;
 		}
         catch (final NoSuchAlgorithmException e) {
-        	throw new AOException("Algoritmo de firma o huella digital no soportado", e, ErrorCode.Request.UNSUPPORTED_SIGNATURE_ALGORITHM); //$NON-NLS-1$
+	throw new AOException("Algoritmo de firma o huella digital no soportado", e, ErrorCode.Request.UNSUPPORTED_SIGNATURE_ALGORITHM); //$NON-NLS-1$
 		}
         catch (final CertificateException e) {
-        	throw new AOException("Error generando la Contrafirma CAdES", e, ErrorCode.Internal.ENCODING_SIGNING_CERTIFICATE); //$NON-NLS-1$
+	throw new AOException("Error generando la Contrafirma CAdES", e, ErrorCode.Internal.ENCODING_SIGNING_CERTIFICATE); //$NON-NLS-1$
+		}
+        catch (final ASN1ParsingException e) {
+	throw new SigningLTSException("No se permite la multifirma de firmas longevas con campos ASN.1 no admitidos", e, false); //$NON-NLS-1$
 		}
 		catch (final Exception e) {
 			throw new AOException("Error generando la contrafirma CAdES: " + e, e, BinaryErrorCode.Internal.UNKWNON_BINARY_SIGNING_ERROR); //$NON-NLS-1$
 		}
 
-    	return dataSigned;
+	return dataSigned;
     }
 
     private static Properties getExtraParams(final Properties extraParams) {
-    	final Properties newExtraParams = extraParams != null ?
-    			(Properties) extraParams.clone() : new Properties();
+	final Properties newExtraParams = extraParams != null ?
+			(Properties) extraParams.clone() : new Properties();
 
-    	return newExtraParams;
+	return newExtraParams;
     }
 }
