@@ -439,6 +439,19 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				malformedDescriptorPathSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		for (final String malformedPath : List.of("$.", "$[")) { //$NON-NLS-1$ //$NON-NLS-2$
+			final SignedJWT barePrefixPathSubmissionJwt = new SignedJWT(
+					jarmHeader(),
+					new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+							.claim("presentation_submission", //$NON-NLS-1$
+									"{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"path\":\"" //$NON-NLS-1$
+											+ malformedPath + "\"}]}") //$NON-NLS-1$
+							.build());
+			barePrefixPathSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+			assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+					barePrefixPathSubmissionJwt.serialize(), verifier,
+					"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, " ", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
