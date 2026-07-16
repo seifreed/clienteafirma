@@ -57,4 +57,13 @@ final class TestEudiwProtocolHandler {
 		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(uri));
 	}
+
+	@Test
+	@DisplayName("parseParameters rechaza claves vacías")
+	void rejectsBlankKeys() {
+		assertThrows(IllegalArgumentException.class,
+				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?=x")));
+		assertThrows(IllegalArgumentException.class,
+				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?%20=x")));
+	}
 }

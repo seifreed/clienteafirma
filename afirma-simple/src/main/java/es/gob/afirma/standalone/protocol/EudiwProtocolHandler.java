@@ -203,6 +203,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 				key = URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
 				value = URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
 			}
+			if (key.isBlank()) {
+				throw new IllegalArgumentException("Parámetro sin nombre en URI eudiw-present"); //$NON-NLS-1$
+			}
 			if (params.containsKey(key)) {
 				throw new IllegalArgumentException(
 						"Parámetro duplicado en URI eudiw-present: " + key); //$NON-NLS-1$
