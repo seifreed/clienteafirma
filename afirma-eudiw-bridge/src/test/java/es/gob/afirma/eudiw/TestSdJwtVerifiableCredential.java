@@ -157,6 +157,15 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(untypedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String mismatchedAlgKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
+				true, Date.from(Instant.now().plus(Duration.ofMinutes(5))), null, new Date(),
+				JWSAlgorithm.RS512);
+		final SdJwtVerifiableCredential mismatchedAlgVc = SdJwtVerifiableCredential.parse(
+				presentation + mismatchedAlgKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(mismatchedAlgVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noExpirationKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, null, null);
@@ -463,7 +472,16 @@ final class TestSdJwtVerifiableCredential {
 			final boolean typed, final Date expirationTime, final Date notBeforeTime,
 			final Date issueTime)
 			throws Exception {
-		final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
+		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, typed,
+				expirationTime, notBeforeTime, issueTime, JWSAlgorithm.RS256);
+	}
+
+	private static String signedKeyBindingJwt(final KeyPair holderKp,
+			final String audience, final String nonce, final String sdHash,
+			final boolean typed, final Date expirationTime, final Date notBeforeTime,
+			final Date issueTime, final JWSAlgorithm algorithm)
+			throws Exception {
+		final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(algorithm);
 		if (typed) {
 			headerBuilder.type(new JOSEObjectType("kb+jwt")); //$NON-NLS-1$
 		}

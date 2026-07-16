@@ -178,6 +178,10 @@ public final class SdJwtVerifier {
 			final String audience, final String nonce) throws Exception {
 		final SignedJWT issuerJwt = vc.issuerSignedJwt();
 		final JWK holderKey = holderKey(issuerJwt);
+		if (holderKey.getAlgorithm() != null
+				&& !kbJwt.getHeader().getAlgorithm().getName().equals(holderKey.getAlgorithm().getName())) {
+			throw new SdJwtVerificationException("Algoritmo Key Binding JWT no coincide con cnf.jwk"); //$NON-NLS-1$
+		}
 		if (!kbJwt.verify(verifier(holderKey))) {
 			throw new SdJwtVerificationException("Firma Key Binding JWT inválida"); //$NON-NLS-1$
 		}
