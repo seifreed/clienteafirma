@@ -14,6 +14,7 @@ name: Build
 
 permissions:
   contents: read
+  security-events: write
 
 # Cancel superseded runs on the same PR / branch.
 concurrency:
@@ -49,25 +50,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Compute weekly NVD cache key
-        id: nvdkey
-        shell: bash
-        run: echo "value=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache OWASP dependency-check NVD data
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-depcheck-${{ steps.nvdkey.outputs.value }}
-          restore-keys: |
-            ${{ runner.os }}-depcheck-
-
-      - name: Build (compile + SBOM + security gate, no tests)
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      - name: Build (compile + SBOM, no tests)
         run: >
-          mvn -B -ntp -Denv=install -Psecurity-gate -DskipTests
-          -DnvdApiKey="$NVD_API_KEY"
+          mvn -B -ntp -Denv=install -DskipTests
+          -Ddependency-check.skip=true
           clean verify
 
       - name: Upload SBOMs
@@ -81,24 +67,6 @@ jobs:
             **/target/bom.xml
             **/target/bom.json
           if-no-files-found: warn
-
-      - name: Upload dependency-check report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-${{ matrix.os }}
-          path: |
-            target/dependency-check-report.html
-            target/dependency-check-report.json
-            target/dependency-check-report.sarif
-          if-no-files-found: warn
-
-      - name: Upload SARIF to Security tab
-        if: matrix.os == 'ubuntu-24.04' && always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: target/dependency-check-report.sarif
-          category: dependency-check
 
   # Tests run only on Linux: they are JVM-pure and the matrix above already
   # validates per-OS native paths (configurator, certutil invocations, etc.).
@@ -125,6 +93,68 @@ jobs:
 
       - name: Run tests
         run: mvn -B -ntp -Denv=install -Ddependency-check.skip=true test
+
+  security:
+    name: Security gate (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ubuntu-24.04-security-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ubuntu-24.04-security-maven-
+            ubuntu-24.04-maven-
+
+      - name: Compute weekly NVD cache key
+        id: nvdkey
+        shell: bash
+        run: echo "value=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OWASP dependency-check NVD data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ubuntu-24.04-depcheck-${{ steps.nvdkey.outputs.value }}
+          restore-keys: |
+            ubuntu-24.04-depcheck-
+
+      - name: Run dependency-check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        shell: bash
+        run: >
+          mvn -B -ntp -Denv=install -Psecurity-gate -DskipTests
+          -DnvdApiKey="$NVD_API_KEY"
+          verify
+
+      - name: Upload dependency-check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-ubuntu-24.04
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
+            target/dependency-check-report.sarif
+          if-no-files-found: warn
+
+      - name: Upload SARIF to Security tab
+        if: always() && hashFiles('target/dependency-check-report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/dependency-check-report.sarif
+          category: dependency-check
 
   quality:
     name: Quality gate (ubuntu-24.04)

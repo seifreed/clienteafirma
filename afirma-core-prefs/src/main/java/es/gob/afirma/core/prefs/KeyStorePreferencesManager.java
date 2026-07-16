@@ -15,10 +15,10 @@ public final class KeyStorePreferencesManager {
 	private static Preferences SYSTEM_PREFERENCES;
 
 	/** Indica cual fue el &uacute;ltimo almac&eacute;n de claves seleccionado por el usuario. */
-	public static String lastSelectedKeystore = null;
+	private static String lastSelectedKeystore = null;
 
 	/** Indica cual fue la libreria del &uacute;ltimo almac&eacute;n de claves seleccionado por el usuario. */
-	public static String lastSelectedKeystoreLib = null;
+	private static String lastSelectedKeystoreLib = null;
 
 	private static final String KEYSTORES_NODE = "/es/gob/afirma/core/keystores"; //$NON-NLS-1$
 	private static final String SYSTEM_UPDATED_KEYSTORES_NODE = "/es/gob/afirma/core/systemkeystores"; //$NON-NLS-1$
@@ -133,15 +133,16 @@ public final class KeyStorePreferencesManager {
 
 		final Map<String, String> smartCardsRegistered = getAllSmartCardsMap();
 
-		for (final String smartCard : smartCards.keySet()) {
+		for (final Map.Entry<String, Object> smartCard : smartCards.entrySet()) {
 			// Las tarjetas que agregue el usuario no pueden configurar un PKCS#11 que ya este registrado
-			final boolean existController = checkExistsController(smartCardsRegistered, (String) smartCards.get(smartCard));
+			final String controller = (String) smartCard.getValue();
+			final boolean existController = checkExistsController(smartCardsRegistered, controller);
 			if (!existController) {
 				// Nos aseguramos de que el nombre no coincida con ningun otro
-				final String smartCardNameChecked = checkCorrectName(smartCardsRegistered, smartCard);
-				addSmartCardToUserRec(smartCardNameChecked, (String) smartCards.get(smartCard));
+				final String smartCardNameChecked = checkCorrectName(smartCardsRegistered, smartCard.getKey());
+				addSmartCardToUserRec(smartCardNameChecked, controller);
 				// Actualizamos el listado para que al agregar el resto de tarjetas no se pueda repetir el nombre
-				smartCardsRegistered.put(smartCardNameChecked, (String) smartCards.get(smartCard));
+				smartCardsRegistered.put(smartCardNameChecked, controller);
 			}
 		}
 	}
@@ -174,12 +175,13 @@ public final class KeyStorePreferencesManager {
 		// (incluimos las del sistema por si no se hubiesen borrado correctamente)
 		final Map<String, String> smartCardsRegistered = getAllSmartCardsMap();
 
-		for (final String smartCard : smartCards.keySet()) {
+		for (final Map.Entry<String, Object> smartCard : smartCards.entrySet()) {
+			final String controller = (String) smartCard.getValue();
 			// Nos aseguramos de que el nombre no coincida con ningun otro
-			final String smartCardNameChecked = checkCorrectName(smartCardsRegistered, smartCard);
-			addSmartCardToSystemRec(smartCardNameChecked, (String) smartCards.get(smartCard));
+			final String smartCardNameChecked = checkCorrectName(smartCardsRegistered, smartCard.getKey());
+			addSmartCardToSystemRec(smartCardNameChecked, controller);
 			// Actualizamos el listado para que al agregar el resto de tarjetas no se pueda repetir el nombre
-			smartCardsRegistered.put(smartCardNameChecked, (String) smartCards.get(smartCard));
+			smartCardsRegistered.put(smartCardNameChecked, controller);
 		}
 	}
 
@@ -220,9 +222,8 @@ public final class KeyStorePreferencesManager {
 	 * @return Devuelve true en caso de que ya exista, false en caso contrario.
 	 */
 	private static boolean checkExistsController(final Map<String, String> smartCardsRegistered, final String newController) {
-		for (final String smartCardName : smartCardsRegistered.keySet()) {
-			final String controllerName = smartCardsRegistered.get(smartCardName);
-			if (controllerName.equals(newController)) {
+		for (final Map.Entry<String, String> smartCard : smartCardsRegistered.entrySet()) {
+			if (smartCard.getValue().equals(newController)) {
 				return true;
 			}
 		}
