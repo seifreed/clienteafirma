@@ -163,7 +163,11 @@ public final class TrustListService {
 		if (!territory.equals(territory.strip())) {
 			throw new IllegalArgumentException("Territorio TSL no normalizado"); //$NON-NLS-1$
 		}
-		return territory.toUpperCase(Locale.ROOT);
+		final String key = territory.toUpperCase(Locale.ROOT);
+		if (!key.matches("[A-Z]{2}")) { //$NON-NLS-1$
+			throw new IllegalArgumentException("Territorio TSL no es ISO alpha-2"); //$NON-NLS-1$
+		}
+		return key;
 	}
 
 	@FunctionalInterface
