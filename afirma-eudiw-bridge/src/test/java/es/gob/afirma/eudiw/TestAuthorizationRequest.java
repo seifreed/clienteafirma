@@ -428,6 +428,10 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", " ")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, null, "state-1")); //$NON-NLS-1$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", null)); //$NON-NLS-1$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, " https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", " state-1")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -516,7 +520,8 @@ final class TestAuthorizationRequest {
 						.build());
 		noAudienceJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
-				noAudienceJwt.serialize(), verifier, null, "state-1")); //$NON-NLS-1$
+				noAudienceJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT noStateJwt = new SignedJWT(
 				jarmHeader(),
@@ -528,7 +533,8 @@ final class TestAuthorizationRequest {
 						.build());
 		noStateJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
-				noStateJwt.serialize(), verifier, "https://verifier.example.es", null)); //$NON-NLS-1$
+				noStateJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT noIssuerJwt = new SignedJWT(
 				jarmHeader(),
@@ -559,7 +565,8 @@ final class TestAuthorizationRequest {
 						.build());
 		unnormalizedAudienceJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
-				unnormalizedAudienceJwt.serialize(), verifier, null, "state-1")); //$NON-NLS-1$
+				unnormalizedAudienceJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT unnormalizedStateJwt = new SignedJWT(
 				jarmHeader(),
@@ -568,7 +575,8 @@ final class TestAuthorizationRequest {
 						.build());
 		unnormalizedStateJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
-				unnormalizedStateJwt.serialize(), verifier, "https://verifier.example.es", null)); //$NON-NLS-1$
+				unnormalizedStateJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT malformedSubmissionJwt = new SignedJWT(
 				jarmHeader(),

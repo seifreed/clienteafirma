@@ -47,8 +47,8 @@ public record JarmAuthorizationResponse(
 			final String expectedState, final String expectedIssuer) throws ParseException, JOSEException {
 		Objects.requireNonNull(responseJwt, "responseJwt"); //$NON-NLS-1$
 		Objects.requireNonNull(verifier, "verifier"); //$NON-NLS-1$
-		rejectBlankExpected(expectedAudience, "audience"); //$NON-NLS-1$
-		rejectBlankExpected(expectedState, "state"); //$NON-NLS-1$
+		requireExpected(expectedAudience, "audience"); //$NON-NLS-1$
+		requireExpected(expectedState, "state"); //$NON-NLS-1$
 		rejectBlankExpected(expectedIssuer, "issuer"); //$NON-NLS-1$
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
 		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
@@ -80,7 +80,7 @@ public record JarmAuthorizationResponse(
 				throw new JOSEException("Audience JARM no normalizada"); //$NON-NLS-1$
 			}
 		}
-		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
+		if (!claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
 		}
 		final String state = claims.getStringClaim("state"); //$NON-NLS-1$
@@ -90,7 +90,7 @@ public record JarmAuthorizationResponse(
 		if (!state.equals(state.strip())) {
 			throw new JOSEException("State JARM no normalizado"); //$NON-NLS-1$
 		}
-		if (expectedState != null && !expectedState.equals(state)) {
+		if (!expectedState.equals(state)) {
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
 		}
 		final String vpToken = normalizeJsonOrTextClaim(
@@ -237,5 +237,13 @@ public record JarmAuthorizationResponse(
 		if (value != null && !value.equals(value.strip())) {
 			throw new JOSEException("Valor esperado JARM no normalizado: " + claim); //$NON-NLS-1$
 		}
+	}
+
+	private static void requireExpected(final String value, final String claim)
+			throws JOSEException {
+		if (value == null) {
+			throw new JOSEException("Valor esperado JARM ausente: " + claim); //$NON-NLS-1$
+		}
+		rejectBlankExpected(value, claim);
 	}
 }
