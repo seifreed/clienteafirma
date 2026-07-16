@@ -4,10 +4,12 @@ package es.gob.afirma.eudiw.oid4vp;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
@@ -170,12 +172,15 @@ public record JarmAuthorizationResponse(
 		if (!(descriptorMap instanceof List<?> descriptors) || descriptors.isEmpty()) {
 			throw new JOSEException("presentation_submission JARM sin descriptor_map"); //$NON-NLS-1$
 		}
+		final Set<String> descriptorIds = new HashSet<>();
 		for (final Object descriptor : descriptors) {
 			if (!(descriptor instanceof Map<?, ?> descriptorEntry)) {
 				throw new JOSEException("presentation_submission JARM con descriptor_map inválido"); //$NON-NLS-1$
 			}
 			final Map<String, Object> typedDescriptor = stringKeyMap(descriptorEntry);
-			requireNormalizedString(typedDescriptor, "id"); //$NON-NLS-1$
+			if (!descriptorIds.add(requireNormalizedString(typedDescriptor, "id"))) { //$NON-NLS-1$
+				throw new JOSEException("presentation_submission JARM con descriptor_map duplicado"); //$NON-NLS-1$
+			}
 			requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
 			if (typedDescriptor.containsKey("format")) { //$NON-NLS-1$
 				final String format = requireNormalizedString(typedDescriptor, "format"); //$NON-NLS-1$
