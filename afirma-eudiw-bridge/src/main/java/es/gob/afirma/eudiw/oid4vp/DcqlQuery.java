@@ -15,6 +15,12 @@ public record DcqlQuery(String json) {
 
 	public DcqlQuery {
 		Objects.requireNonNull(json, "json"); //$NON-NLS-1$
+		if (json.isBlank()) {
+			throw new IllegalArgumentException("dcql_query vacía"); //$NON-NLS-1$
+		}
+		if (!json.equals(json.strip())) {
+			throw new IllegalArgumentException("dcql_query no normalizada"); //$NON-NLS-1$
+		}
 		try {
 			final var parsed = JSONObjectUtils.parse(json);
 			final var credentials = JSONObjectUtils.getJSONArray(parsed, "credentials"); //$NON-NLS-1$
