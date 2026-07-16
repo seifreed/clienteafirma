@@ -49,6 +49,7 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.tsp.TSPAlgorithms;
 import org.bouncycastle.tsp.TimeStampRequest;
+import org.bouncycastle.tsp.TimeStampRequestGenerator;
 import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampResponseGenerator;
 import org.bouncycastle.tsp.TimeStampToken;
@@ -152,6 +153,26 @@ final class TestAOJadesSigner {
 		final Properties params = new Properties();
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAMCAQE="); //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), //$NON-NLS-1$
+						"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params)); //$NON-NLS-1$
+	}
+
+	@Test
+	@DisplayName("timestampTokenBase64 rechaza RFC3161 que no sella la firma JWS")
+	void rejectsTimestampTokenForDifferentImprint() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair tsaKey = kpg.generateKeyPair();
+		final X509Certificate tsaCert = selfSigned(tsaKey, "CN=JAdES TSA, O=AEAD", true); //$NON-NLS-1$
+		final String token = timestampTokenBase64(
+				timestampTokenGenerator(tsaKey, tsaCert),
+				MessageDigest.getInstance("SHA-256").digest("otra-firma".getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, token);
 		final AOJadesSigner signer = new AOJadesSigner();
 
 		assertThrows(es.gob.afirma.core.AOException.class,
@@ -331,6 +352,17 @@ final class TestAOJadesSigner {
 				new ASN1ObjectIdentifier("1.3.6.1.4.1.5734.1.1")); //$NON-NLS-1$
 		generator.addCertificates(new JcaCertStore(List.of(tsaCert)));
 		return generator;
+	}
+
+	private static String timestampTokenBase64(final TimeStampTokenGenerator generator,
+			final byte[] imprint) throws Exception {
+		final TimeStampRequest request = new TimeStampRequestGenerator()
+				.generate(TSPAlgorithms.SHA256, imprint);
+		final TimeStampResponse response = new TimeStampResponseGenerator(
+				generator, TSPAlgorithms.ALLOWED)
+						.generate(request, BigInteger.ONE, new Date());
+		return java.util.Base64.getEncoder().encodeToString(
+				response.getTimeStampToken().getEncoded());
 	}
 
 	private static String timestampTokenFromHeader(final Map<String, Object> json) throws Exception {

@@ -39,6 +39,8 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.tsp.TimeStampToken;
 
@@ -194,8 +196,14 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	private static String resolveTimestampToken(final Properties params,
 			final String timestampTokenBase64,
 			final Map<String, Object> json) throws AOException, IOException {
+		final Object signature = json.get("signature"); //$NON-NLS-1$
+		if (!(signature instanceof String signatureBase64Url) || signatureBase64Url.isBlank()) {
+			throw new AOException("No se pudo extraer la firma JWS para sellarla en JAdES-T", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		final byte[] signatureBytes = Base64URL.from(signatureBase64Url).decode();
 		if (hasText(timestampTokenBase64)) {
-			return normalizeTimestampToken(timestampTokenBase64);
+			return normalizeTimestampToken(timestampTokenBase64, signatureBytes);
 		}
 		if (!hasText(params.getProperty(EXTRA_PARAM_TSA_URL))) {
 			return null;
@@ -209,12 +217,6 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("Configuracion TSA no valida para JAdES-T: " + e.getMessage(), e, //$NON-NLS-1$
 					ErrorCode.Request.INVALID_TIMESTAMP_HASH_ALGORITHM);
 		}
-		final Object signature = json.get("signature"); //$NON-NLS-1$
-		if (!(signature instanceof String signatureBase64Url) || signatureBase64Url.isBlank()) {
-			throw new AOException("No se pudo extraer la firma JWS para sellarla en JAdES-T", //$NON-NLS-1$
-					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
-		}
-		final byte[] signatureBytes = Base64URL.from(signatureBase64Url).decode();
 		final byte[] imprint = digest(signatureBytes, tsaParams.getTsaHashAlgorithm());
 		final byte[] token = new CMSTimestamper(tsaParams).getTimeStampToken(
 				imprint,
@@ -223,7 +225,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		return Base64.getEncoder().encodeToString(token);
 	}
 
-	private static String normalizeTimestampToken(final String timestampTokenBase64) throws AOException {
+	private static String normalizeTimestampToken(final String timestampTokenBase64,
+			final byte[] signatureBytes) throws AOException {
 		final String token = timestampTokenBase64.trim();
 		final byte[] der;
 		try {
@@ -234,13 +237,38 @@ public final class AOJadesSigner implements AOSimpleSigner {
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		try {
-			new TimeStampToken(new CMSSignedData(der));
+			final TimeStampToken tst = new TimeStampToken(new CMSSignedData(der));
+			final String digestAlgorithm = digestAlgorithmName(
+					tst.getTimeStampInfo().getHashAlgorithm().getAlgorithm());
+			final byte[] expectedImprint = digest(signatureBytes, digestAlgorithm);
+			if (!MessageDigest.isEqual(expectedImprint,
+					tst.getTimeStampInfo().getMessageImprintDigest())) {
+				throw new AOException("El token JAdES-T no sella la firma JWS", //$NON-NLS-1$
+						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+			}
+		}
+		catch (final AOException e) {
+			throw e;
 		}
 		catch (final Exception e) {
 			throw new AOException("El token JAdES-T no es un RFC 3161 valido", e, //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		return token;
+	}
+
+	private static String digestAlgorithmName(final ASN1ObjectIdentifier oid) throws AOException {
+		if (NISTObjectIdentifiers.id_sha256.equals(oid)) {
+			return "SHA-256"; //$NON-NLS-1$
+		}
+		if (NISTObjectIdentifiers.id_sha384.equals(oid)) {
+			return "SHA-384"; //$NON-NLS-1$
+		}
+		if (NISTObjectIdentifiers.id_sha512.equals(oid)) {
+			return "SHA-512"; //$NON-NLS-1$
+		}
+		throw new AOException("Algoritmo de huella RFC 3161 no soportado: " + oid, //$NON-NLS-1$
+				ErrorCode.Request.INVALID_TIMESTAMP_HASH_ALGORITHM);
 	}
 
 	private static Map<String, Object> buildUnprotectedHeader(final String timestampTokenBase64) {
