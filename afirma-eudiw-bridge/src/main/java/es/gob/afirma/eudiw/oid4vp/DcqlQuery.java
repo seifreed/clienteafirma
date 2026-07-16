@@ -13,6 +13,8 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 /** Consulta DCQL nativa para OID4VP. */
 public record DcqlQuery(String json) {
 
+	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
+
 	public DcqlQuery {
 		Objects.requireNonNull(json, "json"); //$NON-NLS-1$
 		if (json.isBlank()) {
@@ -35,7 +37,10 @@ public record DcqlQuery(String json) {
 				if (!ids.add(requireText(credentialMap, "id"))) { //$NON-NLS-1$
 					throw new IllegalArgumentException("credential DCQL con id duplicado"); //$NON-NLS-1$
 				}
-				requireText(credentialMap, "format"); //$NON-NLS-1$
+				final String format = requireText(credentialMap, "format"); //$NON-NLS-1$
+				if (!SUPPORTED_FORMAT.equals(format)) {
+					throw new IllegalArgumentException("credential DCQL con format no soportado: " + format); //$NON-NLS-1$
+				}
 			}
 		}
 		catch (final ParseException e) {
