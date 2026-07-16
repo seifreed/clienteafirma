@@ -108,6 +108,14 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("sigT JAdES usa UTC con resolución de segundo")
+	void signingTimeUsesSecondResolution() {
+		final String sigT = JadesTime.nowIso8601();
+		assertTrue(sigT.endsWith("Z")); //$NON-NLS-1$
+		assertTrue(!sigT.contains(".")); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("Detached omite el payload entre los puntos")
 	void detachedOmitsPayload() throws Exception {
 		final AOJadesSigner signer = new AOJadesSigner();
