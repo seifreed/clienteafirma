@@ -3,11 +3,15 @@
 package es.gob.afirma.signers.xmldsig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStore.PrivateKeyEntry;
@@ -19,12 +23,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
+import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.misc.AOUtil;
 import es.gob.afirma.core.signers.AOSignConstants;
 
@@ -217,6 +223,18 @@ final class TestAOXMLDSigSignerCharacterization {
 				"El root element recuperado debe coincidir con el del XML original"); //$NON-NLS-1$
 	}
 
+	@Test
+	@DisplayName("getData() sobre firma ENVELOPING IMPLICIT recupera bytes binarios")
+	void testGetDataRoundtripEnvelopingBinary() throws Exception {
+		final byte[] data = "datos binarios \u0000 \u0001".getBytes(StandardCharsets.UTF_8); //$NON-NLS-1$
+		final byte[] signed = sign(data,
+				AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING,
+				AOSignConstants.SIGN_MODE_IMPLICIT,
+				AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA);
+
+		assertArrayEquals(data, new AOXMLDSigSigner().getData(signed));
+	}
+
 	// =====================================================================
 	// getSignersStructure(): el árbol no es null y tiene al menos una raíz
 	// =====================================================================
@@ -233,6 +251,39 @@ final class TestAOXMLDSigSignerCharacterization {
 		assertNotNull(tree, "getSignersStructure() no puede devolver null"); //$NON-NLS-1$
 		assertNotNull(tree.getRoot(),
 				"El árbol de signatarios debe tener una raíz"); //$NON-NLS-1$
+	}
+
+	@Test
+	@DisplayName("sign() permite EXTERNALLY_DETACHED explícita con URI local y datos vacíos")
+	void testExternallyDetachedWithExternalUriAcceptsEmptyData(@TempDir final Path tempDir) throws Exception {
+		final Path detachedData = tempDir.resolve("documento.xml"); //$NON-NLS-1$
+		Files.writeString(detachedData, "<doc>contenido externo</doc>", StandardCharsets.UTF_8); //$NON-NLS-1$
+
+		final Properties extra = new Properties();
+		extra.setProperty("format", AOSignConstants.SIGN_FORMAT_XMLDSIG_EXTERNALLY_DETACHED); //$NON-NLS-1$
+		extra.setProperty("mode", AOSignConstants.SIGN_MODE_EXPLICIT); //$NON-NLS-1$
+		extra.setProperty("uri", detachedData.toUri().toString()); //$NON-NLS-1$
+
+		final byte[] signed = new AOXMLDSigSigner().sign(new byte[0],
+				AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA,
+				pke.getPrivateKey(), pke.getCertificateChain(), extra);
+
+		assertTrue(new AOXMLDSigSigner().isSign(signed));
+		final NodeList references = parseXml(signed).getElementsByTagNameNS(XMLDSIG_NS, "Reference"); //$NON-NLS-1$
+		assertTrue(references.getLength() >= 1);
+	}
+
+	@Test
+	@DisplayName("sign() rechaza algoritmos no soportados y datos vacíos sin URI externa")
+	void testSignRejectsInvalidParameters() {
+		assertThrows(AOException.class, () -> sign(xmlBytes,
+				AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING,
+				AOSignConstants.SIGN_MODE_IMPLICIT,
+				"MD5withRSA")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> sign(new byte[0],
+				AOSignConstants.SIGN_FORMAT_XMLDSIG_ENVELOPING,
+				AOSignConstants.SIGN_MODE_IMPLICIT,
+				AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA));
 	}
 
 	// =====================================================================

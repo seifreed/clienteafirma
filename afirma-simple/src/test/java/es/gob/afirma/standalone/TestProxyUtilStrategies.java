@@ -1,18 +1,29 @@
 package es.gob.afirma.standalone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.net.Proxy;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.json.JSONException;
 import org.junit.Test;
 
 /** Regression contract for {@link ProxyUtil}'s proxy-vole strategy set.
@@ -79,5 +90,93 @@ public final class TestProxyUtilStrategies {
 			ALLOWED_STRATEGIES,
 			registered
 		);
+	}
+
+	@Test
+	public void proxyConfigPreservesValuesAndClonesPassword() {
+		final ProxyConfig config = new ProxyConfig(ProxyConfig.ConfigType.CUSTOM);
+		config.setHost("proxy.example"); //$NON-NLS-1$
+		config.setPort("8080"); //$NON-NLS-1$
+		config.setUsername("usuario"); //$NON-NLS-1$
+		config.setExcludedUrls("localhost|*.local"); //$NON-NLS-1$
+		final char[] password = "clave".toCharArray(); //$NON-NLS-1$
+		config.setPassword(password);
+		password[0] = 'X';
+
+		assertEquals(ProxyConfig.ConfigType.CUSTOM, config.getConfigType());
+		assertEquals("proxy.example", config.getHost()); //$NON-NLS-1$
+		assertEquals("8080", config.getPort()); //$NON-NLS-1$
+		assertEquals("usuario", config.getUsername()); //$NON-NLS-1$
+		assertEquals("localhost|*.local", config.getExcludedUrls()); //$NON-NLS-1$
+		assertEquals('c', config.getPassword()[0]);
+
+		final char[] returnedPassword = config.getPassword();
+		returnedPassword[0] = 'X';
+		assertEquals('c', config.getPassword()[0]);
+
+		config.setPassword(null);
+		assertNull(config.getPassword());
+	}
+
+	@Test
+	public void proxyPasswordCipherRoundtripAndNoProxySelector() throws GeneralSecurityException, JSONException, IOException {
+		assertNull(ProxyUtil.cipherPassword(null));
+		assertNull(ProxyUtil.cipherPassword(new char[0]));
+		assertNull(ProxyUtil.decipherPassword(null));
+		assertNull(ProxyUtil.decipherPassword("")); //$NON-NLS-1$
+
+		final char[] password = "secreto".toCharArray(); //$NON-NLS-1$
+		final String ciphered = ProxyUtil.cipherPassword(password);
+		assertNotNull(ciphered);
+		assertEquals("secreto", String.valueOf(ProxyUtil.decipherPassword(ciphered))); //$NON-NLS-1$
+
+		final ProxyUtil.NoProxySelector selector = new ProxyUtil.NoProxySelector();
+		final List<Proxy> proxies = selector.select(URI.create("https://firmaelectronica.gob.es/")); //$NON-NLS-1$
+		assertEquals(1, proxies.size());
+		assertSame(Proxy.NO_PROXY, proxies.get(0));
+		selector.connectFailed(URI.create("https://firmaelectronica.gob.es/"), null, new IOException("sin red")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	@Test
+	public void desktopUtilPureContracts() throws Exception {
+		assertNotNull(DesktopUtil.getDefaultDialogsIcon());
+		assertEquals(7, DesktopUtil.getIconImages().size());
+		assertSame(DesktopUtil.getIconImages(), DesktopUtil.getIconImages());
+		assertFalse(DesktopUtil.getAutoStartEnabled());
+		DesktopUtil.setAutoStartEnabled(true);
+		DesktopUtil.setAutoStartEnabled(false);
+		assertNotNull(DesktopUtil.getApplicationDirectory());
+		assertNotNull(DesktopUtil.getApplicationFilename());
+		assertNotNull(DesktopUtil.getJNLPApplicationDirectory());
+		assertNotNull(DesktopUtil.getLinuxAlternativeAppDir());
+		assertNotNull(DesktopUtil.getMacOsXAlternativeAppDir());
+		assertNotNull(DesktopUtil.getAlternativeDirectory());
+		assertEquals(0, DesktopUtil.getDPI());
+
+		final File currentDirectory = new File("."); //$NON-NLS-1$
+		assertNull(DesktopUtil.getCommand(currentDirectory));
+
+		final File jar = new File("Autofirma.jar"); //$NON-NLS-1$
+		final List<String> jarCommand = DesktopUtil.getCommand(jar);
+		assertNotNull(jarCommand);
+		assertEquals("-jar", jarCommand.get(1)); //$NON-NLS-1$
+		assertEquals(jar.getPath(), jarCommand.get(2));
+
+		final File exe = new File("Autofirma.exe"); //$NON-NLS-1$
+		final List<String> exeCommand = DesktopUtil.getCommand(exe);
+		assertEquals(1, exeCommand.size());
+		assertEquals(exe.getPath(), exeCommand.get(0));
+
+		assertNull(DesktopUtil.getCommand(new File("Autofirma.txt"))); //$NON-NLS-1$
+		assertEquals(new File(".").getCanonicalFile(), DesktopUtil.getCanonicalFile(new File("."))); //$NON-NLS-1$ //$NON-NLS-2$
+
+		privateConstructor(ProxyUtil.class).newInstance();
+		privateConstructor(DesktopUtil.class).newInstance();
+	}
+
+	private static Constructor<?> privateConstructor(final Class<?> clazz) throws NoSuchMethodException {
+		final Constructor<?> constructor = clazz.getDeclaredConstructor();
+		constructor.setAccessible(true);
+		return constructor;
 	}
 }

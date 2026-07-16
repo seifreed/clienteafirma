@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Constructor;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.prefs.BackingStoreException;
@@ -215,6 +217,34 @@ final class TestPreferencesManager {
 	@DisplayName("isProtectedPreference() devuelve false para una clave arbitraria")
 	void isProtectedPreferenceFalseForArbitraryKey() {
 		assertFalse(PreferencesManager.isProtectedPreference("clave.que.no.es.exclusiva.de.sistema")); //$NON-NLS-1$
+	}
+
+	@Test
+	@DisplayName("Ramas locales de origen, exportación y borrado de preferencias de sistema")
+	void sourceExportAndSystemRemovalBranches() throws Exception {
+		assertEquals(PreferencesManager.VALUE_MULTISIGN_COSIGN, PreferencesManager.get("cadesMultisign", PreferencesSource.DEFAULT)); //$NON-NLS-1$
+		assertEquals(PreferencesManager.get("cadesMultisign"), PreferencesManager.get("cadesMultisign", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(PreferencesManager.getBoolean(GeneralPreferenceKeys.UPDATECHECK), PreferencesManager.getBoolean(GeneralPreferenceKeys.UPDATECHECK, null));
+
+		PreferencesManager.putSystemPref("test.export.text", "system-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		PreferencesManager.putBooleanSystemPref("test.export.bool", true); //$NON-NLS-1$
+		PreferencesManager.put("test.export.text", "user-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		final Map<String, Object> exported = PreferencesManager.getPrefsToExport();
+		assertEquals("user-value", exported.get("test.export.text")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals(Boolean.TRUE, exported.get("test.export.bool")); //$NON-NLS-1$
+
+		PreferencesManager.removeSystemPrefs("test.export.text"); //$NON-NLS-1$
+		assertEquals(null, PreferencesManager.get("test.export.text", PreferencesSource.SYSTEM)); //$NON-NLS-1$
+		PreferencesManager.clearAllSystemPrefs();
+		assertEquals(null, PreferencesManager.get("test.export.bool", PreferencesSource.SYSTEM)); //$NON-NLS-1$
+		PreferencesManager.flushSystemPrefs();
+
+		assertEquals("es/gob/afirma", PreferencesManager.relativize("/es/gob/afirma")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("relativo", PreferencesManager.relativize("relativo")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final Constructor<PreferencesManager> constructor = PreferencesManager.class.getDeclaredConstructor();
+		constructor.setAccessible(true);
+		assertNotNull(constructor.newInstance());
 	}
 
 	// =====================================================================

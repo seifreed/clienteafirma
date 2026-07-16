@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.junit.jupiter.api.DisplayName;
@@ -58,5 +59,15 @@ final class TestAuthorizationRequest {
 	void rejectsMissingFields() {
 		assertThrows(NullPointerException.class,
 				() -> new AuthorizationRequestBuilder().withFreshNonce().build());
+	}
+
+	@Test
+	@DisplayName("EudiwClient rechaza entradas locales antes de enviar")
+	void clientRejectsInvalidLocalInputs() {
+		assertThrows(NullPointerException.class, () -> new EudiwClient(null));
+		final EudiwClient client = new EudiwClient();
+		assertThrows(NullPointerException.class, () -> client.postFormUrlencoded(null, "a=b"));
+		assertThrows(NullPointerException.class, () -> client.postFormUrlencoded(URI.create("https://wallet.example"), null));
+		assertThrows(IOException.class, () -> client.postFormUrlencoded(URI.create("http://wallet.example"), "a=b"));
 	}
 }

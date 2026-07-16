@@ -27,6 +27,7 @@ import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.signers.AOSignConstants;
 import es.gob.afirma.core.signers.AOSigner;
 import es.gob.afirma.core.signers.AOSimpleSignInfo;
+import es.gob.afirma.core.signers.CounterSignTarget;
 import es.gob.afirma.core.util.tree.AOTreeModel;
 import es.gob.afirma.core.util.tree.AOTreeNode;
 import es.gob.afirma.signers.cms.AOCMSSigner;
@@ -99,7 +100,7 @@ public final class TestCMS {
         pke = (PrivateKeyEntry) ks.getEntry(CERT_ALIAS, new KeyStore.PasswordProtection(CERT_PASS.toCharArray()));
         cert = (X509Certificate) ks.getCertificate(CERT_ALIAS);
 
-        final AOSigner signer = new AOCMSSigner();
+        final AOCMSSigner signer = new AOCMSSigner();
 
         String prueba;
 
@@ -181,7 +182,7 @@ public final class TestCMS {
         final PrivateKeyEntry pke2 = loadKeyEntry(CERT_PATH2, CERT_ALIAS2, CERT_PASS2);
         final PrivateKeyEntry pke3 = loadKeyEntry(CERT_PATH3, CERT_ALIAS3, CERT_PASS3);
 
-        final AOSigner signer = new AOCMSSigner();
+        final AOCMSSigner signer = new AOCMSSigner();
 
         String prueba;
 
@@ -222,6 +223,60 @@ public final class TestCMS {
     		null
 		);
 
+    }
+
+    /** Prueba de contrafirma.
+     * @throws Exception en cualquier error */
+	@Test
+    public void testCounterSignature() throws Exception {
+
+        Logger.getLogger("es.gob.afirma").setLevel(Level.WARNING); //$NON-NLS-1$
+        final PrivateKeyEntry pke1 = loadKeyEntry(CERT_PATH, CERT_ALIAS, CERT_PASS);
+        final PrivateKeyEntry pke2 = loadKeyEntry(CERT_PATH2, CERT_ALIAS2, CERT_PASS2);
+
+        final AOCMSSigner signer = new AOCMSSigner();
+        final Properties extraParams = new Properties();
+        extraParams.setProperty("format", AOSignConstants.SIGN_FORMAT_CMS); //$NON-NLS-1$
+        extraParams.setProperty("mode", AOSignConstants.SIGN_MODE_IMPLICIT); //$NON-NLS-1$
+
+        final byte[] sign = sign(signer, DATA, AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA, pke1, extraParams);
+        final byte[] countersignLeafs = countersign(signer, sign, CounterSignTarget.LEAFS, new Object[] { Integer.valueOf(0) }, pke2, extraParams);
+        final byte[] countersignTree = countersign(signer, sign, CounterSignTarget.TREE, null, pke2, extraParams);
+        final byte[] countersignNodes = countersign(signer, sign, CounterSignTarget.NODES, new Object[] { Integer.valueOf(0), Integer.valueOf(0) }, pke2, extraParams);
+        final byte[] countersignSigners = countersign(signer, sign, CounterSignTarget.SIGNERS, new Object[] { "ANF Usuario Activo" }, pke2, extraParams); //$NON-NLS-1$
+        final byte[] countersignUnknownTarget = countersign(signer, sign, null, null, pke2, extraParams);
+        signer.addSignedAttribute("1.3.6.1.4.1.5734.3.101", "atributo firmado".getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
+        signer.addUnsignedAttribute("1.3.6.1.4.1.5734.3.102", "atributo no firmado".getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
+        final byte[] countersignWithAttributes = countersign(signer, sign, CounterSignTarget.LEAFS, new Object[] { Integer.valueOf(0) }, pke2, extraParams);
+
+        Assert.assertNotNull(countersignLeafs);
+        Assert.assertTrue(signer.isSign(countersignLeafs));
+        Assert.assertNotNull(countersignTree);
+        Assert.assertTrue(signer.isSign(countersignTree));
+        Assert.assertNotNull(countersignNodes);
+        Assert.assertTrue(signer.isSign(countersignNodes));
+        Assert.assertNotNull(countersignSigners);
+        Assert.assertTrue(signer.isSign(countersignSigners));
+        Assert.assertNull(countersignUnknownTarget);
+        Assert.assertNotNull(countersignWithAttributes);
+        Assert.assertTrue(signer.isSign(countersignWithAttributes));
+    }
+
+    private static byte[] countersign(final AOSigner signer,
+                                      final byte[] sign,
+                                      final CounterSignTarget target,
+                                      final Object[] targets,
+                                      final PrivateKeyEntry pke,
+                                      final Properties extraParams) throws Exception {
+        return signer.countersign(
+            sign,
+            AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA,
+            target,
+            targets,
+            pke.getPrivateKey(),
+            pke.getCertificateChain(),
+            extraParams
+        );
     }
 
     /**

@@ -47,12 +47,9 @@ public final class ProtocolUriFuzzer {
 		try {
 			ProtocolInvocationUriParser.getParametersToSign(xml);
 		}
-		catch (final AOException expected) {
-			// XML inválido o atributos faltantes: señalización esperada.
-		}
-		catch (final IllegalArgumentException expected) {
-			// OK también.
-		}
+			catch (final AOException | IllegalArgumentException expected) {
+				// OK también.
+			}
 	}
 
 	private static boolean hasRemoteDataParam(final String uri) {

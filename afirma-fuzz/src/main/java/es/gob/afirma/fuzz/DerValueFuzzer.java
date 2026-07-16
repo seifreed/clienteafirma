@@ -36,11 +36,8 @@ public final class DerValueFuzzer {
 		catch (final IOException expected) {
 			// Bytes inválidos: el parser señaliza con IOException, OK.
 		}
-		catch (final IllegalArgumentException expected) {
-			// Tag/longitud fuera de rango: BC lo señaliza así, OK.
-		}
-		catch (final IllegalStateException expected) {
-			// Estados internos imposibles provocados por ASN.1 corrupto: OK.
-		}
+			catch (final IllegalArgumentException | IllegalStateException expected) {
+				// Tag/longitud/estado interno fuera de rango por ASN.1 corrupto: OK.
+			}
 	}
 }
