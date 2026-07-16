@@ -4,6 +4,7 @@
 
 package es.gob.afirma.standalone.protocol;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+import es.gob.afirma.eudiw.EudiwClient;
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequest;
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
 
@@ -35,14 +37,14 @@ import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
  *     responseMode=direct_post.jwt&
  *     dcqlQuery=%7B%22credentials%22%3A%5B...%5D%7D&
  *     walletUri=eudiw%3A%2F%2Fpresent&
+ *     walletEndpoint=https%3A%2F%2Fwallet.example.es%2Foid4vp%2Frequest&
  *     presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1&
  *     state=optional-state}</pre>
  *
  * <p>El método {@link #process(String, LaunchContext)} construye una
- * {@link AuthorizationRequest} OID4VP y devuelve la URI {@code openid4vp://}
- * canónica para su consumo por la wallet (móvil). La <em>entrega</em> a la
- * wallet (deep-link, mostrar QR, etc.) está marcada como TODO M4.x: depende
- * de coordinación con CTT y del endpoint de la wallet española de referencia.</p>
+ * {@link AuthorizationRequest} OID4VP y la entrega por deep-link
+ * ({@code walletUri}) o por POST URL-encoded ({@code walletEndpoint}). Si no
+ * se declara ninguna entrega, devuelve la URI {@code openid4vp://} canónica.</p>
  */
 public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 
@@ -84,6 +86,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String dcqlQuery = firstNonBlank(params.get("dcqlQuery"), params.get("dcql_query")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
 		final String walletUri = params.get("walletUri"); //$NON-NLS-1$
+		final String walletEndpoint = params.get("walletEndpoint"); //$NON-NLS-1$
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)
@@ -105,9 +108,19 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (walletUri != null && !walletUri.isBlank()) {
 			return appendQueryParam(URI.create(walletUri), "request", openid4vpUri).toString(); //$NON-NLS-1$
 		}
-		// TODO M4.x: entregar la URI a la wallet (deep-link móvil, QR para
-		// flujo cross-device, o POST al endpoint de la wallet de escritorio
-		// cuando exista). De momento, devolvemos la URI canónica.
+		if (walletEndpoint != null && !walletEndpoint.isBlank()) {
+			try {
+				return new EudiwClient().postFormUrlencoded(URI.create(walletEndpoint),
+						"request=" + URLEncoder.encode(openid4vpUri, StandardCharsets.UTF_8)); //$NON-NLS-1$
+			}
+			catch (final InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("Interrumpida la entrega OID4VP a la wallet", e); //$NON-NLS-1$
+			}
+			catch (final IOException e) {
+				throw new IllegalStateException("No se pudo entregar OID4VP a la wallet: " + e.getMessage(), e); //$NON-NLS-1$
+			}
+		}
 		return openid4vpUri;
 	}
 
