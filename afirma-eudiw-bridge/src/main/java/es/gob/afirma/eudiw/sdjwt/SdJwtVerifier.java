@@ -271,7 +271,14 @@ public final class SdJwtVerifier {
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
 		}
-		if (!nonce.equals(claims.getStringClaim("nonce"))) { //$NON-NLS-1$
+		final String claimNonce = claims.getStringClaim("nonce"); //$NON-NLS-1$
+		if (claimNonce == null || claimNonce.isBlank()) {
+			throw new SdJwtVerificationException("Nonce Key Binding JWT ausente"); //$NON-NLS-1$
+		}
+		if (!claimNonce.equals(claimNonce.strip())) {
+			throw new SdJwtVerificationException("Nonce Key Binding JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (!nonce.equals(claimNonce)) {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT inválido"); //$NON-NLS-1$
 		}
 		final String expectedHash = sdHash(vc);
