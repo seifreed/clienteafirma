@@ -25,6 +25,12 @@ public record TrustServiceProvider(
 	public TrustServiceProvider {
 		Objects.requireNonNull(name, "name");
 		Objects.requireNonNull(countryCode, "countryCode");
+		if (name.isBlank()) {
+			throw new IllegalArgumentException("Nombre TSP vacío"); //$NON-NLS-1$
+		}
+		if (countryCode.isBlank()) {
+			throw new IllegalArgumentException("País TSP vacío"); //$NON-NLS-1$
+		}
 		services = services == null ? List.of() : List.copyOf(services);
 	}
 
@@ -41,6 +47,12 @@ public record TrustServiceProvider(
 		public TrustService {
 			Objects.requireNonNull(typeIdentifier, "typeIdentifier");
 			Objects.requireNonNull(status, "status");
+			if (typeIdentifier.isBlank()) {
+				throw new IllegalArgumentException("Tipo de servicio TSL vacío"); //$NON-NLS-1$
+			}
+			if (status.isBlank()) {
+				throw new IllegalArgumentException("Estado de servicio TSL vacío"); //$NON-NLS-1$
+			}
 			serviceDigitalIdentities = serviceDigitalIdentities == null
 					? List.of()
 					: List.copyOf(serviceDigitalIdentities);
