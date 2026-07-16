@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -147,6 +148,13 @@ final class TestAuthorizationRequest {
 				jar.getJWTClaimsSet());
 		untypedJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(untypedJar));
+		final SignedJWT macJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.HS256)
+						.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$
+						.build(),
+				jar.getJWTClaimsSet());
+		macJar.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(macJar));
 		final SignedJWT mismatchedJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
@@ -197,6 +205,8 @@ final class TestAuthorizationRequest {
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " wallet")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " kid-1", null)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new MACSigner("01234567890123456789012345678901"), JWSAlgorithm.HS256, null, null)); //$NON-NLS-1$
 	}
 
 	@Test

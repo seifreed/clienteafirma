@@ -117,6 +117,9 @@ public record AuthorizationRequest(
 			if (!REQUEST_OBJECT_TYPE.equals(requestObject.getHeader().getType())) {
 				throw new IllegalArgumentException("Request Object JAR con typ inválido"); //$NON-NLS-1$
 			}
+			if (!isSupportedJarAlgorithm(requestObject.getHeader().getAlgorithm())) {
+				throw new IllegalArgumentException("Request Object JAR con algoritmo no soportado"); //$NON-NLS-1$
+			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
 			validateRequestObjectTime(claims);
 			if (!this.clientId.equals(claims.getIssuer())) {
@@ -163,6 +166,9 @@ public record AuthorizationRequest(
 			throws JOSEException {
 		Objects.requireNonNull(signer, "signer"); //$NON-NLS-1$
 		Objects.requireNonNull(algorithm, "algorithm"); //$NON-NLS-1$
+		if (!isSupportedJarAlgorithm(algorithm)) {
+			throw new IllegalArgumentException("OID4VP JAR algoritmo no soportado"); //$NON-NLS-1$
+		}
 		final JWSHeader.Builder header = new JWSHeader.Builder(algorithm)
 				.type(REQUEST_OBJECT_TYPE);
 		if (keyId != null && keyId.isBlank()) {
@@ -194,6 +200,10 @@ public record AuthorizationRequest(
 		final SignedJWT jwt = new SignedJWT(header.build(), claims.build());
 		jwt.sign(signer);
 		return jwt;
+	}
+
+	private static boolean isSupportedJarAlgorithm(final JWSAlgorithm algorithm) {
+		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
 	}
 
 	private Map<String, String> params() {
