@@ -434,8 +434,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		if (s.startsWith("{")) { //$NON-NLS-1$
 			try {
 				final Map<String, Object> json = JSONObjectUtils.parse(s);
-				return json.get("protected") instanceof String protectedHeader && !protectedHeader.isBlank() //$NON-NLS-1$
-						&& json.get("signature") instanceof String signature && !signature.isBlank(); //$NON-NLS-1$
+				return isValidJsonSerialization(json);
 			}
 			catch (final java.text.ParseException e) {
 				return false;
@@ -463,6 +462,20 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			return Base64URL.from(s.substring(lastDot + 1)).decode().length > 0;
 		}
 		catch (final java.text.ParseException | IllegalArgumentException e) {
+			return false;
+		}
+	}
+
+	private static boolean isValidJsonSerialization(final Map<String, Object> json) {
+		if (!(json.get("protected") instanceof String protectedHeader) || protectedHeader.isBlank() //$NON-NLS-1$
+				|| !(json.get("signature") instanceof String signature) || signature.isBlank()) { //$NON-NLS-1$
+			return false;
+		}
+		try {
+			JWSHeader.parse(Base64URL.from(protectedHeader));
+			return Base64URL.from(signature).decode().length > 0;
+		}
+		catch (final Exception e) {
 			return false;
 		}
 	}
