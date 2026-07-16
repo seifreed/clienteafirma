@@ -113,6 +113,9 @@ public final class TslParser {
 
 			final List<TrustServiceProvider.TrustService> services = new ArrayList<>();
 			final NodeList serviceNodes = tsp.getElementsByTagNameNS(TSL_NS, "TSPService"); //$NON-NLS-1$
+			if (serviceNodes.getLength() == 0) {
+				throw new TslException("TSP sin servicios"); //$NON-NLS-1$
+			}
 			for (int j = 0; j < serviceNodes.getLength(); j++) {
 				final Element svc = (Element) serviceNodes.item(j);
 				final String type = textOrEmpty(svc, TSL_NS, "ServiceTypeIdentifier"); //$NON-NLS-1$
