@@ -4,9 +4,11 @@ package es.gob.afirma.eudiw;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Objects;
@@ -91,7 +93,12 @@ public final class EudiwClient {
 			if (equals <= 0 || equals == pair.length() - 1) {
 				throw new IOException("OID4VP form body no es application/x-www-form-urlencoded"); //$NON-NLS-1$
 			}
-			if (!keys.add(pair.substring(0, equals))) {
+			final String key = URLDecoder.decode(pair.substring(0, equals), StandardCharsets.UTF_8);
+			if (key.isBlank() || !key.equals(key.strip())
+					|| key.chars().anyMatch(Character::isISOControl)) {
+				throw new IOException("OID4VP form body contiene clave no normalizada"); //$NON-NLS-1$
+			}
+			if (!keys.add(key)) {
 				throw new IOException("OID4VP form body contiene parámetros duplicados"); //$NON-NLS-1$
 			}
 		}
