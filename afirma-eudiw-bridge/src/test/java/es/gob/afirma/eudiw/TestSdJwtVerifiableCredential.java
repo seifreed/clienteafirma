@@ -227,6 +227,24 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(noHolderJwkVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT controlCnfKeyIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of( //$NON-NLS-1$
+								"jwk", holderJwk.toPublicJWK().toJSONObject(), //$NON-NLS-1$
+								"jw\nk", "x")) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		controlCnfKeyIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String controlCnfKeyPresentation = controlCnfKeyIssuerJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlCnfKeyKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(controlCnfKeyPresentation));
+		final SdJwtVerifiableCredential controlCnfKeyVc = SdJwtVerifiableCredential.parse(
+				controlCnfKeyPresentation + controlCnfKeyKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlCnfKeyVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final RSAKey controlKidHolderJwk = new RSAKey.Builder(
 				(java.security.interfaces.RSAPublicKey) holderKp.getPublic())
 				.algorithm(JWSAlgorithm.RS256)

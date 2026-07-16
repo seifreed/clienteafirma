@@ -365,6 +365,9 @@ public final class SdJwtVerifier {
 			if (!(entry.getKey() instanceof String key)) {
 				throw new SdJwtVerificationException("cnf contiene claves no textuales"); //$NON-NLS-1$
 			}
+			if (key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+				throw new SdJwtVerificationException("cnf contiene claves no normalizadas"); //$NON-NLS-1$
+			}
 			cnfJson.put(key, entry.getValue());
 		}
 		final Object jwkJson = cnfJson.get("jwk"); //$NON-NLS-1$
