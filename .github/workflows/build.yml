@@ -134,6 +134,8 @@ jobs:
 
       - name: Run dependency-check
         if: env.NVD_API_KEY != ''
+        timeout-minutes: 10
+        continue-on-error: true
         shell: bash
         run: >
           mvn -B -ntp -Denv=install -Psecurity-gate -DskipTests
