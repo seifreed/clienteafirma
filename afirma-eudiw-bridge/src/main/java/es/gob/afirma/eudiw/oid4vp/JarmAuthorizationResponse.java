@@ -3,6 +3,7 @@
 package es.gob.afirma.eudiw.oid4vp;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.Objects;
 
 import com.nimbusds.jose.JOSEException;
@@ -29,6 +30,7 @@ public record JarmAuthorizationResponse(
 			throw new JOSEException("Firma JARM inválida"); //$NON-NLS-1$
 		}
 		final JWTClaimsSet claims = jwt.getJWTClaimsSet();
+		verifyValidity(claims);
 		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
 		}
@@ -43,5 +45,17 @@ public record JarmAuthorizationResponse(
 				vpToken,
 				claims.getStringClaim("state"), //$NON-NLS-1$
 				claims.getStringClaim("presentation_submission")); //$NON-NLS-1$
+	}
+
+	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
+		final Date now = new Date();
+		final Date expirationTime = claims.getExpirationTime();
+		if (expirationTime != null && !expirationTime.after(now)) {
+			throw new JOSEException("Respuesta JARM caducada"); //$NON-NLS-1$
+		}
+		final Date notBeforeTime = claims.getNotBeforeTime();
+		if (notBeforeTime != null && notBeforeTime.after(now)) {
+			throw new JOSEException("Respuesta JARM no válida aún"); //$NON-NLS-1$
+		}
 	}
 }

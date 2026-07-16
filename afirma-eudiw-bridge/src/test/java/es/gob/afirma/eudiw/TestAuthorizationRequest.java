@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -129,6 +132,7 @@ final class TestAuthorizationRequest {
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
 						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("presentation_submission", "{}") //$NON-NLS-1$ //$NON-NLS-2$
@@ -143,6 +147,18 @@ final class TestAuthorizationRequest {
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final SignedJWT expiredJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().minus(Duration.ofMinutes(1))))
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		expiredJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				expiredJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
