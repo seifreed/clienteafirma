@@ -22,6 +22,9 @@ public record TrustServiceProvider(
 		String countryCode,
 		List<TrustService> services) {
 
+	private static final String SERVICE_STATUS_GRANTED =
+			"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted"; //$NON-NLS-1$
+
 	public TrustServiceProvider {
 		Objects.requireNonNull(name, "name");
 		Objects.requireNonNull(countryCode, "countryCode");
@@ -58,10 +61,9 @@ public record TrustServiceProvider(
 					: List.copyOf(serviceDigitalIdentities);
 		}
 
-		/** Heurística rápida: ¿este servicio está actualmente <em>granted</em>?
-		 *  ETSI TS 119 612 §5.5.4 — el estatus URI termina en {@code /granted}. */
+		/** ¿Este servicio está actualmente <em>granted</em>? */
 		public boolean isGranted() {
-			return status != null && status.endsWith("/granted"); //$NON-NLS-1$
+			return SERVICE_STATUS_GRANTED.equals(status);
 		}
 	}
 }

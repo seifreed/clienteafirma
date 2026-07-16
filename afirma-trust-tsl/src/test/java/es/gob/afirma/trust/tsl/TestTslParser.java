@@ -106,6 +106,8 @@ final class TestTslParser {
 				() -> new TrustServiceProvider.TrustService(" ", "granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider.TrustService("type", " ", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
+		assertFalse(new TrustServiceProvider.TrustService(
+				"type", "https://example.invalid/status/granted", List.of()).isGranted()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
