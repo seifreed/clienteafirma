@@ -77,6 +77,13 @@ public record TrustServiceProvider(
 			if (!status.equals(status.strip())) {
 				throw new IllegalArgumentException("Estado de servicio TSL no normalizado"); //$NON-NLS-1$
 			}
+			if (serviceDigitalIdentities != null) {
+				for (final X509Certificate identity : serviceDigitalIdentities) {
+					if (identity == null) {
+						throw new IllegalArgumentException("Identidad de servicio TSL vacía"); //$NON-NLS-1$
+					}
+				}
+			}
 			serviceDigitalIdentities = serviceDigitalIdentities == null
 					? List.of()
 					: List.copyOf(serviceDigitalIdentities);

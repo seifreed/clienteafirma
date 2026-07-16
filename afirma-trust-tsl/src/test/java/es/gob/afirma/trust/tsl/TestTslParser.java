@@ -132,6 +132,9 @@ final class TestTslParser {
 				() -> new TrustServiceProvider.TrustService(" type", "granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider.TrustService("type", " granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new TrustServiceProvider.TrustService("type", "granted", //$NON-NLS-1$ //$NON-NLS-2$
+						java.util.Arrays.asList((X509Certificate) null)));
 		assertFalse(new TrustServiceProvider.TrustService(
 				"type", "https://example.invalid/status/granted", List.of()).isGranted()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
