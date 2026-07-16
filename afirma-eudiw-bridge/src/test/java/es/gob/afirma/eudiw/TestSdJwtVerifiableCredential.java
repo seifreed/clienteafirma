@@ -15,6 +15,7 @@ import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -248,6 +249,22 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(expiredCertVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final X509Certificate expiredExtraX5c = selfSigned(kpg.generateKeyPair(),
+				"CN=EUDI Expired Extra, O=AEAD", expiredCertTime, //$NON-NLS-1$
+				expiredCertTime.plus(Duration.ofDays(1)));
+		final String expiredChainIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert, expiredExtraX5c));
+		final String expiredChainPresentation = expiredChainIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String expiredChainKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(expiredChainPresentation));
+		final SdJwtVerifiableCredential expiredChainVc = SdJwtVerifiableCredential.parse(
+				expiredChainPresentation + expiredChainKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(expiredChainVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String nonArrayDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
 		final String nonArrayIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
@@ -424,6 +441,15 @@ final class TestSdJwtVerifiableCredential {
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final List<String> sdHashes, final Date expirationTime,
 			final boolean publicHolderJwk, final Date issueTime) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHashes,
+				expirationTime, publicHolderJwk, issueTime, List.of(issuerCert));
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final List<String> sdHashes, final Date expirationTime,
+			final boolean publicHolderJwk, final Date issueTime,
+			final List<X509Certificate> x5cChain) throws Exception {
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.issuer("https://issuer.example.es") //$NON-NLS-1$
 				.subject("pid-1") //$NON-NLS-1$
@@ -437,10 +463,13 @@ final class TestSdJwtVerifiableCredential {
 		if (issueTime != null) {
 			claims.issueTime(issueTime);
 		}
+		final List<com.nimbusds.jose.util.Base64> x5c = new ArrayList<>();
+		for (final X509Certificate cert : x5cChain) {
+			x5c.add(com.nimbusds.jose.util.Base64.encode(cert.getEncoded()));
+		}
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)
-						.x509CertChain(List.of(com.nimbusds.jose.util.Base64
-								.encode(issuerCert.getEncoded())))
+						.x509CertChain(x5c)
 						.build(),
 				claims.build());
 		jwt.sign(new RSASSASigner(issuerKp.getPrivate()));
@@ -520,10 +549,16 @@ final class TestSdJwtVerifiableCredential {
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject)
 			throws Exception {
 		final Instant now = Instant.now();
+		return selfSigned(kp, subject, now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp, final String subject,
+			final Instant notBefore, final Instant notAfter)
+			throws Exception {
 		final X500Name dn = new X500Name(subject);
 		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
 				dn, BigInteger.valueOf(System.currentTimeMillis()),
-				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				Date.from(notBefore), Date.from(notAfter),
 				dn, kp.getPublic())
 				.build(new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate())); //$NON-NLS-1$
 		return (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$

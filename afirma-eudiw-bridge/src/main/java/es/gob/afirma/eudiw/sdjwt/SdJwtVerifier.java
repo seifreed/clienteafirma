@@ -107,12 +107,19 @@ public final class SdJwtVerifier {
 		if (chain == null || chain.isEmpty()) {
 			throw new SdJwtVerificationException("Issuer JWT sin cadena x5c"); //$NON-NLS-1$
 		}
-		final X509Certificate cert = X509CertUtils.parse(chain.get(0).decode());
-		if (cert != null) {
-			return cert;
+		X509Certificate issuerCert = null;
+		for (final com.nimbusds.jose.util.Base64 encodedCert : chain) {
+			X509Certificate cert = X509CertUtils.parse(encodedCert.decode());
+			if (cert == null) {
+				cert = (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
+						.generateCertificate(new ByteArrayInputStream(encodedCert.decode()));
+			}
+			cert.checkValidity();
+			if (issuerCert == null) {
+				issuerCert = cert;
+			}
 		}
-		return (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
-				.generateCertificate(new ByteArrayInputStream(chain.get(0).decode()));
+		return issuerCert;
 	}
 
 	private static JWSVerifier verifier(final X509Certificate cert) throws Exception {
