@@ -209,9 +209,10 @@ public record JarmAuthorizationResponse(
 	}
 
 	private static void validatePresentationSubmission(final Map<String, Object> submission) throws JOSEException {
-		requireNormalizedString(submission, "id"); //$NON-NLS-1$
-		requireNormalizedString(submission, "definition_id"); //$NON-NLS-1$
-		final Object descriptorMap = submission.get("descriptor_map"); //$NON-NLS-1$
+		final Map<String, Object> typedSubmission = stringKeyMap(submission);
+		requireNormalizedString(typedSubmission, "id"); //$NON-NLS-1$
+		requireNormalizedString(typedSubmission, "definition_id"); //$NON-NLS-1$
+		final Object descriptorMap = typedSubmission.get("descriptor_map"); //$NON-NLS-1$
 		if (!(descriptorMap instanceof List<?> descriptors) || descriptors.isEmpty()) {
 			throw new JOSEException("presentation_submission JARM sin descriptor_map"); //$NON-NLS-1$
 		}

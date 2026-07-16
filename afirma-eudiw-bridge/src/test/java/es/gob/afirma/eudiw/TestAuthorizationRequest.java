@@ -435,6 +435,16 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				emptyObjectSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT controlRootKeySubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", //$NON-NLS-1$
+								"{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"def\\ninition_id_extra\":\"x\",\"descriptor_map\":[{\"id\":\"pid\",\"path\":\"$\"}]}") //$NON-NLS-1$
+						.build());
+		controlRootKeySubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				controlRootKeySubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT missingDefinitionSubmissionJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
