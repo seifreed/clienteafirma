@@ -131,6 +131,7 @@ final class TestAuthorizationRequest {
 		final SignedJWT jwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
@@ -142,11 +143,15 @@ final class TestAuthorizationRequest {
 		final RSASSAVerifier verifier = new RSASSAVerifier(
 				(java.security.interfaces.RSAPublicKey) kp.getPublic());
 		final JarmAuthorizationResponse response = JarmAuthorizationResponse.verify(
-				jwt.serialize(), verifier, "https://verifier.example.es", "state-1"); //$NON-NLS-1$ //$NON-NLS-2$
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", //$NON-NLS-1$ //$NON-NLS-2$
+				"https://wallet.example.es"); //$NON-NLS-1$
 		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", //$NON-NLS-1$ //$NON-NLS-2$
+				"https://otra-wallet.example.es")); //$NON-NLS-1$
 
 		final SignedJWT expiredJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),

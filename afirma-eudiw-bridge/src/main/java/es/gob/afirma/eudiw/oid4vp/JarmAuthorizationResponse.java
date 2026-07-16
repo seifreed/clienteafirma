@@ -23,6 +23,15 @@ public record JarmAuthorizationResponse(
 	public static JarmAuthorizationResponse verify(final String responseJwt,
 			final JWSVerifier verifier, final String expectedAudience,
 			final String expectedState) throws ParseException, JOSEException {
+		return verify(responseJwt, verifier, expectedAudience, expectedState, null);
+	}
+
+	/**
+	 * Verifica firma, issuer, audience y state de una respuesta JARM.
+	 */
+	public static JarmAuthorizationResponse verify(final String responseJwt,
+			final JWSVerifier verifier, final String expectedAudience,
+			final String expectedState, final String expectedIssuer) throws ParseException, JOSEException {
 		Objects.requireNonNull(responseJwt, "responseJwt"); //$NON-NLS-1$
 		Objects.requireNonNull(verifier, "verifier"); //$NON-NLS-1$
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
@@ -31,6 +40,9 @@ public record JarmAuthorizationResponse(
 		}
 		final JWTClaimsSet claims = jwt.getJWTClaimsSet();
 		verifyValidity(claims);
+		if (expectedIssuer != null && !expectedIssuer.equals(claims.getIssuer())) {
+			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
+		}
 		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
 		}
