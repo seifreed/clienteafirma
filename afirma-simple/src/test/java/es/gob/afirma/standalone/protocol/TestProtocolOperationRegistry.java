@@ -166,6 +166,8 @@ final class TestProtocolOperationRegistry {
 		assertTrue(result.startsWith("eudiw://present?client=autofirma&request=")); //$NON-NLS-1$
 		assertTrue(result.contains("openid4vp%3A%2F%2Fauthorize")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> handler.process(url + "%23frag", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process(url.replace("client%3Dautofirma", "request%3Dold"), ctx)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test

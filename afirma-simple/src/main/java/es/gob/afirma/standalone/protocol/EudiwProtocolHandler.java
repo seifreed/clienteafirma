@@ -147,6 +147,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (walletDeepLink.getRawFragment() != null) {
 				throw new IllegalArgumentException("walletUri no admite fragmento"); //$NON-NLS-1$
 			}
+			if (hasQueryParam(walletDeepLink, "request")) { //$NON-NLS-1$
+				throw new IllegalArgumentException("walletUri no admite request preexistente"); //$NON-NLS-1$
+			}
 			return appendQueryParam(walletDeepLink, "request", openid4vpUri).toString(); //$NON-NLS-1$
 		}
 		if (walletEndpoint != null && !walletEndpoint.isBlank()) {
@@ -289,6 +292,21 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			return first;
 		}
 		return second != null && !second.isBlank() ? second : null;
+	}
+
+	private static boolean hasQueryParam(final URI uri, final String key) {
+		final String query = uri.getRawQuery();
+		if (query == null || query.isEmpty()) {
+			return false;
+		}
+		for (final String pair : query.split("&", -1)) { //$NON-NLS-1$
+			final int eq = pair.indexOf('=');
+			final String rawKey = eq < 0 ? pair : pair.substring(0, eq);
+			if (key.equals(decodeQueryComponent(rawKey))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static URI appendQueryParam(final URI uri, final String key, final String value) {
