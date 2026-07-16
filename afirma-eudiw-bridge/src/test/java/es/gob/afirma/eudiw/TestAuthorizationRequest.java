@@ -167,6 +167,13 @@ final class TestAuthorizationRequest {
 						.build());
 		futureIatJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(futureIatJar));
+		final SignedJWT futureNbfJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.notBeforeTime(Date.from(Instant.now().plus(Duration.ofMinutes(1))))
+						.build());
+		futureNbfJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(futureNbfJar));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " ")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
