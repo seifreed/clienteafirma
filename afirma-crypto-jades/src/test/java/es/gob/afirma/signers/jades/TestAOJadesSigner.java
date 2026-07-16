@@ -193,6 +193,19 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("JAdES-T rechaza token RFC3161 y TSA configurados a la vez")
+	void rejectsAmbiguousTimestampSource() {
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAMCAQE="); //$NON-NLS-1$
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TSA_URL, "https://tsa.example/test"); //$NON-NLS-1$
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> new AOJadesSigner().sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
+	}
+
+	@Test
 	@DisplayName("sign rechaza certificado firmante que no es X.509")
 	void rejectsNonX509SignerCertificate() {
 		final AOJadesSigner signer = new AOJadesSigner();
