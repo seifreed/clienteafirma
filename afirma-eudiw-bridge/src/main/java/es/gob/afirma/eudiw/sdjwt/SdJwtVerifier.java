@@ -177,6 +177,9 @@ public final class SdJwtVerifier {
 			if (digest == null || digest.isBlank() || digest.indexOf('=') >= 0) {
 				throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
 			}
+			if (!digest.equals(digest.strip())) {
+				throw new SdJwtVerificationException("Issuer JWT contiene _sd no normalizado"); //$NON-NLS-1$
+			}
 			try {
 				if (Base64.getUrlDecoder().decode(digest).length != 32) {
 					throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
