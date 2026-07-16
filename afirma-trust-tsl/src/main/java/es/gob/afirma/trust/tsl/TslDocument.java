@@ -24,6 +24,12 @@ public record TslDocument(
 	public TslDocument {
 		Objects.requireNonNull(schemeOperatorName, "schemeOperatorName");
 		Objects.requireNonNull(territory, "territory");
+		if (schemeOperatorName.isBlank()) {
+			throw new IllegalArgumentException("Operador TSL vacío"); //$NON-NLS-1$
+		}
+		if (territory.isBlank()) {
+			throw new IllegalArgumentException("Territorio TSL vacío"); //$NON-NLS-1$
+		}
 		providers = providers == null ? List.of() : List.copyOf(providers);
 	}
 }

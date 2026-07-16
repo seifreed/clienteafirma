@@ -6,6 +6,7 @@ import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +53,7 @@ public final class TrustListService {
 
 	/** Añade o reemplaza la TSL de un territorio. */
 	public void ingest(final TslDocument tsl) {
-		final String key = tsl.territory().toUpperCase();
+		final String key = territoryKey(tsl.territory());
 		this.byTerritory.put(key, tsl);
 		this.loadedAt.put(key, Instant.now(this.clock));
 	}
@@ -69,7 +70,7 @@ public final class TrustListService {
 			return cached;
 		}
 		final TslDocument loaded = loader.load();
-		if (!key.equals(loaded.territory().toUpperCase())) {
+		if (!key.equals(territoryKey(loaded.territory()))) {
 			throw new TslException("La TSL cargada no corresponde al territorio " + territory); //$NON-NLS-1$
 		}
 		ingest(loaded);
@@ -150,7 +151,7 @@ public final class TrustListService {
 		if (territory == null || territory.isBlank()) {
 			throw new IllegalArgumentException("Territorio TSL vacío"); //$NON-NLS-1$
 		}
-		return territory.toUpperCase();
+		return territory.toUpperCase(Locale.ROOT);
 	}
 
 	@FunctionalInterface
