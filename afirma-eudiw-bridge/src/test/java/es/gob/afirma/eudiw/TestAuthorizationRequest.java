@@ -78,6 +78,8 @@ final class TestAuthorizationRequest {
 				"DCQL sustituye al presentation_definition_uri legacy");
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery("not-json"));
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery("{}")); //$NON-NLS-1$
 	}
 
 	@Test
