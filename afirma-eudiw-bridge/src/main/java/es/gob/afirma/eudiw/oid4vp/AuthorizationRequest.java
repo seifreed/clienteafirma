@@ -109,7 +109,10 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(algorithm, "algorithm"); //$NON-NLS-1$
 		final JWSHeader.Builder header = new JWSHeader.Builder(algorithm)
 				.type(new JOSEObjectType("oauth-authz-req+jwt")); //$NON-NLS-1$
-		if (keyId != null && !keyId.isBlank()) {
+		if (keyId != null && keyId.isBlank()) {
+			throw new IllegalArgumentException("OID4VP JAR keyId vacío"); //$NON-NLS-1$
+		}
+		if (keyId != null) {
 			header.keyID(keyId);
 		}
 		if (audience != null && audience.isBlank()) {
