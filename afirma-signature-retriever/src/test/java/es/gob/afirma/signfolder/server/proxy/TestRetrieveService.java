@@ -22,7 +22,7 @@ public final class TestRetrieveService {
 	public void testRetrieveSimpleText() throws Exception {
 		Assume.assumeTrue("Test omitido: requiere -Dafirma.it.intermediate.server=true (servicio de almacenamiento intermedio corriendo)", //$NON-NLS-1$
 				Boolean.getBoolean("afirma.it.intermediate.server")); //$NON-NLS-1$
-		final UrlHttpManager mgr = UrlHttpManagerFactory.getInstalledManager();
+		final UrlHttpManager mgr = UrlHttpManagerFactory.getManager();
 		byte[] res = mgr.readUrl(
 			SERVICE_URL,
 			UrlHttpMethod.GET

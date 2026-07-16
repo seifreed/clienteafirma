@@ -281,7 +281,7 @@ final class XAdESReferenceResolver {
 			final String referenceId,
 			final Properties extraParams) throws AOException {
 
-		final UrlHttpManager httpManager = UrlHttpManagerFactory.getInstalledManager();
+		final UrlHttpManager httpManager = UrlHttpManagerFactory.getManager();
 		final SSLErrorProcessor errorProcessor = new SSLErrorProcessor(extraParams);
 		final byte[] data;
 		try {

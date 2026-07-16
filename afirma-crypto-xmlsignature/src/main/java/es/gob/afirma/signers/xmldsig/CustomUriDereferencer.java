@@ -100,7 +100,7 @@ public final class CustomUriDereferencer implements URIDereferencer {
 				// nunca vamos a dejar importar los datos remotos en este caso si el SSL no es de confianza
 				byte[] externalContent;
 				try {
-					externalContent = UrlHttpManagerFactory.getInstalledManager().readUrl(uri, UrlHttpMethod.GET);
+					externalContent = UrlHttpManagerFactory.getManager().readUrl(uri, UrlHttpMethod.GET);
 				}
 				catch (final Exception e1) {
 					throw new URIReferenceException(

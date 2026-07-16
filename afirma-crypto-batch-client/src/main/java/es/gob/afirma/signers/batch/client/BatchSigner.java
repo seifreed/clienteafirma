@@ -405,7 +405,7 @@ public final class BatchSigner {
 
 		UrlHttpManager httpConnection;
 		if (urlHttpManager == null) {
-			httpConnection = UrlHttpManagerFactory.getInstalledManager();
+			httpConnection = UrlHttpManagerFactory.getManager();
 		} else {
 			httpConnection = urlHttpManager;
 		}
@@ -611,7 +611,7 @@ public final class BatchSigner {
 
 		UrlHttpManager httpConnection;
 		if (urlHttpManager == null) {
-			httpConnection = UrlHttpManagerFactory.getInstalledManager();
+			httpConnection = UrlHttpManagerFactory.getManager();
 		} else {
 			httpConnection = urlHttpManager;
 		}

@@ -66,7 +66,7 @@ public class CustomUriDereferencer implements URIDereferencer {
 				byte[] externalContent;
 				final SSLErrorProcessor errorProcessor = new SSLErrorProcessor();
 				try {
-					externalContent = UrlHttpManagerFactory.getInstalledManager().readUrl(uri, UrlHttpMethod.GET, errorProcessor);
+					externalContent = UrlHttpManagerFactory.getManager().readUrl(uri, UrlHttpMethod.GET, errorProcessor);
 				}
 				catch (final Exception e1) {
 					if (errorProcessor.isCancelled()) {

@@ -80,12 +80,9 @@ public final class AOPDFTriPhaseSigner extends AOTriphaseSigner {
 		}
 		
 		// Creamos el objeto de conexion
-		final UrlHttpManager urlManager;
-		if (this.httpConnection != null) {
-			urlManager = this.httpConnection;
-		}
-		else {
-			urlManager = UrlHttpManagerFactory.getInstalledManager();
+		final UrlHttpManager urlManager = UrlHttpManagerFactory.getManager();
+		if (this.httpReadTimeout != UrlHttpManager.DEFAULT_TIMEOUT) {
+			urlManager.setReadTimeout(this.httpReadTimeout);
 		}
 
 		// Decodificamos el identificador del documento
