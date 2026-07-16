@@ -119,6 +119,7 @@ public final class TrustListService {
 			return false;
 		}
 		try {
+			issuer.checkValidity();
 			cert.verify(issuer.getPublicKey());
 			return true;
 		}

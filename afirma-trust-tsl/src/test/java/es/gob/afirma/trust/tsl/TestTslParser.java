@@ -218,6 +218,29 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("findIssuer ignora identidades de servicio caducadas")
+	void findIssuerIgnoresExpiredServiceIdentities() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair caKp = kpg.generateKeyPair();
+		final Instant expired = Instant.now().minus(Duration.ofDays(2));
+		final X509Certificate caCert = selfSigned(caKp, "CN=CA Test, O=AEAD", //$NON-NLS-1$
+				expired, expired.plus(Duration.ofDays(1)));
+		final X509Certificate leaf = issuedBy(caKp, caCert, kpg.generateKeyPair(),
+				"CN=Suscriptor, O=Prueba"); //$NON-NLS-1$
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted", //$NON-NLS-1$
+						List.of(caCert))));
+		final TrustListService svc = new TrustListService();
+		svc.ingest(new TslDocument("Operator", "ES", null, List.of(tsp), false)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertTrue(svc.findIssuer(leaf).isEmpty());
+	}
+
+	@Test
 	@DisplayName("Parser endurecido contra DOCTYPE (XXE)")
 	void rejectsDoctype() {
 		final String xxe = """
@@ -232,10 +255,15 @@ final class TestTslParser {
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
 		final Instant now = Instant.now();
+		return selfSigned(kp, subject, now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp, final String subject,
+			final Instant notBefore, final Instant notAfter) throws Exception {
 		final X500Name dn = new X500Name(subject);
 		final BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
-				dn, serial, Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				dn, serial, Date.from(notBefore), Date.from(notAfter),
 				dn, kp.getPublic())
 				.build(new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate()));
 		return (X509Certificate) CertificateFactory.getInstance("X.509")
