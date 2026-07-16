@@ -45,6 +45,7 @@ public final class SdJwtVerifier {
 			throws SdJwtVerificationException {
 		try {
 			final X509Certificate issuerCert = issuerCertificate(vc.issuerSignedJwt());
+			issuerCert.checkValidity();
 			if (!vc.issuerSignedJwt().verify(verifier(issuerCert))) {
 				throw new SdJwtVerificationException("Firma del issuer JWT inválida"); //$NON-NLS-1$
 			}

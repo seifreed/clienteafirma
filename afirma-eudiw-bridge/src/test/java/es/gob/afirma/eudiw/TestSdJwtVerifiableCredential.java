@@ -154,6 +154,21 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(expiredVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
+		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,
+				"CN=EUDI Issuer Expired, O=AEAD", expiredCertTime, //$NON-NLS-1$
+				expiredCertTime.plus(Duration.ofDays(1)));
+		final String expiredCertIssuerJwt = signedIssuerJwt(issuerKp, expiredIssuerCert,
+				holderJwk, disclosureHash);
+		final String expiredCertPresentation = expiredCertIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String expiredCertKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(expiredCertPresentation));
+		final SdJwtVerifiableCredential expiredCertVc = SdJwtVerifiableCredential.parse(
+				expiredCertPresentation + expiredCertKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(expiredCertVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String nonArrayDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
@@ -270,6 +285,13 @@ final class TestSdJwtVerifiableCredential {
 			final X509Certificate issuerCert, final KeyPair subjectKp,
 			final String subjectDn) throws Exception {
 		final Instant now = Instant.now();
+		return issuedBy(issuerKp, issuerCert, subjectKp, subjectDn,
+				now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate issuedBy(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final KeyPair subjectKp,
+			final String subjectDn, final Instant notBefore, final Instant notAfter) throws Exception {
 		final X500Name issuer = X500Name.getInstance(
 				issuerCert.getSubjectX500Principal().getEncoded());
 		final X500Name subject = new X500Name(subjectDn);
@@ -277,7 +299,7 @@ final class TestSdJwtVerifiableCredential {
 				.build(issuerKp.getPrivate());
 		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
 				issuer, BigInteger.valueOf(System.currentTimeMillis() + 1),
-				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				Date.from(notBefore), Date.from(notAfter),
 				subject, subjectKp.getPublic())
 				.build(signer);
 		return (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
