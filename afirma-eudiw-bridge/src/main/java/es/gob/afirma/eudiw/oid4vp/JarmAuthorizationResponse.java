@@ -189,7 +189,10 @@ public record JarmAuthorizationResponse(
 			if (!descriptorIds.add(requireNormalizedString(typedDescriptor, "id"))) { //$NON-NLS-1$
 				throw new JOSEException("presentation_submission JARM con descriptor_map duplicado"); //$NON-NLS-1$
 			}
-			requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
+			final String path = requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
+			if (!path.startsWith("$")) { //$NON-NLS-1$
+				throw new JOSEException("presentation_submission JARM con path inválido"); //$NON-NLS-1$
+			}
 			if (typedDescriptor.containsKey("format")) { //$NON-NLS-1$
 				final String format = requireNormalizedString(typedDescriptor, "format"); //$NON-NLS-1$
 				if (!SUPPORTED_FORMAT.equals(format)) {
