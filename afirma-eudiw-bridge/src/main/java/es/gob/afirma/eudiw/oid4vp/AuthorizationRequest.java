@@ -35,8 +35,6 @@ import com.nimbusds.jwt.SignedJWT;
  *   <li>{@code dcql_query} — consulta DCQL nativa.</li>
  *   <li>{@code nonce} y {@code state} — protección replay/CSRF.</li>
  * </ul>
- *
- * <p><strong>TODO M4.x:</strong> validación del JARM recibido.</p>
  */
 public record AuthorizationRequest(
 		String clientId,

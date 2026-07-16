@@ -146,6 +146,26 @@ final class TestAuthorizationRequest {
 	}
 
 	@Test
+	@DisplayName("JARM response exige vp_token")
+	void rejectsJarmWithoutVpToken() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair kp = kpg.generateKeyPair();
+		final SignedJWT jwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		jwt.sign(new RSASSASigner(kp.getPrivate()));
+
+		final RSASSAVerifier verifier = new RSASSAVerifier(
+				(java.security.interfaces.RSAPublicKey) kp.getPublic());
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	@Test
 	@DisplayName("Cada build genera un nonce distinto (high-entropy)")
 	void freshNoncesUnique() {
 		final AuthorizationRequestBuilder base = new AuthorizationRequestBuilder()

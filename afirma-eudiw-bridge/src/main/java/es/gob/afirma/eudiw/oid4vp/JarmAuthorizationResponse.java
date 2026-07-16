@@ -35,8 +35,12 @@ public record JarmAuthorizationResponse(
 		if (expectedState != null && !expectedState.equals(claims.getStringClaim("state"))) { //$NON-NLS-1$
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
 		}
+		final String vpToken = claims.getStringClaim("vp_token"); //$NON-NLS-1$
+		if (vpToken == null || vpToken.isBlank()) {
+			throw new JOSEException("Respuesta JARM sin vp_token"); //$NON-NLS-1$
+		}
 		return new JarmAuthorizationResponse(
-				claims.getStringClaim("vp_token"), //$NON-NLS-1$
+				vpToken,
 				claims.getStringClaim("state"), //$NON-NLS-1$
 				claims.getStringClaim("presentation_submission")); //$NON-NLS-1$
 	}
