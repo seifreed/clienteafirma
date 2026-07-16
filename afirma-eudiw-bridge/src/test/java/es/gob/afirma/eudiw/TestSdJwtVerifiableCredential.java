@@ -127,6 +127,15 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", "wrong")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
+		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				sdHash(badDisclosure));
+		final SdJwtVerifiableCredential badVc = SdJwtVerifiableCredential.parse(
+				badIssuerJwt + "~" + badDisclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(badVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static String makeUnsignedJwt() throws Exception {

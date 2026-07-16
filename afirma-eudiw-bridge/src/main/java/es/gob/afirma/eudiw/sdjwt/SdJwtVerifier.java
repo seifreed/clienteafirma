@@ -99,6 +99,12 @@ public final class SdJwtVerifier {
 		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		for (final String disclosure : vc.disclosures()) {
+			try {
+				Base64.getUrlDecoder().decode(disclosure);
+			}
+			catch (final IllegalArgumentException e) {
+				throw new SdJwtVerificationException("Disclosure no es base64url válido", e); //$NON-NLS-1$
+			}
 			final String digest = Base64.getUrlEncoder().withoutPadding().encodeToString(
 					sha256.digest(disclosure.getBytes(StandardCharsets.US_ASCII)));
 			if (!expected.contains(digest)) {
