@@ -145,6 +145,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("Parametro timestampTokenBase64 JAdES vacio", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
+		if (tsaUrl != null && tsaUrl.isBlank()) {
+			throw new AOException("Parametro tsaURL JAdES vacio", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 		if (tsaUrl != null && !tsaUrl.equals(tsaUrl.strip())) {
 			throw new AOException("Parametro tsaURL JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
