@@ -132,6 +132,9 @@ final class TestLotlLoader {
 		final byte[] signed = sign(LOTL, kp, selfSigned(kp, expired, expired.plus(Duration.ofDays(1))));
 
 		assertThrows(TslException.class, () -> new TslVerifier().verify(signed));
+		final Instant future = Instant.now().plus(Duration.ofDays(1));
+		final byte[] notYetValid = sign(LOTL, kp, selfSigned(kp, future, future.plus(Duration.ofDays(1))));
+		assertThrows(TslException.class, () -> new TslVerifier().verify(notYetValid));
 	}
 
 	@Test
