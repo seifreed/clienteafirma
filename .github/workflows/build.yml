@@ -98,6 +98,8 @@ jobs:
   security:
     name: Security gate (ubuntu-24.04)
     runs-on: ubuntu-24.04
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -131,13 +133,20 @@ jobs:
             ubuntu-24.04-depcheck-
 
       - name: Run dependency-check
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        if: env.NVD_API_KEY != ''
         shell: bash
         run: >
           mvn -B -ntp -Denv=install -Psecurity-gate -DskipTests
           -DnvdApiKey="$NVD_API_KEY"
           verify
+
+      - name: Skip dependency-check without NVD API key
+        if: env.NVD_API_KEY == ''
+        shell: bash
+        run: >
+          echo "::warning title=Dependency-Check skipped::NVD_API_KEY secret
+          is not configured; skipping OWASP dependency-check to avoid
+          unauthenticated NVD rate limits."
 
       - name: Upload dependency-check report
         if: always()
