@@ -222,7 +222,11 @@ public record JarmAuthorizationResponse(
 
 	private static boolean isSupportedJsonPath(final String path) {
 		return "$".equals(path) || path.startsWith("$.") && path.length() > 2 //$NON-NLS-1$ //$NON-NLS-2$
-				|| path.startsWith("$[") && path.endsWith("]") && path.length() > 3; //$NON-NLS-1$ //$NON-NLS-2$
+				|| path.startsWith("$[") && path.endsWith("]") && isArrayIndex(path.substring(2, path.length() - 1)); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private static boolean isArrayIndex(final String text) {
+		return !text.isEmpty() && text.chars().allMatch(Character::isDigit);
 	}
 
 	private static String requireNormalizedString(final Map<String, Object> map, final String name) throws JOSEException {

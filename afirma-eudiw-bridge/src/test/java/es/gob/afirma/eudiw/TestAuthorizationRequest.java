@@ -480,7 +480,7 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				controlDescriptorSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
-		for (final String malformedPath : List.of("$.", "$[", "$[]", "$[0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		for (final String malformedPath : List.of("$.", "$[", "$[]", "$[0", "$[abc]")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 			final SignedJWT barePrefixPathSubmissionJwt = new SignedJWT(
 					jarmHeader(),
 					new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
