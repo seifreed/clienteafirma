@@ -46,6 +46,13 @@ public record DcqlQuery(String json) {
 				if (claims != null && (!(claims instanceof List<?> claimList) || claimList.isEmpty())) {
 					throw new IllegalArgumentException("credential DCQL con claims inválido"); //$NON-NLS-1$
 				}
+				if (claims instanceof List<?> claimList) {
+					for (final Object claim : claimList) {
+						if (!(claim instanceof Map<?, ?>)) {
+							throw new IllegalArgumentException("claims DCQL debe contener objetos"); //$NON-NLS-1$
+						}
+					}
+				}
 			}
 		}
 		catch (final ParseException e) {
