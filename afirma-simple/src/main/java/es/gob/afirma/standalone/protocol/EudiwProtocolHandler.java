@@ -201,12 +201,12 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			final String key;
 			final String value;
 			if (eq < 0) {
-				key = URLDecoder.decode(pair, StandardCharsets.UTF_8);
+				key = decodeQueryComponent(pair);
 				value = ""; //$NON-NLS-1$
 			}
 			else {
-				key = URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
-				value = URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
+				key = decodeQueryComponent(pair.substring(0, eq));
+				value = decodeQueryComponent(pair.substring(eq + 1));
 			}
 			if (key.isBlank()) {
 				throw new IllegalArgumentException("Parámetro sin nombre en URI eudiw-present"); //$NON-NLS-1$
@@ -218,6 +218,10 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			params.put(key, value);
 		}
 		return Collections.unmodifiableMap(params);
+	}
+
+	private static String decodeQueryComponent(final String value) {
+		return URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static String require(final Map<String, String> params, final String key) {

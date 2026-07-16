@@ -32,11 +32,13 @@ final class TestEudiwProtocolHandler {
 		final URI uri = URI.create("afirma://eudiw-present"
 				+ "?verifier=https%3A%2F%2Fverifier.example.es"
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
-				+ "&state=abc");
+				+ "&state=abc"
+				+ "&format=dc+sd-jwt");
 		final Map<String, String> p = EudiwProtocolHandler.parseParameters(uri);
 		assertEquals("https://verifier.example.es", p.get("verifier"));
 		assertEquals("https://verifier.example.es/oid4vp/response", p.get("responseUri"));
 		assertEquals("abc", p.get("state"));
+		assertEquals("dc+sd-jwt", p.get("format"));
 	}
 
 	@Test
