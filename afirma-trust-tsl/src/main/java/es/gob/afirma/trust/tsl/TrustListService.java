@@ -54,6 +54,9 @@ public final class TrustListService {
 	/** Añade o reemplaza la TSL de un territorio. */
 	public void ingest(final TslDocument tsl) {
 		final String key = territoryKey(tsl.territory());
+		if (tsl.nextUpdate() != null && !Instant.now(this.clock).isBefore(tsl.nextUpdate())) {
+			throw new IllegalArgumentException("La TSL ha caducado"); //$NON-NLS-1$
+		}
 		this.byTerritory.put(key, tsl);
 		this.loadedAt.put(key, Instant.now(this.clock));
 	}

@@ -137,12 +137,14 @@ final class TestTslParser {
 						() -> new TslDocument("Operator", "FR", null, List.of(), false)));
 
 		final AtomicInteger nextUpdateLoads = new AtomicInteger();
+		final MutableClock nextUpdateClock = new MutableClock(Instant.parse("2026-01-01T00:00:00Z"));
 		final TrustListService nextUpdateExpired = new TrustListService(
-				Clock.fixed(Instant.parse("2026-01-02T00:00:00Z"), ZoneOffset.UTC),
+				nextUpdateClock,
 				Duration.ofHours(24));
 		final TslDocument oldNextUpdate = new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
 				Instant.parse("2026-01-01T23:59:59Z"), List.of(), false);
 		nextUpdateExpired.ingest(oldNextUpdate);
+		nextUpdateClock.now = Instant.parse("2026-01-02T00:00:00Z"); //$NON-NLS-1$
 		nextUpdateExpired.getOrRefresh("ES", () -> { //$NON-NLS-1$
 			nextUpdateLoads.incrementAndGet();
 			return es;
@@ -153,6 +155,9 @@ final class TestTslParser {
 				Duration.ZERO);
 		assertThrows(TslException.class, () -> rejectsExpiredLoad.getOrRefresh("ES", //$NON-NLS-1$
 				() -> new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
+						Instant.parse("2026-01-01T23:59:59Z"), List.of(), false)));
+		assertThrows(IllegalArgumentException.class, () -> rejectsExpiredLoad.ingest(
+				new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
 						Instant.parse("2026-01-01T23:59:59Z"), List.of(), false)));
 	}
 
@@ -345,5 +350,28 @@ final class TestTslParser {
 				.build(signer);
 		return (X509Certificate) CertificateFactory.getInstance("X.509")
 				.generateCertificate(new java.io.ByteArrayInputStream(holder.getEncoded()));
+	}
+
+	private static final class MutableClock extends Clock {
+		private Instant now;
+
+		MutableClock(final Instant now) {
+			this.now = now;
+		}
+
+		@Override
+		public ZoneOffset getZone() {
+			return ZoneOffset.UTC;
+		}
+
+		@Override
+		public Clock withZone(final java.time.ZoneId zone) {
+			return this;
+		}
+
+		@Override
+		public Instant instant() {
+			return this.now;
+		}
 	}
 }
