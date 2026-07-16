@@ -309,6 +309,50 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("tsaURL rechaza token RFC3161 sin certificado TSA embebido")
+	void rejectsTimestampTokenWithoutEmbeddedCertificate() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair tsaKey = kpg.generateKeyPair();
+		final X509Certificate tsaCert = selfSigned(tsaKey, "CN=JAdES TSA, O=AEAD", true); //$NON-NLS-1$
+		final TimeStampTokenGenerator tokenGenerator = timestampTokenGenerator(tsaKey, tsaCert, false);
+		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0); //$NON-NLS-1$
+		server.createContext("/tsa", exchange -> { //$NON-NLS-1$
+			try {
+				final TimeStampRequest request = new TimeStampRequest(exchange.getRequestBody().readAllBytes());
+				final TimeStampResponse response = new TimeStampResponseGenerator(
+						tokenGenerator,
+						TSPAlgorithms.ALLOWED)
+								.generate(request, BigInteger.ONE, new Date());
+				final byte[] responseBytes = response.getEncoded();
+				exchange.sendResponseHeaders(200, responseBytes.length);
+				exchange.getResponseBody().write(responseBytes);
+			}
+			catch (final Exception e) {
+				throw new IOException("No se pudo generar la respuesta RFC3161 de prueba", e); //$NON-NLS-1$
+			}
+			finally {
+				exchange.close();
+			}
+		});
+		server.start();
+		try {
+			final Properties params = new Properties();
+			params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+			params.setProperty(AOJadesSigner.EXTRA_PARAM_TSA_URL,
+					"http://127.0.0.1:" + server.getAddress().getPort() + "/tsa"); //$NON-NLS-1$ //$NON-NLS-2$
+			params.setProperty("tsaHashAlgorithm", "SHA-256"); //$NON-NLS-1$ //$NON-NLS-2$
+
+			assertThrows(es.gob.afirma.core.AOException.class,
+					() -> new AOJadesSigner().sign("payload".getBytes(), //$NON-NLS-1$
+							"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params)); //$NON-NLS-1$
+		}
+		finally {
+			server.stop(0);
+		}
+	}
+
+	@Test
 	@DisplayName("isSign rechaza entradas que no son JWS compact")
 	void isSignRejectsNonJws() {
 		final AOJadesSigner signer = new AOJadesSigner();
@@ -363,6 +407,11 @@ final class TestAOJadesSigner {
 
 	private static TimeStampTokenGenerator timestampTokenGenerator(final KeyPair tsaKey,
 			final X509Certificate tsaCert) throws Exception {
+		return timestampTokenGenerator(tsaKey, tsaCert, true);
+	}
+
+	private static TimeStampTokenGenerator timestampTokenGenerator(final KeyPair tsaKey,
+			final X509Certificate tsaCert, final boolean embedCertificate) throws Exception {
 		final DigestCalculatorProvider digestProvider = new JcaDigestCalculatorProviderBuilder()
 				.setProvider(BouncyCastleProvider.PROVIDER_NAME)
 				.build();
@@ -373,7 +422,9 @@ final class TestAOJadesSigner {
 				new JcaSignerInfoGeneratorBuilder(digestProvider).build(tsaSigner, tsaCert),
 				digestProvider.get(new AlgorithmIdentifier(NISTObjectIdentifiers.id_sha256)),
 				new ASN1ObjectIdentifier("1.3.6.1.4.1.5734.1.1")); //$NON-NLS-1$
-		generator.addCertificates(new JcaCertStore(List.of(tsaCert)));
+		if (embedCertificate) {
+			generator.addCertificates(new JcaCertStore(List.of(tsaCert)));
+		}
 		return generator;
 	}
 

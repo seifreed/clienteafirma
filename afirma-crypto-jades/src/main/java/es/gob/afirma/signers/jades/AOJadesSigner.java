@@ -19,6 +19,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +42,9 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.tsp.TimeStampToken;
 
 import es.gob.afirma.core.AOException;
@@ -222,7 +225,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				imprint,
 				tsaParams.getTsaHashAlgorithm(),
 				Calendar.getInstance());
-		return Base64.getEncoder().encodeToString(token);
+		return normalizeTimestampToken(Base64.getEncoder().encodeToString(token), signatureBytes);
 	}
 
 	private static String normalizeTimestampToken(final String timestampTokenBase64,
@@ -238,6 +241,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		}
 		try {
 			final TimeStampToken tst = new TimeStampToken(new CMSSignedData(der));
+			validateTimestampTokenSignature(tst);
 			final String digestAlgorithm = digestAlgorithmName(
 					tst.getTimeStampInfo().getHashAlgorithm().getAlgorithm());
 			final byte[] expectedImprint = digest(signatureBytes, digestAlgorithm);
@@ -255,6 +259,15 @@ public final class AOJadesSigner implements AOSimpleSigner {
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		return token;
+	}
+
+	private static void validateTimestampTokenSignature(final TimeStampToken tst) throws Exception {
+		final Collection<X509CertificateHolder> certificates = tst.getCertificates().getMatches(tst.getSID());
+		if (certificates.isEmpty()) {
+			throw new AOException("El token JAdES-T no incluye certificado TSA", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		tst.validate(new JcaSimpleSignerInfoVerifierBuilder().build(certificates.iterator().next()));
 	}
 
 	private static String digestAlgorithmName(final ASN1ObjectIdentifier oid) throws AOException {
