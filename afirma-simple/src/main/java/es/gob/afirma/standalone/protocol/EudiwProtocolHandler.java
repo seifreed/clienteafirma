@@ -81,6 +81,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final Map<String, String> params = parseParameters(uri);
 
 		final String verifier = require(params, "verifier"); //$NON-NLS-1$
+		requireHttpsUri(verifier, "verifier"); //$NON-NLS-1$
 		final URI responseUri = URI.create(require(params, "responseUri")); //$NON-NLS-1$
 		final String responseMode = params.get("responseMode"); //$NON-NLS-1$
 		final String dcqlQuery = firstNonBlank(params.get("dcqlQuery"), params.get("dcql_query")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -191,6 +192,13 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 					"Parámetro requerido ausente en eudiw-present: " + key); //$NON-NLS-1$
 		}
 		return v;
+	}
+
+	private static void requireHttpsUri(final String value, final String key) {
+		final URI uri = URI.create(value);
+		if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
+			throw new IllegalArgumentException("Parámetro " + key + " debe ser HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 	}
 
 	private static String firstNonBlank(final String first, final String second) {
