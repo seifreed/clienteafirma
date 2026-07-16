@@ -114,10 +114,19 @@ public final class SdJwtVerifiableCredential {
 						"Formato SD-JWT inválido: falta separador final o Key Binding JWT", i); //$NON-NLS-1$
 			}
 			else {
+				validateDisclosureSegment(segment, i);
 				disclosures.add(segment);
 			}
 		}
 
 		return new SdJwtVerifiableCredential(issuerJwt, disclosures, keyBinding);
+	}
+
+	private static void validateDisclosureSegment(final String segment, final int index)
+			throws ParseException {
+		if (segment.indexOf('.') >= 0) {
+			throw new ParseException(
+					"Formato SD-JWT inválido: disclosure no es base64url", index); //$NON-NLS-1$
+		}
 	}
 }

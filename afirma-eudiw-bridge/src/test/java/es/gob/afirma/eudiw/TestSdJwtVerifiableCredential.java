@@ -92,6 +92,7 @@ final class TestSdJwtVerifiableCredential {
 				.encodeToString(DISCLOSURE_JSON.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~" + disclosure)); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~ " + disclosure + "~")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc.def~")); //$NON-NLS-1$
 		assertThrows(NullPointerException.class, () -> SdJwtVerifiableCredential.parse(null));
 	}
 
