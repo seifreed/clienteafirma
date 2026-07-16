@@ -476,16 +476,29 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	}
 
 	private static boolean isValidJsonSerialization(final Map<String, Object> json) {
+		final Object payload = json.get("payload"); //$NON-NLS-1$
+		if (payload != null && (!(payload instanceof String payloadText)
+				|| payloadText.isBlank() || !isBase64Url(payloadText))) {
+			return false;
+		}
+		if (json.get("signatures") instanceof List<?> signatures) { //$NON-NLS-1$
+			for (final Object signature : signatures) {
+				if (signature instanceof Map<?, ?> signatureJson
+						&& isValidJsonSignature(signatureJson)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return isValidJsonSignature(json);
+	}
+
+	private static boolean isValidJsonSignature(final Map<?, ?> json) {
 		if (!(json.get("protected") instanceof String protectedHeader) || protectedHeader.isBlank() //$NON-NLS-1$
 				|| !(json.get("signature") instanceof String signature) || signature.isBlank()) { //$NON-NLS-1$
 			return false;
 		}
 		if (!isBase64Url(protectedHeader) || !isBase64Url(signature)) {
-			return false;
-		}
-		final Object payload = json.get("payload"); //$NON-NLS-1$
-		if (payload != null && (!(payload instanceof String payloadText)
-				|| payloadText.isBlank() || !isBase64Url(payloadText))) {
 			return false;
 		}
 		try {

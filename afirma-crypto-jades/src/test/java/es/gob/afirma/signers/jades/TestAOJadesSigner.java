@@ -148,6 +148,26 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("isSign reconoce JWS JSON Serialization general")
+	void isSignAcceptsGeneralJsonSerialization() throws Exception {
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+		final Map<String, Object> flattened = JSONObjectUtils.parse(new String(
+				signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params),
+				java.nio.charset.StandardCharsets.UTF_8));
+		final Map<String, Object> signature = Map.of(
+				"protected", flattened.get("protected"), //$NON-NLS-1$ //$NON-NLS-2$
+				"signature", flattened.get("signature")); //$NON-NLS-1$ //$NON-NLS-2$
+		final Map<String, Object> general = Map.of("signatures", List.of(signature)); //$NON-NLS-1$
+
+		assertTrue(signer.isSign(JSONObjectUtils.toJSONString(general)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		assertTrue(!signer.isSign("{\"signatures\":[]}".getBytes())); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("timestampTokenBase64 rechaza Base64 que no es RFC3161")
 	void rejectsMalformedTimestampToken() {
 		final Properties params = new Properties();
