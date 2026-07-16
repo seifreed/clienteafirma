@@ -243,7 +243,7 @@ final class TestTslParser {
 				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				List.of(new TrustServiceProvider.TrustService(
 						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
-						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/notgranted", //$NON-NLS-1$
 						List.of(caCert))));
 		final TrustListService svc = new TrustListService();
 		svc.ingest(new TslDocument("Operator", "ES", null, List.of(tsp), false)); //$NON-NLS-1$ //$NON-NLS-2$

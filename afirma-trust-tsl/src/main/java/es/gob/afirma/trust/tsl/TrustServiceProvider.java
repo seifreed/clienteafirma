@@ -61,7 +61,7 @@ public record TrustServiceProvider(
 		/** Heurística rápida: ¿este servicio está actualmente <em>granted</em>?
 		 *  ETSI TS 119 612 §5.5.4 — el estatus URI termina en {@code /granted}. */
 		public boolean isGranted() {
-			return status != null && status.endsWith("granted"); //$NON-NLS-1$
+			return status != null && status.endsWith("/granted"); //$NON-NLS-1$
 		}
 	}
 }
