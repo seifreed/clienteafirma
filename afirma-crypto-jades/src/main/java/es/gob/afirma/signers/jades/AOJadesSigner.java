@@ -534,6 +534,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		return header.getX509CertSHA256Thumbprint() != null
 				&& header.getX509CertChain() != null && !header.getX509CertChain().isEmpty()
 				&& header.getCustomParam("sigT") instanceof String sigT && !sigT.isBlank() //$NON-NLS-1$
+				&& sigT.equals(sigT.strip())
 				&& header.getCriticalParams() != null && header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
 	}
 
