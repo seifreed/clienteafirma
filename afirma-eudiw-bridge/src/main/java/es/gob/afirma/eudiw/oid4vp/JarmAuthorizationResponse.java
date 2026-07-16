@@ -7,8 +7,9 @@ import java.util.Date;
 import java.util.Objects;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.util.JSONObjectUtils;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -17,6 +18,9 @@ public record JarmAuthorizationResponse(
 		String vpToken,
 		String state,
 		String presentationSubmission) {
+
+	private static final JOSEObjectType RESPONSE_TYPE =
+			new JOSEObjectType("oauth-authz-resp+jwt"); //$NON-NLS-1$
 
 	/**
 	 * Verifica firma, audience y state de una respuesta JARM.
@@ -41,6 +45,9 @@ public record JarmAuthorizationResponse(
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
 		if (!jwt.verify(verifier)) {
 			throw new JOSEException("Firma JARM inválida"); //$NON-NLS-1$
+		}
+		if (!RESPONSE_TYPE.equals(jwt.getHeader().getType())) {
+			throw new JOSEException("Tipo JARM inválido"); //$NON-NLS-1$
 		}
 		final JWTClaimsSet claims = jwt.getJWTClaimsSet();
 		verifyValidity(claims);
