@@ -47,6 +47,9 @@ public final class TslVerifier {
 			if (signatures.getLength() == 0) {
 				return false;
 			}
+			if (signatures.getLength() > 1) {
+				throw new TslException("TSL con varias firmas XMLDSig"); //$NON-NLS-1$
+			}
 			final Element signature = (Element) signatures.item(0);
 			final NodeList certificates = signature.getElementsByTagNameNS(XMLSignature.XMLNS, "X509Certificate"); //$NON-NLS-1$
 			if (certificates.getLength() == 0) {

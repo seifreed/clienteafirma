@@ -224,6 +224,14 @@ final class TestLotlLoader {
 
 		assertThrows(TslException.class,
 				() -> new TslVerifier().verify(duplicateSignature.getBytes(StandardCharsets.UTF_8), kp.getPublic()));
+		final String selfContained = new String(sign(LOTL, kp, selfSigned(kp)), StandardCharsets.UTF_8);
+		final int selfContainedSignatureStart = selfContained.indexOf("<Signature"); //$NON-NLS-1$
+		final int selfContainedSignatureEnd = selfContained.indexOf("</Signature>") + "</Signature>".length(); //$NON-NLS-1$ //$NON-NLS-2$
+		final String duplicateSelfContainedSignature = selfContained.substring(0, selfContainedSignatureEnd)
+				+ selfContained.substring(selfContainedSignatureStart, selfContainedSignatureEnd)
+				+ selfContained.substring(selfContainedSignatureEnd);
+		assertThrows(TslException.class,
+				() -> new TslVerifier().verify(duplicateSelfContainedSignature.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	private static KeyPair rsa() throws Exception {
