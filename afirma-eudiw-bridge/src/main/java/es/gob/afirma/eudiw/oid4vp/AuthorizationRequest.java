@@ -30,17 +30,18 @@ import com.nimbusds.jwt.SignedJWT;
  * <ul>
  *   <li>{@code client_id} — identificador del Verifier.</li>
  *   <li>{@code response_type} — fijo a {@code vp_token}.</li>
- *   <li>{@code response_mode} — {@code direct_post} para que la wallet POSTee la respuesta.</li>
+ *   <li>{@code response_mode} — {@code direct_post} o {@code direct_post.jwt}.</li>
  *   <li>{@code response_uri} — endpoint del Verifier que recibe la respuesta.</li>
  *   <li>{@code dcql_query} — consulta DCQL nativa.</li>
  *   <li>{@code nonce} y {@code state} — protección replay/CSRF.</li>
  * </ul>
  *
- * <p><strong>TODO M4.x:</strong> cifrado de respuesta con JARM (RFC 9207).</p>
+ * <p><strong>TODO M4.x:</strong> validación del JARM recibido.</p>
  */
 public record AuthorizationRequest(
 		String clientId,
 		URI responseUri,
+		String responseMode,
 		URI presentationDefinitionUri,
 		DcqlQuery dcqlQuery,
 		String nonce,
@@ -50,6 +51,7 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(clientId, "clientId");
 		Objects.requireNonNull(responseUri, "responseUri");
 		Objects.requireNonNull(nonce, "nonce");
+		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 	}
 
 	/** Serializa la request a una URI {@code openid4vp://authorize?...}. */
@@ -93,7 +95,7 @@ public record AuthorizationRequest(
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		params.put("response_type", "vp_token"); //$NON-NLS-1$ //$NON-NLS-2$
-		params.put("response_mode", "direct_post"); //$NON-NLS-1$ //$NON-NLS-2$
+		params.put("response_mode", this.responseMode); //$NON-NLS-1$
 		params.put("response_uri", this.responseUri.toString()); //$NON-NLS-1$
 		if (this.dcqlQuery != null) {
 			params.put("dcql_query", this.dcqlQuery.json()); //$NON-NLS-1$

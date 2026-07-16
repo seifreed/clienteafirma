@@ -13,6 +13,7 @@ public final class AuthorizationRequestBuilder {
 
 	private String clientId;
 	private URI responseUri;
+	private String responseMode = "direct_post"; //$NON-NLS-1$
 	private URI presentationDefinitionUri;
 	private DcqlQuery dcqlQuery;
 	private String nonce;
@@ -25,6 +26,11 @@ public final class AuthorizationRequestBuilder {
 
 	public AuthorizationRequestBuilder responseUri(final URI value) {
 		this.responseUri = value;
+		return this;
+	}
+
+	public AuthorizationRequestBuilder directPostJwtResponse() {
+		this.responseMode = "direct_post.jwt"; //$NON-NLS-1$
 		return this;
 	}
 
@@ -65,6 +71,7 @@ public final class AuthorizationRequestBuilder {
 		return new AuthorizationRequest(
 				this.clientId,
 				this.responseUri,
+				this.responseMode,
 				this.presentationDefinitionUri,
 				this.dcqlQuery,
 				this.nonce,

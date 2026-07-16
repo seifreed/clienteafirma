@@ -31,6 +31,7 @@ import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
  * <pre>{@code afirma://eudiw-present?
  *     verifier=https%3A%2F%2Fverifier.example.es&
  *     responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse&
+ *     responseMode=direct_post.jwt&
  *     dcqlQuery=%7B%22credentials%22%3A%5B...%5D%7D&
  *     presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1&
  *     state=optional-state}</pre>
@@ -77,6 +78,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 
 		final String verifier = require(params, "verifier"); //$NON-NLS-1$
 		final URI responseUri = URI.create(require(params, "responseUri")); //$NON-NLS-1$
+		final String responseMode = params.get("responseMode"); //$NON-NLS-1$
 		final String dcqlQuery = firstNonBlank(params.get("dcqlQuery"), params.get("dcql_query")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
 
@@ -85,6 +87,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 				.responseUri(responseUri)
 				.withFreshNonce()
 				.withFreshState();
+		if ("direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$
+			builder.directPostJwtResponse();
+		}
 		if (dcqlQuery != null) {
 			builder.dcqlQuery(dcqlQuery);
 		}

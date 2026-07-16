@@ -105,6 +105,18 @@ final class TestAuthorizationRequest {
 	}
 
 	@Test
+	@DisplayName("Builder permite solicitar response_mode direct_post.jwt")
+	void buildsJarmResponseMode() {
+		final AuthorizationRequest req = new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es") //$NON-NLS-1$
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response")) //$NON-NLS-1$
+				.directPostJwtResponse()
+				.nonce("nonce") //$NON-NLS-1$
+				.build();
+		assertTrue(req.toUri().getRawQuery().contains("response_mode=direct_post.jwt")); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("Cada build genera un nonce distinto (high-entropy)")
 	void freshNoncesUnique() {
 		final AuthorizationRequestBuilder base = new AuthorizationRequestBuilder()
