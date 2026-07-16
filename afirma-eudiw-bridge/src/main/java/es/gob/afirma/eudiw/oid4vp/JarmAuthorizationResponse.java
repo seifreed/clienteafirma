@@ -59,11 +59,19 @@ public record JarmAuthorizationResponse(
 		if (issuer == null || issuer.isBlank()) {
 			throw new JOSEException("Issuer JARM ausente"); //$NON-NLS-1$
 		}
+		if (!issuer.equals(issuer.strip())) {
+			throw new JOSEException("Issuer JARM no normalizado"); //$NON-NLS-1$
+		}
 		if (expectedIssuer != null && !expectedIssuer.equals(issuer)) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
 		if (claims.getAudience().isEmpty()) {
 			throw new JOSEException("Audience JARM ausente"); //$NON-NLS-1$
+		}
+		for (final String audience : claims.getAudience()) {
+			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
+				throw new JOSEException("Audience JARM no normalizada"); //$NON-NLS-1$
+			}
 		}
 		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
@@ -71,6 +79,9 @@ public record JarmAuthorizationResponse(
 		final String state = claims.getStringClaim("state"); //$NON-NLS-1$
 		if (state == null || state.isBlank()) {
 			throw new JOSEException("State JARM ausente"); //$NON-NLS-1$
+		}
+		if (!state.equals(state.strip())) {
+			throw new JOSEException("State JARM no normalizado"); //$NON-NLS-1$
 		}
 		if (expectedState != null && !expectedState.equals(state)) {
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
@@ -170,6 +181,9 @@ public record JarmAuthorizationResponse(
 			throws JOSEException {
 		if (value != null && value.isBlank()) {
 			throw new JOSEException("Valor esperado JARM vacío: " + claim); //$NON-NLS-1$
+		}
+		if (value != null && !value.equals(value.strip())) {
+			throw new JOSEException("Valor esperado JARM no normalizado: " + claim); //$NON-NLS-1$
 		}
 	}
 }
