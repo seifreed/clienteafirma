@@ -194,6 +194,20 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("sign rechaza certificado firmante caducado")
+	void rejectsExpiredSignerCertificate() throws Exception {
+		final Instant expired = Instant.now().minus(Duration.ofDays(2));
+		final Certificate[] expiredChain = new Certificate[] {
+				selfSigned(RSA_KEY, "CN=JAdES Expired, O=AEAD", false, //$NON-NLS-1$
+						expired, expired.plus(Duration.ofDays(1))) };
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), expiredChain, new Properties()));
+	}
+
+	@Test
 	@DisplayName("tsaURL genera token RFC3161 sobre la firma JWS y lo inserta en etsiU")
 	void signRsa256JsonSerializationWithLocalTsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
@@ -268,10 +282,15 @@ final class TestAOJadesSigner {
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject, final boolean timestamping) throws Exception {
 		final Instant now = Instant.now();
+		return selfSigned(kp, subject, timestamping, now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp, final String subject,
+			final boolean timestamping, final Instant notBefore, final Instant notAfter) throws Exception {
 		final X500Name dn = new X500Name(subject);
 		final BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 		final X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
-				dn, serial, Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				dn, serial, Date.from(notBefore), Date.from(notAfter),
 				dn, kp.getPublic());
 		if (timestamping) {
 			builder.addExtension(Extension.extendedKeyUsage, true,

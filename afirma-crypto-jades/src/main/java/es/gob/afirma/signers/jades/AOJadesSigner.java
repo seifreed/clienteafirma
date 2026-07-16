@@ -126,6 +126,13 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				throw new AOException("El certificado firmante JAdES debe ser X.509", //$NON-NLS-1$
 						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 			}
+			try {
+				signerCert.checkValidity();
+			}
+			catch (final Exception e) {
+				throw new AOException("El certificado firmante JAdES no esta vigente", e, //$NON-NLS-1$
+						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+			}
 
 			final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(jwsAlg)
 					.type(JOSEObjectType.JOSE)
