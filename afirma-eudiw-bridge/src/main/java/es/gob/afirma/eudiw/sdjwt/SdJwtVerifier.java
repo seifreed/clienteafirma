@@ -173,6 +173,9 @@ public final class SdJwtVerifier {
 		if (expected == null) {
 			throw new SdJwtVerificationException("Issuer JWT sin claim _sd"); //$NON-NLS-1$
 		}
+		if (expected.isEmpty()) {
+			throw new SdJwtVerificationException("Issuer JWT con claim _sd vacío"); //$NON-NLS-1$
+		}
 		if (new HashSet<>(expected).size() != expected.size()) {
 			throw new SdJwtVerificationException("Issuer JWT con _sd duplicado"); //$NON-NLS-1$
 		}
