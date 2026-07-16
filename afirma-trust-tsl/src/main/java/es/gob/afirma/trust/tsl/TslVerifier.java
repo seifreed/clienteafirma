@@ -55,6 +55,7 @@ public final class TslVerifier {
 			final byte[] der = Base64.getMimeDecoder().decode(certificates.item(0).getTextContent());
 			final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
 			final X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der));
+			cert.checkValidity();
 			return validate(doc, cert.getPublicKey());
 		}
 		catch (final TslException e) {

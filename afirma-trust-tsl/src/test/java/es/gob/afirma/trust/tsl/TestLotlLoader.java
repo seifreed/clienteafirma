@@ -125,6 +125,16 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("TslVerifier rechaza certificado KeyInfo caducado")
+	void rejectsExpiredKeyInfoCertificate() throws Exception {
+		final KeyPair kp = rsa();
+		final Instant expired = Instant.now().minus(Duration.ofDays(2));
+		final byte[] signed = sign(LOTL, kp, selfSigned(kp, expired, expired.plus(Duration.ofDays(1))));
+
+		assertThrows(TslException.class, () -> new TslVerifier().verify(signed));
+	}
+
+	@Test
 	@DisplayName("TslVerifier rechaza XML con DOCTYPE")
 	void rejectsDoctype() throws Exception {
 		final String xml = """
@@ -188,10 +198,15 @@ final class TestLotlLoader {
 
 	private static X509Certificate selfSigned(final KeyPair kp) throws Exception {
 		final Instant now = Instant.now();
+		return selfSigned(kp, now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp,
+			final Instant notBefore, final Instant notAfter) throws Exception {
 		final X500Name dn = new X500Name("CN=TSL Test, O=AEAD"); //$NON-NLS-1$
 		final X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
 				dn, BigInteger.valueOf(System.currentTimeMillis()),
-				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				Date.from(notBefore), Date.from(notAfter),
 				dn, kp.getPublic());
 		final ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate()); //$NON-NLS-1$
 		final X509CertificateHolder holder = builder.build(signer);
