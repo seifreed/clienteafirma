@@ -186,6 +186,10 @@ final class TestAuthorizationRequest {
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " ")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " ", null)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " wallet")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " kid-1", null)); //$NON-NLS-1$
 	}
 
 	@Test
@@ -541,6 +545,9 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"fragment", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						" direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest(" ", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$

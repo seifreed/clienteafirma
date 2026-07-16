@@ -80,6 +80,9 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException("OID4VP sin consulta de credenciales"); //$NON-NLS-1$
 		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
+		if (!responseMode.equals(responseMode.strip())) {
+			throw new IllegalArgumentException("response_mode OID4VP no normalizado"); //$NON-NLS-1$
+		}
 		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
 			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
 		}
@@ -165,11 +168,17 @@ public record AuthorizationRequest(
 		if (keyId != null && keyId.isBlank()) {
 			throw new IllegalArgumentException("OID4VP JAR keyId vacío"); //$NON-NLS-1$
 		}
+		if (keyId != null && !keyId.equals(keyId.strip())) {
+			throw new IllegalArgumentException("OID4VP JAR keyId no normalizado"); //$NON-NLS-1$
+		}
 		if (keyId != null) {
 			header.keyID(keyId);
 		}
 		if (audience != null && audience.isBlank()) {
 			throw new IllegalArgumentException("OID4VP JAR audience vacío"); //$NON-NLS-1$
+		}
+		if (audience != null && !audience.equals(audience.strip())) {
+			throw new IllegalArgumentException("OID4VP JAR audience no normalizado"); //$NON-NLS-1$
 		}
 		final Date now = new Date();
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
