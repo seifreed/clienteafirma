@@ -184,6 +184,13 @@ final class TestAuthorizationRequest {
 						.build());
 		mismatchedIssuerJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedIssuerJar));
+		final SignedJWT unnormalizedIssuerJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.issuer(" https://verifier.example.es") //$NON-NLS-1$
+						.build());
+		unnormalizedIssuerJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unnormalizedIssuerJar));
 		final SignedJWT unnormalizedAudienceJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())

@@ -126,7 +126,11 @@ public record AuthorizationRequest(
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
 			validateRequestObjectTime(claims);
 			validateRequestObjectAudience(claims);
-			if (!this.clientId.equals(claims.getIssuer())) {
+			final String issuer = claims.getIssuer();
+			if (issuer == null || issuer.isBlank() || !issuer.equals(issuer.strip())) {
+				throw new IllegalArgumentException("Request Object JAR con issuer no normalizado"); //$NON-NLS-1$
+			}
+			if (!this.clientId.equals(issuer)) {
 				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
 			}
 			for (final Map.Entry<String, String> entry : params().entrySet()) {
