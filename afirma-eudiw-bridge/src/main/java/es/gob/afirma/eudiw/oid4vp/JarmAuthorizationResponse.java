@@ -166,6 +166,7 @@ public record JarmAuthorizationResponse(
 			if (list.isEmpty()) {
 				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
 			}
+			validateJsonValue(list);
 			return JSONArrayUtils.toJSONString(list);
 		}
 		if (claim instanceof Map<?, ?> map) {
