@@ -26,6 +26,7 @@ public record DcqlQuery(String json) {
 		}
 		try {
 			final var parsed = JSONObjectUtils.parse(json);
+			validateObjectKeys(parsed);
 			final var credentials = JSONObjectUtils.getJSONArray(parsed, "credentials"); //$NON-NLS-1$
 			if (credentials == null || credentials.isEmpty()) {
 				throw new IllegalArgumentException("dcql_query debe declarar credentials"); //$NON-NLS-1$
@@ -35,6 +36,7 @@ public record DcqlQuery(String json) {
 				if (!(credential instanceof Map<?, ?> credentialMap)) {
 					throw new IllegalArgumentException("credentials DCQL debe contener objetos"); //$NON-NLS-1$
 				}
+				validateObjectKeys(credentialMap);
 				if (!ids.add(requireText(credentialMap, "id"))) { //$NON-NLS-1$
 					throw new IllegalArgumentException("credential DCQL con id duplicado"); //$NON-NLS-1$
 				}
@@ -52,6 +54,7 @@ public record DcqlQuery(String json) {
 						if (!(claim instanceof Map<?, ?> claimMap)) {
 							throw new IllegalArgumentException("claims DCQL debe contener objetos"); //$NON-NLS-1$
 						}
+						validateObjectKeys(claimMap);
 						final Object claimId = claimMap.get("id"); //$NON-NLS-1$
 						if (claimId != null) {
 							if (!(claimId instanceof String text) || !isNormalizedText(text)) {
@@ -72,6 +75,14 @@ public record DcqlQuery(String json) {
 		}
 		catch (final ParseException e) {
 			throw new IllegalArgumentException("dcql_query debe ser un objeto JSON válido", e); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateObjectKeys(final Map<?, ?> json) {
+		for (final Object key : json.keySet()) {
+			if (!(key instanceof String text) || !isNormalizedText(text)) {
+				throw new IllegalArgumentException("dcql_query contiene claves no normalizadas"); //$NON-NLS-1$
+			}
 		}
 	}
 
