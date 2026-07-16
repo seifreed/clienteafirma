@@ -313,10 +313,17 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
 				.clientId("http://c").responseUri(URI.create("https://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https:/c").responseUri(URI.create("https://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
 				.clientId("https://c").responseUri(URI.create("http://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://c").responseUri(URI.create("https:/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
 				.clientId("https://c").responseUri(URI.create("https://x/r")) //$NON-NLS-1$ //$NON-NLS-2$
 				.presentationDefinitionUri(URI.create("http://x/pd")).build()); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://c").responseUri(URI.create("https://x/r")) //$NON-NLS-1$ //$NON-NLS-2$
+				.presentationDefinitionUri(URI.create("https:/pd")).build()); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"fragment", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$

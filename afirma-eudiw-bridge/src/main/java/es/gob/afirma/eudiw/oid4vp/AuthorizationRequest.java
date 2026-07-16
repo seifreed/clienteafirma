@@ -56,25 +56,29 @@ public record AuthorizationRequest(
 		if (clientId.isBlank()) {
 			throw new IllegalArgumentException("OID4VP client_id vacío"); //$NON-NLS-1$
 		}
-		if (!"https".equalsIgnoreCase(URI.create(clientId).getScheme())) { //$NON-NLS-1$
-			throw new IllegalArgumentException("OID4VP client_id exige HTTPS"); //$NON-NLS-1$
-		}
+		requireHttpsWithHost(URI.create(clientId), "client_id"); //$NON-NLS-1$
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
 		if (state != null && state.isBlank()) {
 			throw new IllegalArgumentException("OID4VP state vacío"); //$NON-NLS-1$
 		}
-		if (!"https".equalsIgnoreCase(responseUri.getScheme())) { //$NON-NLS-1$
-			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
-		}
-		if (presentationDefinitionUri != null
-				&& !"https".equalsIgnoreCase(presentationDefinitionUri.getScheme())) { //$NON-NLS-1$
-			throw new IllegalArgumentException("OID4VP presentation_definition_uri exige HTTPS"); //$NON-NLS-1$
+		requireHttpsWithHost(responseUri, "response_uri"); //$NON-NLS-1$
+		if (presentationDefinitionUri != null) {
+			requireHttpsWithHost(presentationDefinitionUri, "presentation_definition_uri"); //$NON-NLS-1$
 		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
 			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
+		}
+	}
+
+	private static void requireHttpsWithHost(final URI uri, final String field) {
+		if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
+			throw new IllegalArgumentException("OID4VP " + field + " exige HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (uri.getHost() == null || uri.getHost().isBlank()) {
+			throw new IllegalArgumentException("OID4VP " + field + " exige host"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
