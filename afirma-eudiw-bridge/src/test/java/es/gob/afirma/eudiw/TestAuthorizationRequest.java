@@ -223,7 +223,7 @@ final class TestAuthorizationRequest {
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
-						.claim("presentation_submission", "{\"id\":\"ps-1\"}") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("presentation_submission", "{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"path\":\"$\"}]}") //$NON-NLS-1$ //$NON-NLS-2$
 						.build());
 		jwt.sign(new RSASSASigner(kp.getPrivate()));
 
@@ -234,7 +234,9 @@ final class TestAuthorizationRequest {
 				"https://wallet.example.es"); //$NON-NLS-1$
 		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
-		assertEquals("{\"id\":\"ps-1\"}", response.presentationSubmission()); //$NON-NLS-1$
+		assertEquals(
+				"{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"path\":\"$\"}]}", //$NON-NLS-1$
+				response.presentationSubmission());
 		final SignedJWT objectVpTokenJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
@@ -274,12 +276,20 @@ final class TestAuthorizationRequest {
 		final SignedJWT objectSubmissionJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
-						.claim("presentation_submission", Map.of("id", "ps-1")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						.claim("presentation_submission", Map.of( //$NON-NLS-1$
+								"id", "ps-1", //$NON-NLS-1$ //$NON-NLS-2$
+								"definition_id", "pd-1", //$NON-NLS-1$ //$NON-NLS-2$
+								"descriptor_map", List.of(Map.of( //$NON-NLS-1$
+										"id", "pid", //$NON-NLS-1$ //$NON-NLS-2$
+										"format", "dc+sd-jwt", //$NON-NLS-1$ //$NON-NLS-2$
+										"path", "$")))) //$NON-NLS-1$ //$NON-NLS-2$
 						.build());
 		objectSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
-		assertEquals("{\"id\":\"ps-1\"}", JarmAuthorizationResponse.verify( //$NON-NLS-1$
+		final String objectSubmission = JarmAuthorizationResponse.verify(
 				objectSubmissionJwt.serialize(), verifier,
-				"https://verifier.example.es", "state-1").presentationSubmission()); //$NON-NLS-1$ //$NON-NLS-2$
+				"https://verifier.example.es", "state-1").presentationSubmission(); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(objectSubmission.contains("\"definition_id\"")); //$NON-NLS-1$
+		assertTrue(objectSubmission.contains("\"descriptor_map\"")); //$NON-NLS-1$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT emptySubmissionJwt = new SignedJWT(
@@ -299,6 +309,33 @@ final class TestAuthorizationRequest {
 		emptyObjectSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				emptyObjectSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT missingDefinitionSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{\"id\":\"ps-1\",\"descriptor_map\":[{\"id\":\"pid\",\"path\":\"$\"}]}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		missingDefinitionSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				missingDefinitionSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT unnormalizedIdSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{\"id\":\" ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"path\":\"$\"}]}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		unnormalizedIdSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				unnormalizedIdSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT emptyDescriptorSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[]}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		emptyDescriptorSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				emptyDescriptorSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, " ", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -100,7 +100,27 @@ public record JarmAuthorizationResponse(
 		if (claim == null) {
 			return null;
 		}
-		return normalizeJsonObjectOrTextClaim(claim, "presentation_submission"); //$NON-NLS-1$
+		if (claim instanceof String text) {
+			if (text.isBlank()) {
+				throw new JOSEException("presentation_submission JARM vacío"); //$NON-NLS-1$
+			}
+			if (!text.equals(text.strip())) {
+				throw new JOSEException("presentation_submission JARM no normalizado"); //$NON-NLS-1$
+			}
+			try {
+				validatePresentationSubmission(JSONObjectUtils.parse(text));
+			}
+			catch (final ParseException e) {
+				throw new JOSEException("presentation_submission JARM no es JSON válido", e); //$NON-NLS-1$
+			}
+			return text;
+		}
+		if (claim instanceof Map<?, ?> map) {
+			final Map<String, Object> typed = stringKeyMap(map);
+			validatePresentationSubmission(typed);
+			return JSONObjectUtils.toJSONString(typed);
+		}
+		throw new JOSEException("presentation_submission JARM no es objeto JSON"); //$NON-NLS-1$
 	}
 
 	private static String normalizeJsonOrTextClaim(final Object claim, final String name) throws JOSEException {
@@ -131,33 +151,6 @@ public record JarmAuthorizationResponse(
 		throw new JOSEException(name + " JARM no es JSON ni texto"); //$NON-NLS-1$
 	}
 
-	private static String normalizeJsonObjectOrTextClaim(final Object claim, final String name) throws JOSEException {
-		if (claim instanceof String text) {
-			if (text.isBlank()) {
-				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
-			}
-			if (!text.equals(text.strip())) {
-				throw new JOSEException(name + " JARM no normalizado"); //$NON-NLS-1$
-			}
-			try {
-				if (JSONObjectUtils.parse(text).isEmpty()) {
-					throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
-				}
-			}
-			catch (final ParseException e) {
-				throw new JOSEException(name + " JARM no es JSON válido", e); //$NON-NLS-1$
-			}
-			return text;
-		}
-		if (claim instanceof Map<?, ?> map) {
-			if (map.isEmpty()) {
-				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
-			}
-			return JSONObjectUtils.toJSONString(stringKeyMap(map));
-		}
-		throw new JOSEException(name + " JARM no es objeto JSON"); //$NON-NLS-1$
-	}
-
 	private static Map<String, Object> stringKeyMap(final Map<?, ?> map) throws JOSEException {
 		final Map<String, Object> typed = new LinkedHashMap<>();
 		for (final Map.Entry<?, ?> entry : map.entrySet()) {
@@ -167,6 +160,34 @@ public record JarmAuthorizationResponse(
 			typed.put(key, entry.getValue());
 		}
 		return typed;
+	}
+
+	private static void validatePresentationSubmission(final Map<String, Object> submission) throws JOSEException {
+		requireNormalizedString(submission, "id"); //$NON-NLS-1$
+		requireNormalizedString(submission, "definition_id"); //$NON-NLS-1$
+		final Object descriptorMap = submission.get("descriptor_map"); //$NON-NLS-1$
+		if (!(descriptorMap instanceof List<?> descriptors) || descriptors.isEmpty()) {
+			throw new JOSEException("presentation_submission JARM sin descriptor_map"); //$NON-NLS-1$
+		}
+		for (final Object descriptor : descriptors) {
+			if (!(descriptor instanceof Map<?, ?> descriptorEntry)) {
+				throw new JOSEException("presentation_submission JARM con descriptor_map inválido"); //$NON-NLS-1$
+			}
+			final Map<String, Object> typedDescriptor = stringKeyMap(descriptorEntry);
+			requireNormalizedString(typedDescriptor, "id"); //$NON-NLS-1$
+			requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
+			if (typedDescriptor.containsKey("format")) { //$NON-NLS-1$
+				requireNormalizedString(typedDescriptor, "format"); //$NON-NLS-1$
+			}
+		}
+	}
+
+	private static String requireNormalizedString(final Map<String, Object> map, final String name) throws JOSEException {
+		final Object value = map.get(name);
+		if (!(value instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
+			throw new JOSEException("presentation_submission JARM con " + name + " inválido"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return text;
 	}
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
