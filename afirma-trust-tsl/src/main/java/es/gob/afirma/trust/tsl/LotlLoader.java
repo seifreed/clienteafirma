@@ -158,6 +158,9 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			if (uri.getRawFragment() != null) {
 				throw new IllegalArgumentException("La URI LOTL no admite fragmento"); //$NON-NLS-1$
 			}
+			if (uri.getRawQuery() != null) {
+				throw new IllegalArgumentException("La URI LOTL no admite query"); //$NON-NLS-1$
+			}
 			this.uri = uri;
 		}
 

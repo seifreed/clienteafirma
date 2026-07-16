@@ -135,6 +135,8 @@ final class TestLotlLoader {
 				() -> new LotlLoader.HttpTslXmlSource(URI.create("https://user@ec.europa.eu/lotl.xml"))); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new LotlLoader.HttpTslXmlSource(URI.create("https://ec.europa.eu/lotl.xml#frag"))); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new LotlLoader.HttpTslXmlSource(URI.create("https://ec.europa.eu/lotl.xml?x=1"))); //$NON-NLS-1$
 	}
 
 	@Test
