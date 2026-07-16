@@ -129,7 +129,11 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String openid4vpUri = request.toUri().toString();
 		LOGGER.fine(() -> "OID4VP request construido para verifier=" + verifier); //$NON-NLS-1$
 		if (walletUri != null && !walletUri.isBlank()) {
-			return appendQueryParam(URI.create(walletUri), "request", openid4vpUri).toString(); //$NON-NLS-1$
+			final URI walletDeepLink = URI.create(walletUri);
+			if (walletDeepLink.getScheme() == null || walletDeepLink.getScheme().isBlank()) {
+				throw new IllegalArgumentException("walletUri debe declarar esquema"); //$NON-NLS-1$
+			}
+			return appendQueryParam(walletDeepLink, "request", openid4vpUri).toString(); //$NON-NLS-1$
 		}
 		if (walletEndpoint != null && !walletEndpoint.isBlank()) {
 			try {
