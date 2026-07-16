@@ -288,6 +288,10 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> new AOJadesSigner().sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
 						RSA_KEY.getPrivate(), RSA_CHAIN, params));
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TSA_URL, "http://127.0.0.1/\ntsa"); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> new AOJadesSigner().sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test

@@ -152,7 +152,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("Parametro tsaURL JAdES vacio", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
-		if (tsaUrl != null && !tsaUrl.equals(tsaUrl.strip())) {
+		if (tsaUrl != null && (!tsaUrl.equals(tsaUrl.strip())
+				|| tsaUrl.chars().anyMatch(Character::isISOControl))) {
 			throw new AOException("Parametro tsaURL JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
