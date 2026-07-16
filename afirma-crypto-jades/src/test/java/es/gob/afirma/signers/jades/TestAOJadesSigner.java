@@ -427,7 +427,7 @@ final class TestAOJadesSigner {
 
 	@Test
 	@DisplayName("isSign rechaza entradas que no son JWS compact")
-	void isSignRejectsNonJws() {
+	void isSignRejectsNonJws() throws Exception {
 		final AOJadesSigner signer = new AOJadesSigner();
 		assertDoesNotThrow(() -> {
 			assertTrue(!signer.isSign("not a jws".getBytes()));
@@ -445,6 +445,15 @@ final class TestAOJadesSigner {
 			assertTrue(!signer.isSign("{\"protected-text\":\"x\",\"signature-text\":\"y\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{not-json".getBytes())); //$NON-NLS-1$
 		});
+		final Properties attached = new Properties();
+		attached.setProperty(AOJadesSigner.EXTRA_PARAM_DETACHED, "false"); //$NON-NLS-1$
+		final String jades = new String(signer.sign("payload".getBytes(), //$NON-NLS-1$
+				"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, attached), //$NON-NLS-1$
+				java.nio.charset.StandardCharsets.UTF_8);
+		final int firstDot = jades.indexOf('.');
+		final int secondDot = jades.indexOf('.', firstDot + 1);
+		assertTrue(!signer.isSign((jades.substring(0, firstDot + 1)
+				+ "not-base64url!!" + jades.substring(secondDot)).getBytes())); //$NON-NLS-1$
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
