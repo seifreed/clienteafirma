@@ -70,13 +70,12 @@ The following secrets are present in `git` history and **must be considered comp
 - `afirma-simple/afirma.keystore` — JKS keystore used to sign Autofirma JARs. Alias `codesign`, password `afirma` (visible in `pom.xml`).
 - `afirma-simple-installer/Autofirma_sign.pfx` — PFX used by `signtool` to sign the Windows `.exe` / `.msi` installers, with the password embedded in `Autofirma_sign_*.bat`.
 
-If you are a downstream consumer pinning a specific Autofirma version, validate the published artifacts against the GPG signatures attached to Maven Central (the GPG signing key is separate from the keystores above) and against the SBOM (CycloneDX) attached to each release. Request rotation of the keystores from the upstream maintainer if you depend on installer signatures for trust decisions.
+If you are a downstream consumer pinning a specific Autofirma version, validate the published artifacts against the GPG signatures attached to Maven Central (the GPG signing key is separate from the keystores above), the SBOM (CycloneDX), the Sigstore bundles, and the SLSA provenance attached to each GitHub release. Request rotation of the keystores from the upstream maintainer if you depend on installer signatures for trust decisions.
 
 Future releases will:
 
 1. Rotate both signing keys.
 2. Provision them only via CI secrets, never in the repository.
-3. Sign artifacts with **Sigstore cosign** (keyless, OIDC) in addition to GPG, so that signatures are independently verifiable against the GitHub Actions OIDC issuer.
 
 ## Coordinated disclosure
 
