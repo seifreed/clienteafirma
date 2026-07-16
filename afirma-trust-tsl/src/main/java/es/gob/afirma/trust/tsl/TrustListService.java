@@ -3,6 +3,10 @@
 package es.gob.afirma.trust.tsl;
 
 import java.security.cert.X509Certificate;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,8 +31,7 @@ import javax.security.auth.x500.X500Principal;
  * {@code issuer subject DN → TSP}. Reemplazar una TSL del mismo territorio
  * limpia las entradas previas asociadas a ella.</p>
  *
- * <p><strong>TODO M4.x:</strong> persistencia local de la cache, refresh policy
- * (24h por defecto en la AEAD-SE), feed de la LOTL europea
+ * <p><strong>TODO M4.x:</strong> persistencia local de la cache, feed de la LOTL europea
  * (https://ec.europa.eu/tools/lotl/eu-lotl.xml) y validación cruzada del
  * certificado firmante de la LOTL contra la lista pública de la Comisión.
  * Comparación issuer+serial (RFC 5280) en lugar de solo subject DN para evitar
@@ -36,17 +39,51 @@ import javax.security.auth.x500.X500Principal;
  */
 public final class TrustListService {
 
+	private static final Duration DEFAULT_REFRESH_INTERVAL = Duration.ofHours(24);
+
 	private final ConcurrentMap<String, TslDocument> byTerritory = new ConcurrentHashMap<>();
 	private final ConcurrentMap<X500Principal, TrustServiceProvider> byIssuerSubject = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, Instant> loadedAt = new ConcurrentHashMap<>();
+	private final Clock clock;
+	private final Duration refreshInterval;
+
+	public TrustListService() {
+		this(Clock.systemUTC(), DEFAULT_REFRESH_INTERVAL);
+	}
+
+	TrustListService(final Clock clock, final Duration refreshInterval) {
+		this.clock = Objects.requireNonNull(clock, "clock"); //$NON-NLS-1$
+		this.refreshInterval = Objects.requireNonNull(refreshInterval, "refreshInterval"); //$NON-NLS-1$
+	}
 
 	/** Añade o reemplaza la TSL de un territorio. Reconstruye el índice de issuers. */
 	public void ingest(final TslDocument tsl) {
 		final String key = tsl.territory().toUpperCase();
 		final TslDocument previous = this.byTerritory.put(key, tsl);
+		this.loadedAt.put(key, Instant.now(this.clock));
 		if (previous != null) {
 			removeFromIssuerIndex(previous);
 		}
 		addToIssuerIndex(tsl);
+	}
+
+	/**
+	 * Devuelve la TSL en cache si sigue fresca; si no, la carga con el loader
+	 * indicado y la ingesta antes de devolverla.
+	 */
+	public TslDocument getOrRefresh(final String territory, final TslLoader loader)
+			throws TslException {
+		final String key = territory.toUpperCase();
+		final TslDocument cached = this.byTerritory.get(key);
+		if (cached != null && !isExpired(key)) {
+			return cached;
+		}
+		final TslDocument loaded = loader.load();
+		if (!key.equals(loaded.territory().toUpperCase())) {
+			throw new TslException("La TSL cargada no corresponde al territorio " + territory); //$NON-NLS-1$
+		}
+		ingest(loaded);
+		return loaded;
 	}
 
 	/** Lookup directo por código ISO-3166-1 alpha-2. */
@@ -92,5 +129,16 @@ public final class TrustListService {
 				}
 			}
 		}
+	}
+
+	private boolean isExpired(final String territory) {
+		final Instant timestamp = this.loadedAt.get(territory);
+		return timestamp == null
+				|| !Instant.now(this.clock).isBefore(timestamp.plus(this.refreshInterval));
+	}
+
+	@FunctionalInterface
+	public interface TslLoader {
+		TslDocument load() throws TslException;
 	}
 }

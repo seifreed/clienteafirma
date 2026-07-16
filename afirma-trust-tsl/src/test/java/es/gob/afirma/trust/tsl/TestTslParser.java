@@ -13,10 +13,13 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -89,6 +92,34 @@ final class TestTslParser {
 		final TrustListService svc = new TrustListService();
 		assertEquals(0, svc.loadedCount());
 		assertTrue(svc.findIssuer(null).isEmpty());
+	}
+
+	@Test
+	@DisplayName("TrustListService refresca la TSL solo al caducar la cache")
+	void getOrRefreshUsesTwentyFourHourCache() throws Exception {
+		final TslDocument es = new TslDocument("Operator", "ES", null, List.of(), false);
+		final AtomicInteger loads = new AtomicInteger();
+		final TrustListService fresh = new TrustListService(
+				Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC),
+				Duration.ofHours(24));
+
+		assertEquals(es, fresh.getOrRefresh("ES", () -> {
+			loads.incrementAndGet();
+			return es;
+		}));
+		assertEquals(es, fresh.getOrRefresh("ES", () -> {
+			loads.incrementAndGet();
+			return es;
+		}));
+		assertEquals(1, loads.get(), "La cache fresca no debe recargar");
+
+		final TrustListService expired = new TrustListService(
+				Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC),
+				Duration.ZERO);
+		assertEquals(es, expired.getOrRefresh("ES", () -> es));
+		assertThrows(TslException.class,
+				() -> expired.getOrRefresh("ES",
+						() -> new TslDocument("Operator", "FR", null, List.of(), false)));
 	}
 
 	@Test
