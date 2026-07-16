@@ -100,6 +100,9 @@ public final class TrustListService {
 		for (final TslDocument tsl : this.byTerritory.values()) {
 			for (final TrustServiceProvider tsp : tsl.providers()) {
 				for (final TrustServiceProvider.TrustService svc : tsp.services()) {
+					if (!svc.isGranted()) {
+						continue;
+					}
 					for (final X509Certificate sdi : svc.serviceDigitalIdentities()) {
 						if (isIssuedBy(cert, sdi)) {
 							return Optional.of(tsp);

@@ -197,6 +197,27 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("findIssuer ignora servicios TSL no granted")
+	void findIssuerIgnoresNonGrantedServices() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair caKp = kpg.generateKeyPair();
+		final X509Certificate caCert = selfSigned(caKp, "CN=CA Test, O=AEAD"); //$NON-NLS-1$
+		final X509Certificate leaf = issuedBy(caKp, caCert, kpg.generateKeyPair(),
+				"CN=Suscriptor, O=Prueba"); //$NON-NLS-1$
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn", //$NON-NLS-1$
+						List.of(caCert))));
+		final TrustListService svc = new TrustListService();
+		svc.ingest(new TslDocument("Operator", "ES", null, List.of(tsp), false)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertTrue(svc.findIssuer(leaf).isEmpty());
+	}
+
+	@Test
 	@DisplayName("Parser endurecido contra DOCTYPE (XXE)")
 	void rejectsDoctype() {
 		final String xxe = """
