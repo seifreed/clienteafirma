@@ -53,7 +53,11 @@ public record JarmAuthorizationResponse(
 		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
 		}
-		if (expectedState != null && !expectedState.equals(claims.getStringClaim("state"))) { //$NON-NLS-1$
+		final String state = claims.getStringClaim("state"); //$NON-NLS-1$
+		if (state == null || state.isBlank()) {
+			throw new JOSEException("State JARM ausente"); //$NON-NLS-1$
+		}
+		if (expectedState != null && !expectedState.equals(state)) {
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
 		}
 		final String vpToken = claims.getStringClaim("vp_token"); //$NON-NLS-1$
@@ -74,7 +78,7 @@ public record JarmAuthorizationResponse(
 		}
 		return new JarmAuthorizationResponse(
 				vpToken,
-				claims.getStringClaim("state"), //$NON-NLS-1$
+				state,
 				presentationSubmission);
 	}
 

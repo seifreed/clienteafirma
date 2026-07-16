@@ -203,6 +203,17 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				noAudienceJwt.serialize(), verifier, null, "state-1")); //$NON-NLS-1$
 
+		final SignedJWT noStateJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		noStateJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				noStateJwt.serialize(), verifier, "https://verifier.example.es", null)); //$NON-NLS-1$
+
 		final SignedJWT malformedSubmissionJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
