@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -123,6 +124,17 @@ final class TestLotlLoader {
 		final LotlLoader loader = new LotlLoader(
 				() -> LOTL.getBytes(StandardCharsets.UTF_8), kp.getPublic(), null);
 		assertThrows(TslException.class, loader::load);
+	}
+
+	@Test
+	@DisplayName("LotlLoader rechaza URI LOTL insegura")
+	void rejectsUnsafeLotlUri() {
+		assertThrows(IllegalArgumentException.class,
+				() -> new LotlLoader.HttpTslXmlSource(URI.create("http://ec.europa.eu/lotl.xml"))); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new LotlLoader.HttpTslXmlSource(URI.create("https://user@ec.europa.eu/lotl.xml"))); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new LotlLoader.HttpTslXmlSource(URI.create("https://ec.europa.eu/lotl.xml#frag"))); //$NON-NLS-1$
 	}
 
 	@Test

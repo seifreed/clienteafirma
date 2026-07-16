@@ -137,7 +137,7 @@ public final class LotlLoader implements TrustListService.TslLoader {
 		}
 	}
 
-	private static final class HttpTslXmlSource implements TslXmlSource {
+	static final class HttpTslXmlSource implements TslXmlSource {
 
 		private final URI uri;
 		private final HttpClient http = HttpClient.newBuilder()
@@ -148,6 +148,15 @@ public final class LotlLoader implements TrustListService.TslLoader {
 		HttpTslXmlSource(final URI uri) {
 			if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
 				throw new IllegalArgumentException("La LOTL debe descargarse por HTTPS"); //$NON-NLS-1$
+			}
+			if (uri.getHost() == null || uri.getHost().isBlank()) {
+				throw new IllegalArgumentException("La LOTL debe descargarse desde una URI con host"); //$NON-NLS-1$
+			}
+			if (uri.getRawUserInfo() != null) {
+				throw new IllegalArgumentException("La URI LOTL no admite userinfo"); //$NON-NLS-1$
+			}
+			if (uri.getRawFragment() != null) {
+				throw new IllegalArgumentException("La URI LOTL no admite fragmento"); //$NON-NLS-1$
 			}
 			this.uri = uri;
 		}
