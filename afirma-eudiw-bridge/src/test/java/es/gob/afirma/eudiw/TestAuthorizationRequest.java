@@ -212,6 +212,12 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"fragment", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest(" ", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, " ", null)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test

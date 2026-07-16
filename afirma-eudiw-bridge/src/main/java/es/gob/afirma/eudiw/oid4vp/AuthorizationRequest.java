@@ -53,6 +53,12 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(clientId, "clientId");
 		Objects.requireNonNull(responseUri, "responseUri");
 		Objects.requireNonNull(nonce, "nonce");
+		if (clientId.isBlank()) {
+			throw new IllegalArgumentException("OID4VP client_id vacío"); //$NON-NLS-1$
+		}
+		if (nonce.isBlank()) {
+			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
+		}
 		if (!"https".equalsIgnoreCase(responseUri.getScheme())) { //$NON-NLS-1$
 			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
 		}
