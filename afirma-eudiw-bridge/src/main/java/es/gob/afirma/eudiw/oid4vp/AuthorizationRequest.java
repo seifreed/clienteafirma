@@ -17,6 +17,7 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -112,8 +113,9 @@ public record AuthorizationRequest(
 	}
 
 	/** Serializa la request usando JAR by value ({@code request=<jwt>}). */
-	public URI toUriWithRequestObject(final SignedJWT requestObject) {
+	public URI toUriWithRequestObject(final SignedJWT requestObject, final JWSVerifier verifier) {
 		Objects.requireNonNull(requestObject, "requestObject"); //$NON-NLS-1$
+		Objects.requireNonNull(verifier, "verifier"); //$NON-NLS-1$
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		try {
@@ -122,6 +124,9 @@ public record AuthorizationRequest(
 			}
 			if (!isSupportedJarAlgorithm(requestObject.getHeader().getAlgorithm())) {
 				throw new IllegalArgumentException("Request Object JAR con algoritmo no soportado"); //$NON-NLS-1$
+			}
+			if (!requestObject.verify(verifier)) {
+				throw new IllegalArgumentException("Firma Request Object JAR inválida"); //$NON-NLS-1$
 			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
 			validateRequestObjectTime(claims);
@@ -142,6 +147,9 @@ public record AuthorizationRequest(
 		}
 		catch (final ParseException e) {
 			throw new IllegalArgumentException("Request Object JAR inválido", e); //$NON-NLS-1$
+		}
+		catch (final JOSEException e) {
+			throw new IllegalArgumentException("No se pudo verificar la firma Request Object JAR", e); //$NON-NLS-1$
 		}
 		catch (final IllegalStateException e) {
 			throw new IllegalArgumentException("Request Object JAR sin firma", e); //$NON-NLS-1$
