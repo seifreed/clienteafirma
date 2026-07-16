@@ -55,7 +55,10 @@ public record JarmAuthorizationResponse(
 			throw new JOSEException("Respuesta JARM sin vp_token"); //$NON-NLS-1$
 		}
 		final String presentationSubmission = claims.getStringClaim("presentation_submission"); //$NON-NLS-1$
-		if (presentationSubmission != null && !presentationSubmission.isBlank()) {
+		if (presentationSubmission != null) {
+			if (presentationSubmission.isBlank()) {
+				throw new JOSEException("presentation_submission JARM vacío"); //$NON-NLS-1$
+			}
 			try {
 				JSONObjectUtils.parse(presentationSubmission);
 			}
