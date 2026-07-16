@@ -219,6 +219,15 @@ final class TestAuthorizationRequest {
 				"https://wallet.example.es"); //$NON-NLS-1$
 		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
+		final SignedJWT objectVpTokenJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("vp_token", Map.of("format", "dc+sd-jwt")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						.build());
+		objectVpTokenJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertEquals("{\"format\":\"dc+sd-jwt\"}", JarmAuthorizationResponse.verify( //$NON-NLS-1$
+				objectVpTokenJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1").vpToken()); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT objectSubmissionJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())

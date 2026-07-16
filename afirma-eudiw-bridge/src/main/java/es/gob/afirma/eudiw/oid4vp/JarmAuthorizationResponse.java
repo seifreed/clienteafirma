@@ -5,12 +5,14 @@ package es.gob.afirma.eudiw.oid4vp;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -73,10 +75,8 @@ public record JarmAuthorizationResponse(
 		if (expectedState != null && !expectedState.equals(state)) {
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
 		}
-		final String vpToken = claims.getStringClaim("vp_token"); //$NON-NLS-1$
-		if (vpToken == null || vpToken.isBlank()) {
-			throw new JOSEException("Respuesta JARM sin vp_token"); //$NON-NLS-1$
-		}
+		final String vpToken = normalizeJsonOrTextClaim(
+				claims.getClaim("vp_token"), "vp_token"); //$NON-NLS-1$ //$NON-NLS-2$
 		final String presentationSubmission = normalizePresentationSubmission(
 				claims.getClaim("presentation_submission")); //$NON-NLS-1$
 		return new JarmAuthorizationResponse(
@@ -89,22 +89,45 @@ public record JarmAuthorizationResponse(
 		if (claim == null) {
 			return null;
 		}
+		return normalizeJsonObjectOrTextClaim(claim, "presentation_submission"); //$NON-NLS-1$
+	}
+
+	private static String normalizeJsonOrTextClaim(final Object claim, final String name) throws JOSEException {
+		if (claim == null) {
+			throw new JOSEException("Respuesta JARM sin " + name); //$NON-NLS-1$
+		}
 		if (claim instanceof String text) {
 			if (text.isBlank()) {
-				throw new JOSEException("presentation_submission JARM vacío"); //$NON-NLS-1$
+				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
+			}
+			return text;
+		}
+		if (claim instanceof List<?> list) {
+			return JSONArrayUtils.toJSONString(list);
+		}
+		if (claim instanceof Map<?, ?> map) {
+			return JSONObjectUtils.toJSONString(stringKeyMap(map));
+		}
+		throw new JOSEException(name + " JARM no es JSON ni texto"); //$NON-NLS-1$
+	}
+
+	private static String normalizeJsonObjectOrTextClaim(final Object claim, final String name) throws JOSEException {
+		if (claim instanceof String text) {
+			if (text.isBlank()) {
+				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
 			}
 			try {
 				JSONObjectUtils.parse(text);
 			}
 			catch (final ParseException e) {
-				throw new JOSEException("presentation_submission JARM no es JSON válido", e); //$NON-NLS-1$
+				throw new JOSEException(name + " JARM no es JSON válido", e); //$NON-NLS-1$
 			}
 			return text;
 		}
 		if (claim instanceof Map<?, ?> map) {
 			return JSONObjectUtils.toJSONString(stringKeyMap(map));
 		}
-		throw new JOSEException("presentation_submission JARM no es objeto JSON"); //$NON-NLS-1$
+		throw new JOSEException(name + " JARM no es objeto JSON"); //$NON-NLS-1$
 	}
 
 	private static Map<String, Object> stringKeyMap(final Map<?, ?> map) throws JOSEException {
