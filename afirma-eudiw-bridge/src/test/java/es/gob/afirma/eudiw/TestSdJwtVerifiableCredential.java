@@ -85,6 +85,7 @@ final class TestSdJwtVerifiableCredential {
 	void rejectsEmpty() {
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(""));
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse("~"));
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~~"));
 		assertThrows(NullPointerException.class, () -> SdJwtVerifiableCredential.parse(null));
 	}
 

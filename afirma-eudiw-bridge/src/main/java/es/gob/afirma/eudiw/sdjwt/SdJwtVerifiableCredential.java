@@ -77,7 +77,7 @@ public final class SdJwtVerifiableCredential {
 	 */
 	public static SdJwtVerifiableCredential parse(final String compact) throws ParseException {
 		Objects.requireNonNull(compact, "compact");
-		final String[] parts = compact.split(SEPARATOR);
+		final String[] parts = compact.split(SEPARATOR, -1);
 		if (parts.length < 1 || parts[0].isBlank()) {
 			throw new ParseException("Formato SD-JWT inválido: vacío o sin issuer JWT", 0); //$NON-NLS-1$
 		}
@@ -90,13 +90,16 @@ public final class SdJwtVerifiableCredential {
 
 		for (int i = 1; i < parts.length; i++) {
 			final String segment = parts[i];
-			if (segment.isEmpty()) {
+			final boolean isLast = i == parts.length - 1;
+			if (segment.isEmpty() && isLast && trailingSeparator) {
 				continue;
+			}
+			if (segment.isEmpty()) {
+				throw new ParseException("Formato SD-JWT inválido: segmento vacío", i); //$NON-NLS-1$
 			}
 			// El último segmento, si NO termina en '~', es el Key Binding JWT;
 			// si la cadena termina en '~', no hay Key Binding y todos los
 			// segmentos son disclosures.
-			final boolean isLast = i == parts.length - 1;
 			if (isLast && !trailingSeparator && segment.indexOf('.') > 0) {
 				keyBinding = Optional.of(SignedJWT.parse(segment));
 			}
