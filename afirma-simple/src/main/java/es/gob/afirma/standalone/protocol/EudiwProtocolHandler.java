@@ -191,6 +191,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			throw new IllegalArgumentException(
 					"URI no corresponde al verbo eudiw-present: " + uri); //$NON-NLS-1$
 		}
+		if (uri.getRawFragment() != null) {
+			throw new IllegalArgumentException("URI eudiw-present no admite fragmento"); //$NON-NLS-1$
+		}
 
 		final String query = uri.getRawQuery();
 		if (query == null || query.isBlank()) {
