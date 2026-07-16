@@ -39,6 +39,9 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.tsp.TimeStampToken;
+
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.ErrorCode;
 import es.gob.afirma.core.signers.AOSignConstants;
@@ -212,11 +215,19 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static String normalizeTimestampToken(final String timestampTokenBase64) throws AOException {
 		final String token = timestampTokenBase64.trim();
+		final byte[] der;
 		try {
-			Base64.getDecoder().decode(token);
+			der = Base64.getDecoder().decode(token);
 		}
 		catch (final IllegalArgumentException e) {
 			throw new AOException("El token RFC 3161 de JAdES-T no esta codificado en Base64 valido", e, //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		try {
+			new TimeStampToken(new CMSSignedData(der));
+		}
+		catch (final Exception e) {
+			throw new AOException("El token JAdES-T no es un RFC 3161 valido", e, //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		return token;

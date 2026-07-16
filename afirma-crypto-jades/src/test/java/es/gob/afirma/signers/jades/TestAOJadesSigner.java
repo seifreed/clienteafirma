@@ -146,22 +146,16 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
-	@DisplayName("timestampTokenBase64 emite contenedor etsiU JAdES-T en JSON Serialization")
-	void signRsa256JsonSerializationWithTimestampToken() throws Exception {
+	@DisplayName("timestampTokenBase64 rechaza Base64 que no es RFC3161")
+	void rejectsMalformedTimestampToken() {
 		final Properties params = new Properties();
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAMCAQE="); //$NON-NLS-1$
 		final AOJadesSigner signer = new AOJadesSigner();
 
-		final byte[] jws = signer.sign("payload".getBytes(), //$NON-NLS-1$
-				"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params); //$NON-NLS-1$
-		final String json = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
-
-		assertTrue(json.contains("\"header\""), "JAdES-T debe incluir cabecera no protegida");
-		assertTrue(json.contains("\"etsiU\""), "JAdES-T debe incluir el contenedor ETSI unsigned");
-		assertTrue(json.contains("\"tstTokens\""), "El contenedor etsiU debe listar tstTokens");
-		assertTrue(json.contains("\"val\":\"MAMCAQE=\""), "El token RFC3161 debe viajar en Base64 DER");
-		assertTrue(!json.contains("\"payload\""), "JAdES-T detached no debe incluir payload");
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), //$NON-NLS-1$
+						"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params)); //$NON-NLS-1$
 	}
 
 	@Test

@@ -31,14 +31,13 @@
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
 		</dependency>
-
-		<!-- Test-scope: BouncyCastle PKIX para generar certificados auto-firmados
-		     en los tests sin depender de fixtures. La versión la fija el padre. -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk18on</artifactId>
-			<scope>test</scope>
 		</dependency>
+
+		<!-- Test-scope: BouncyCastle PKIX para generar certificados auto-firmados
+		     en los tests sin depender de fixtures. La versión la fija el padre. -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk18on</artifactId>
