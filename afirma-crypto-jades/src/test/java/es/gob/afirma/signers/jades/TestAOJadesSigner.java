@@ -406,6 +406,9 @@ final class TestAOJadesSigner {
 			assertTrue(!signer.isSign("not a jws".getBytes()));
 			assertTrue(!signer.isSign(new byte[] { 0x30, (byte) 0x82 })); // un DER no es un JWS
 			assertTrue(!signer.isSign(new byte[0]));
+			assertTrue(!signer.isSign("{\"protected\":\"x\",\"signature\":\"\"}".getBytes())); //$NON-NLS-1$
+			assertTrue(!signer.isSign("{\"protected-text\":\"x\",\"signature-text\":\"y\"}".getBytes())); //$NON-NLS-1$
+			assertTrue(!signer.isSign("{not-json".getBytes())); //$NON-NLS-1$
 		});
 	}
 

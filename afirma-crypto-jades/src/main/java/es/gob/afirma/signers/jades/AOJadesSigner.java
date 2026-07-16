@@ -400,7 +400,14 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		}
 		final String s = new String(data, java.nio.charset.StandardCharsets.UTF_8);
 		if (s.startsWith("{")) { //$NON-NLS-1$
-			return s.contains("\"protected\"") && s.contains("\"signature\""); //$NON-NLS-1$ //$NON-NLS-2$
+			try {
+				final Map<String, Object> json = JSONObjectUtils.parse(s);
+				return json.get("protected") instanceof String protectedHeader && !protectedHeader.isBlank() //$NON-NLS-1$
+						&& json.get("signature") instanceof String signature && !signature.isBlank(); //$NON-NLS-1$
+			}
+			catch (final java.text.ParseException e) {
+				return false;
+			}
 		}
 		int dots = 0;
 		for (final byte b : data) {
