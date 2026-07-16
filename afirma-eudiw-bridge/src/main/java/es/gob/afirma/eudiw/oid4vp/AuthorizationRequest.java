@@ -5,6 +5,7 @@ package es.gob.afirma.eudiw.oid4vp;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -99,7 +100,16 @@ public record AuthorizationRequest(
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		try {
+			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
+			for (final Map.Entry<String, String> entry : params().entrySet()) {
+				if (!entry.getValue().equals(claims.getStringClaim(entry.getKey()))) {
+					throw new IllegalArgumentException("Request Object JAR no coincide con " + entry.getKey()); //$NON-NLS-1$
+				}
+			}
 			params.put("request", requestObject.serialize()); //$NON-NLS-1$
+		}
+		catch (final ParseException e) {
+			throw new IllegalArgumentException("Request Object JAR inválido", e); //$NON-NLS-1$
 		}
 		catch (final IllegalStateException e) {
 			throw new IllegalArgumentException("Request Object JAR sin firma", e); //$NON-NLS-1$

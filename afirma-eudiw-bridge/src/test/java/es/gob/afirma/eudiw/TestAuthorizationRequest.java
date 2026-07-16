@@ -127,6 +127,13 @@ final class TestAuthorizationRequest {
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				jar.getJWTClaimsSet());
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unsignedJar));
+		final SignedJWT mismatchedJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.claim("client_id", "https://otro-verifier.example.es") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		mismatchedJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedJar));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " ")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
