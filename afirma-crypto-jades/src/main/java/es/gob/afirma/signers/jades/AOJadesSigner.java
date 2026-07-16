@@ -600,9 +600,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				return false;
 			}
 			try {
-				java.util.Base64.getDecoder().decode(tokenBase64);
+				new TimeStampToken(new CMSSignedData(java.util.Base64.getDecoder().decode(tokenBase64)));
 			}
-			catch (final IllegalArgumentException e) {
+			catch (final Exception e) {
 				return false;
 			}
 		}
