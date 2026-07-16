@@ -129,6 +129,12 @@ final class TestSdJwtVerifiableCredential {
 		assertEquals("EUDI Provider", SdJwtVerifier.verify( //$NON-NLS-1$
 				vc, trust, "https://verifier.example.es", "nonce-1").name()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(null, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, null,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust, " ", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,

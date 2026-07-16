@@ -45,6 +45,12 @@ public final class SdJwtVerifier {
 	public static TrustServiceProvider verify(final SdJwtVerifiableCredential vc,
 			final TrustListService trust, final String audience, final String nonce)
 			throws SdJwtVerificationException {
+		if (vc == null) {
+			throw new SdJwtVerificationException("SD-JWT VC vacía"); //$NON-NLS-1$
+		}
+		if (trust == null) {
+			throw new SdJwtVerificationException("TSL no proporcionada"); //$NON-NLS-1$
+		}
 		if (audience == null || audience.isBlank()) {
 			throw new SdJwtVerificationException("Audience SD-JWT vacía"); //$NON-NLS-1$
 		}
