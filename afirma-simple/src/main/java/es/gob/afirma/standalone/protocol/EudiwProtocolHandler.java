@@ -164,7 +164,10 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		}
 
 		final Map<String, String> params = new LinkedHashMap<>();
-		for (final String pair : query.split("&")) { //$NON-NLS-1$
+		for (final String pair : query.split("&", -1)) { //$NON-NLS-1$
+			if (pair.isEmpty()) {
+				throw new IllegalArgumentException("Parámetro vacío en URI eudiw-present"); //$NON-NLS-1$
+			}
 			final int eq = pair.indexOf('=');
 			final String key;
 			final String value;
