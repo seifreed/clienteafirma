@@ -127,6 +127,11 @@ final class TestAOJadesSigner {
 				RSA_KEY.getPrivate(), RSA_CHAIN, new Properties());
 		final String header = AOJadesSigner.decodeProtectedHeader(jws);
 		assertTrue(!header.contains("\"cty\""), "Sin extraParam contentType no debe haber cty en header");
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_CONTENT_TYPE, " application/json"); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("x".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test

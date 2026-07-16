@@ -160,6 +160,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 			final String contentType = params.getProperty(EXTRA_PARAM_CONTENT_TYPE);
 			if (contentType != null && !contentType.isBlank()) {
+				if (!contentType.equals(contentType.strip())) {
+					throw new AOException("Content-Type JAdES no normalizado", //$NON-NLS-1$
+							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+				}
 				headerBuilder.contentType(contentType);
 			}
 
