@@ -12,11 +12,13 @@ package es.gob.afirma.standalone.configurator.common;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 /** Gesti&oacute;n de mensajes del aplicativo. */
 public final class ConfiguratorCommonMessages {
 
 	private static final String BUNDLE_NAME = ConfiguratorCommonMessages.class.getName();
+	private static final Logger LOGGER = Logger.getLogger("es.gob.afirma"); //$NON-NLS-1$
     private static ResourceBundle bundle;
 
     static {
@@ -24,7 +26,7 @@ public final class ConfiguratorCommonMessages {
     		bundle = ResourceBundle.getBundle(BUNDLE_NAME /*, Locale.getDefault()*/);
     	}
     	catch (final Exception e) {
-    		e.printStackTrace();
+			LOGGER.warning("No se pudo cargar el fichero de mensajes del configurador: " + e); //$NON-NLS-1$
 		}
     }
 
