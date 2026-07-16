@@ -461,7 +461,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			return false;
 		}
 		try {
-			JWSHeader.parse(Base64URL.from(s.substring(0, firstDot)));
+			final JWSHeader header = JWSHeader.parse(Base64URL.from(s.substring(0, firstDot)));
+			if (!isJadesHeader(header)) {
+				return false;
+			}
 			return Base64URL.from(s.substring(lastDot + 1)).decode().length > 0;
 		}
 		catch (final java.text.ParseException | IllegalArgumentException e) {
@@ -478,12 +481,22 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			return false;
 		}
 		try {
-			JWSHeader.parse(Base64URL.from(protectedHeader));
+			final JWSHeader header = JWSHeader.parse(Base64URL.from(protectedHeader));
+			if (!isJadesHeader(header)) {
+				return false;
+			}
 			return Base64URL.from(signature).decode().length > 0;
 		}
 		catch (final Exception e) {
 			return false;
 		}
+	}
+
+	private static boolean isJadesHeader(final JWSHeader header) {
+		return header.getX509CertSHA256Thumbprint() != null
+				&& header.getX509CertChain() != null && !header.getX509CertChain().isEmpty()
+				&& header.getCustomParam("sigT") instanceof String sigT && !sigT.isBlank() //$NON-NLS-1$
+				&& header.getCriticalParams() != null && header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
 	}
 
 	private static boolean isBase64Url(final String value) {
