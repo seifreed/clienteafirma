@@ -31,6 +31,7 @@ import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
  * <pre>{@code afirma://eudiw-present?
  *     verifier=https%3A%2F%2Fverifier.example.es&
  *     responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse&
+ *     dcqlQuery=%7B%22credentials%22%3A%5B...%5D%7D&
  *     presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1&
  *     state=optional-state}</pre>
  *
@@ -76,6 +77,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 
 		final String verifier = require(params, "verifier"); //$NON-NLS-1$
 		final URI responseUri = URI.create(require(params, "responseUri")); //$NON-NLS-1$
+		final String dcqlQuery = firstNonBlank(params.get("dcqlQuery"), params.get("dcql_query")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
@@ -83,7 +85,10 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 				.responseUri(responseUri)
 				.withFreshNonce()
 				.withFreshState();
-		if (pdUri != null && !pdUri.isBlank()) {
+		if (dcqlQuery != null) {
+			builder.dcqlQuery(dcqlQuery);
+		}
+		else if (pdUri != null && !pdUri.isBlank()) {
 			builder.presentationDefinitionUri(URI.create(pdUri));
 		}
 		final AuthorizationRequest request = builder.build();
@@ -157,5 +162,12 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 					"Parámetro requerido ausente en eudiw-present: " + key); //$NON-NLS-1$
 		}
 		return v;
+	}
+
+	private static String firstNonBlank(final String first, final String second) {
+		if (first != null && !first.isBlank()) {
+			return first;
+		}
+		return second != null && !second.isBlank() ? second : null;
 	}
 }

@@ -3,6 +3,7 @@
 package es.gob.afirma.eudiw;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,6 +42,28 @@ final class TestAuthorizationRequest {
 		assertTrue(q.contains("presentation_definition_uri="), "PD URI presente");
 		assertTrue(q.contains("nonce="), "nonce presente");
 		assertTrue(q.contains("state="), "state presente");
+	}
+
+	@Test
+	@DisplayName("Builder serializa dcql_query nativo y valida JSON")
+	void buildsDcqlQueryUri() {
+		final String dcql = "{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\"}]}";
+		final AuthorizationRequest req = new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es")
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response"))
+				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/legacy"))
+				.dcqlQuery(dcql)
+				.nonce("nonce")
+				.build();
+
+		final String q = req.toUri().getRawQuery();
+		assertNotNull(q);
+		assertTrue(q.contains("dcql_query="), "DCQL presente");
+		assertTrue(q.contains("credentials"), "JSON DCQL codificado");
+		assertFalse(q.contains("presentation_definition_uri="),
+				"DCQL sustituye al presentation_definition_uri legacy");
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery("not-json"));
 	}
 
 	@Test

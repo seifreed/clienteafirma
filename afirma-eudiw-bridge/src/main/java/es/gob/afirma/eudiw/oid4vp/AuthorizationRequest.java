@@ -24,19 +24,19 @@ import java.util.Objects;
  *   <li>{@code response_type} — fijo a {@code vp_token}.</li>
  *   <li>{@code response_mode} — {@code direct_post} para que la wallet POSTee la respuesta.</li>
  *   <li>{@code response_uri} — endpoint del Verifier que recibe la respuesta.</li>
- *   <li>{@code presentation_definition} — JSON DCQL inline (solo URI por ahora; ver TODO).</li>
+ *   <li>{@code dcql_query} — consulta DCQL nativa.</li>
  *   <li>{@code nonce} y {@code state} — protección replay/CSRF.</li>
  * </ul>
  *
  * <p><strong>TODO M4.x:</strong> JAR (JWT-Signed Authorization Requests, RFC 9101)
  * para los Verifiers que requieren request object firmado; cifrado de respuesta
- * con JARM (RFC 9207); soporte para DCQL nativo en lugar del legacy
- * {@code presentation_definition_uri}.</p>
+ * con JARM (RFC 9207).</p>
  */
 public record AuthorizationRequest(
 		String clientId,
 		URI responseUri,
 		URI presentationDefinitionUri,
+		DcqlQuery dcqlQuery,
 		String nonce,
 		String state) {
 
@@ -53,7 +53,10 @@ public record AuthorizationRequest(
 		params.put("response_type", "vp_token"); //$NON-NLS-1$ //$NON-NLS-2$
 		params.put("response_mode", "direct_post"); //$NON-NLS-1$ //$NON-NLS-2$
 		params.put("response_uri", this.responseUri.toString()); //$NON-NLS-1$
-		if (this.presentationDefinitionUri != null) {
+		if (this.dcqlQuery != null) {
+			params.put("dcql_query", this.dcqlQuery.json()); //$NON-NLS-1$
+		}
+		else if (this.presentationDefinitionUri != null) {
 			params.put("presentation_definition_uri", this.presentationDefinitionUri.toString()); //$NON-NLS-1$
 		}
 		params.put("nonce", this.nonce); //$NON-NLS-1$

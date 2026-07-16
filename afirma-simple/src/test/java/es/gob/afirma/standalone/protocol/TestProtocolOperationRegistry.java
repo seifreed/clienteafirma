@@ -102,6 +102,24 @@ final class TestProtocolOperationRegistry {
 	}
 
 	@Test
+	@DisplayName("EudiwProtocolHandler usa dcql_query nativo si se declara")
+	void eudiwProducesNativeDcqlQuery() throws Exception {
+		final EudiwProtocolHandler handler = new EudiwProtocolHandler();
+		final String dcql = "%7B%22credentials%22%3A%5B%7B%22id%22%3A%22pid%22%2C%22format%22%3A%22dc%2Bsd-jwt%22%7D%5D%7D";
+		final String url = "afirma://eudiw-present"
+				+ "?verifier=https%3A%2F%2Fverifier.example.es"
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2Flegacy"
+				+ "&dcql_query=" + dcql;
+		final LaunchContext ctx = new LaunchContext(null, false,
+				Collections.emptyMap(), 1);
+		final String result = handler.process(url, ctx);
+		assertTrue(result.contains("dcql_query="));
+		assertTrue(result.contains("credentials"));
+		assertFalse(result.contains("presentation_definition_uri="));
+	}
+
+	@Test
 	@DisplayName("EudiwProtocolHandler.process exige verifier y responseUri")
 	void eudiwRejectsMissingRequired() {
 		final EudiwProtocolHandler handler = new EudiwProtocolHandler();

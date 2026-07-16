@@ -14,6 +14,7 @@ public final class AuthorizationRequestBuilder {
 	private String clientId;
 	private URI responseUri;
 	private URI presentationDefinitionUri;
+	private DcqlQuery dcqlQuery;
 	private String nonce;
 	private String state;
 
@@ -29,6 +30,11 @@ public final class AuthorizationRequestBuilder {
 
 	public AuthorizationRequestBuilder presentationDefinitionUri(final URI value) {
 		this.presentationDefinitionUri = value;
+		return this;
+	}
+
+	public AuthorizationRequestBuilder dcqlQuery(final String value) {
+		this.dcqlQuery = new DcqlQuery(value);
 		return this;
 	}
 
@@ -60,6 +66,7 @@ public final class AuthorizationRequestBuilder {
 				this.clientId,
 				this.responseUri,
 				this.presentationDefinitionUri,
+				this.dcqlQuery,
 				this.nonce,
 				this.state);
 	}
