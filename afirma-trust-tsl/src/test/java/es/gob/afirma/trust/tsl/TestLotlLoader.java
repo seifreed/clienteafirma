@@ -147,6 +147,7 @@ final class TestLotlLoader {
 		final LotlLoader loader = new LotlLoader(
 				() -> signed, kp.getPublic(), null);
 		assertThrows(TslException.class, loader::load);
+		assertThrows(TslException.class, () -> new TslVerifier().verify(signed, kp.getPublic()));
 	}
 
 	@Test

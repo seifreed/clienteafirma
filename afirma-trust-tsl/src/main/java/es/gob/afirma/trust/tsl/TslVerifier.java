@@ -35,6 +35,8 @@ import org.w3c.dom.NodeList;
  */
 public final class TslVerifier {
 
+	private static final String TSL_NS = "http://uri.etsi.org/02231/v2#"; //$NON-NLS-1$
+
 	/** Verifica una TSL self-contained usando el certificado X.509 embebido en
 	 *  {@code ds:Signature/ds:KeyInfo/ds:X509Data}. */
 	public boolean verify(final byte[] xml) throws TslException {
@@ -113,6 +115,11 @@ public final class TslVerifier {
 	}
 
 	private static boolean validate(final Document doc, final PublicKey trustedKey) throws Exception {
+		final Element root = doc.getDocumentElement();
+		if (!TSL_NS.equals(root.getNamespaceURI())
+				|| !"TrustServiceStatusList".equals(root.getLocalName())) { //$NON-NLS-1$
+			throw new TslException("La raíz XML no es TrustServiceStatusList"); //$NON-NLS-1$
+		}
 		final NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature"); //$NON-NLS-1$
 		if (nl.getLength() == 0) {
 			return false;
