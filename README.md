@@ -80,7 +80,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
   - **JAdES T/LT/LTA:** JAdES-T ya puede obtener un token RFC 3161 desde `tsaURL` o serializar en `etsiU` un token aportado por el llamador mediante JWS JSON Serialization flattened. Quedan la política TSA CTT por defecto y la conexión con `afirma-trust-tsl` para LT/LTA.
   - **TSL/LOTL real:** `LotlLoader` ya descarga la LOTL por HTTPS (<https://ec.europa.eu/tools/lotl/eu-lotl.xml>), verifica XMLDSig con clave pública pinada suministrada por el integrador y persiste cache local verificada. Queda fijar el pin oficial del certificado de firma de la Comisión y la política de distribución/rotación CTT.
   - **OID4VP completo:** perfiles finales de interoperabilidad. DCQL nativo ya sustituye al legacy `presentation_definition_uri` cuando se declara; JAR by value ya genera Request Objects firmados; JARM `direct_post.jwt` ya se solicita y valida.
-  - **SD-JWT VC:** `SdJwtVerifier` ya valida issuer JWT contra TSL, disclosures, firma del Holder, `aud`, `nonce` y `sd_hash` del Key Binding JWT.
+  - **SD-JWT VC:** `SdJwtVerifier` ya valida issuer JWT contra TSL, disclosures, firma del Holder, `typ`, `iat`, `aud`, `nonce` y `sd_hash` del Key Binding JWT.
   - **Conformance:** suites EU Reference Wallet + eIDAS Test Bench.
   - **Mobile:** `EudiwProtocolHandler` ya permite `walletUri` para deep-link móvil configurable y `walletEndpoint` para entrega REST same-device. Quedan contratos cerrados con `afirma-android` y `afirma-ios` (repos separados en CTT).
 

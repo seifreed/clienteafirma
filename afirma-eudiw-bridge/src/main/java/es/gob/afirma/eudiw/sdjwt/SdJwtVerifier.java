@@ -9,10 +9,12 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.util.Base64;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -30,6 +32,8 @@ import es.gob.afirma.trust.tsl.TrustServiceProvider;
 
 /** Verificador local de SD-JWT VC contra TSL y Key Binding JWT. */
 public final class SdJwtVerifier {
+
+	private static final JOSEObjectType KEY_BINDING_TYPE = new JOSEObjectType("kb+jwt"); //$NON-NLS-1$
 
 	private SdJwtVerifier() {
 		// No instanciable.
@@ -121,7 +125,14 @@ public final class SdJwtVerifier {
 		if (!kbJwt.verify(verifier(holderKey))) {
 			throw new SdJwtVerificationException("Firma Key Binding JWT inválida"); //$NON-NLS-1$
 		}
+		if (!KEY_BINDING_TYPE.equals(kbJwt.getHeader().getType())) {
+			throw new SdJwtVerificationException("Tipo Key Binding JWT inválido"); //$NON-NLS-1$
+		}
 		final JWTClaimsSet claims = kbJwt.getJWTClaimsSet();
+		final Date issueTime = claims.getIssueTime();
+		if (issueTime == null) {
+			throw new SdJwtVerificationException("Key Binding JWT sin iat"); //$NON-NLS-1$
+		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
 		}

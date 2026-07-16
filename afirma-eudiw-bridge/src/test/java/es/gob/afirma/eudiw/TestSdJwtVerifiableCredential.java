@@ -23,6 +23,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -136,6 +137,13 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(replayedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String untypedKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), false); //$NON-NLS-1$ //$NON-NLS-2$
+		final SdJwtVerifiableCredential untypedVc = SdJwtVerifiableCredential.parse(
+				presentation + untypedKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(untypedVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
@@ -178,10 +186,21 @@ final class TestSdJwtVerifiableCredential {
 
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
 			final String audience, final String nonce, final String sdHash) throws Exception {
+		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, true);
+	}
+
+	private static String signedKeyBindingJwt(final KeyPair holderKp,
+			final String audience, final String nonce, final String sdHash,
+			final boolean typed) throws Exception {
+		final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
+		if (typed) {
+			headerBuilder.type(new JOSEObjectType("kb+jwt")); //$NON-NLS-1$
+		}
 		final SignedJWT jwt = new SignedJWT(
-				new JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				headerBuilder.build(),
 				new JWTClaimsSet.Builder()
 						.audience(audience)
+						.issueTime(new Date())
 						.claim("nonce", nonce) //$NON-NLS-1$
 						.claim("sd_hash", sdHash) //$NON-NLS-1$
 						.build());
