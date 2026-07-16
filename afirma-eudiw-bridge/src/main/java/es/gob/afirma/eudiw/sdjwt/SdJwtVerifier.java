@@ -58,11 +58,17 @@ public final class SdJwtVerifier {
 		if (!audience.equals(audience.strip())) {
 			throw new SdJwtVerificationException("Audience SD-JWT no normalizada"); //$NON-NLS-1$
 		}
+		if (containsControlChars(audience)) {
+			throw new SdJwtVerificationException("Audience SD-JWT contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (nonce == null || nonce.isBlank()) {
 			throw new SdJwtVerificationException("Nonce SD-JWT vacío"); //$NON-NLS-1$
 		}
 		if (!nonce.equals(nonce.strip())) {
 			throw new SdJwtVerificationException("Nonce SD-JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (containsControlChars(nonce)) {
+			throw new SdJwtVerificationException("Nonce SD-JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
 		try {
 			if (!ISSUER_TYPE.equals(vc.issuerSignedJwt().getHeader().getType())) {
@@ -102,6 +108,9 @@ public final class SdJwtVerifier {
 		}
 		if (!issuer.equals(issuer.strip())) {
 			throw new SdJwtVerificationException("Issuer JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (containsControlChars(issuer)) {
+			throw new SdJwtVerificationException("Issuer JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
 		final Date now = new Date();
 		final Date issueTime = claims.getIssueTime();
@@ -186,6 +195,9 @@ public final class SdJwtVerifier {
 			if (!digest.equals(digest.strip())) {
 				throw new SdJwtVerificationException("Issuer JWT contiene _sd no normalizado"); //$NON-NLS-1$
 			}
+			if (containsControlChars(digest)) {
+				throw new SdJwtVerificationException("Issuer JWT contiene _sd con caracteres de control"); //$NON-NLS-1$
+			}
 			try {
 				if (Base64.getUrlDecoder().decode(digest).length != 32) {
 					throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
@@ -223,8 +235,14 @@ public final class SdJwtVerifier {
 			if (!salt.equals(salt.strip())) {
 				throw new SdJwtVerificationException("Salt SD-JWT no normalizado"); //$NON-NLS-1$
 			}
+			if (containsControlChars(salt)) {
+				throw new SdJwtVerificationException("Salt SD-JWT contiene caracteres de control"); //$NON-NLS-1$
+			}
 			if (!claimName.equals(claimName.strip())) {
 				throw new SdJwtVerificationException("Claim SD-JWT no normalizado: " + claimName); //$NON-NLS-1$
+			}
+			if (containsControlChars(claimName)) {
+				throw new SdJwtVerificationException("Claim SD-JWT contiene caracteres de control: " + claimName); //$NON-NLS-1$
 			}
 			if (!seenClaimNames.add(claimName)) {
 				throw new SdJwtVerificationException("Claim SD-JWT duplicado: " + claimName); //$NON-NLS-1$
@@ -287,6 +305,9 @@ public final class SdJwtVerifier {
 					|| !claimAudience.equals(claimAudience.strip())) {
 				throw new SdJwtVerificationException("Audience Key Binding JWT no normalizada"); //$NON-NLS-1$
 			}
+			if (containsControlChars(claimAudience)) {
+				throw new SdJwtVerificationException("Audience Key Binding JWT contiene caracteres de control"); //$NON-NLS-1$
+			}
 		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
@@ -297,6 +318,9 @@ public final class SdJwtVerifier {
 		}
 		if (!claimNonce.equals(claimNonce.strip())) {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (containsControlChars(claimNonce)) {
+			throw new SdJwtVerificationException("Nonce Key Binding JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
 		if (!nonce.equals(claimNonce)) {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT inválido"); //$NON-NLS-1$
@@ -309,6 +333,10 @@ public final class SdJwtVerifier {
 
 	private static boolean isSupportedJwsAlgorithm(final JWSAlgorithm algorithm) {
 		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
+	}
+
+	private static boolean containsControlChars(final String text) {
+		return text.chars().anyMatch(Character::isISOControl);
 	}
 
 	private static String sdHash(final SdJwtVerifiableCredential vc) throws Exception {

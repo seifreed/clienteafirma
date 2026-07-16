@@ -149,11 +149,16 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust, " https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust, "https://verifier\n.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", " ")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", " nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust,
+						"https://verifier.example.es", "non\nce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", "wrong")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -234,6 +239,13 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(unnormalizedNonceKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlNonceKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "non\nce-1", presentationHash(presentation)); //$NON-NLS-1$ //$NON-NLS-2$
+		final SdJwtVerifiableCredential controlNonceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + controlNonceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlNonceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noAudienceKbJwt = signedKeyBindingJwt(holderKp,
 				List.of(), "nonce-1", presentationHash(presentation)); //$NON-NLS-1$
 		final SdJwtVerifiableCredential noAudienceKbVc = SdJwtVerifiableCredential.parse(
@@ -248,6 +260,14 @@ final class TestSdJwtVerifiableCredential {
 				presentation + unnormalizedAudienceKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(unnormalizedAudienceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlAudienceKbJwt = signedKeyBindingJwt(holderKp,
+				List.of("https://verifier.example.es", "oth\ner"), "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				presentationHash(presentation));
+		final SdJwtVerifiableCredential controlAudienceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + controlAudienceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlAudienceKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noExpirationKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
@@ -351,6 +371,18 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(unnormalizedIssuerVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert), true, "https://issuer\n.example.es"); //$NON-NLS-1$
+		final String controlIssuerPresentation = controlIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlIssuerKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(controlIssuerPresentation));
+		final SdJwtVerifiableCredential controlIssuerVc = SdJwtVerifiableCredential.parse(
+				controlIssuerPresentation + controlIssuerKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
 		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,
 				"CN=EUDI Issuer Expired, O=AEAD", expiredCertTime, //$NON-NLS-1$
@@ -437,6 +469,30 @@ final class TestSdJwtVerifiableCredential {
 				blankNamePresentation + blankNameKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(blankNameVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlNameDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"salt\",\"family\\nname\",\"García\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String controlNameIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash(controlNameDisclosure));
+		final String controlNamePresentation = controlNameIssuerJwt + "~" + controlNameDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlNameKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(controlNamePresentation));
+		final SdJwtVerifiableCredential controlNameVc = SdJwtVerifiableCredential.parse(
+				controlNamePresentation + controlNameKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlNameVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlSdIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of(disclosureHash.substring(0, 8) + "\n" + disclosureHash.substring(8))); //$NON-NLS-1$
+		final String controlSdPresentation = controlSdIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlSdKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(controlSdPresentation));
+		final SdJwtVerifiableCredential controlSdVc = SdJwtVerifiableCredential.parse(
+				controlSdPresentation + controlSdKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlSdVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String unnormalizedSaltDisclosure = Base64.getUrlEncoder().withoutPadding()
