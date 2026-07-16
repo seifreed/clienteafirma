@@ -8,12 +8,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import javax.xml.XMLConstants;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
@@ -24,8 +31,16 @@ import javax.xml.crypto.dsig.SignedInfo;
 import javax.xml.crypto.dsig.Transform;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.KeyInfo;
+import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -85,6 +100,16 @@ final class TestLotlLoader {
 		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
 	}
 
+	@Test
+	@DisplayName("TslVerifier usa el certificado embebido en KeyInfo si no se aporta clave")
+	void verifiesSelfContainedSignature() throws Exception {
+		final KeyPair kp = rsa();
+		final X509Certificate cert = selfSigned(kp);
+		final byte[] signed = sign(LOTL, kp, cert);
+
+		assertTrue(new TslVerifier().verify(signed));
+	}
+
 	private static KeyPair rsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
 		kpg.initialize(2048);
@@ -92,6 +117,10 @@ final class TestLotlLoader {
 	}
 
 	private static byte[] sign(final String xml, final KeyPair kp) throws Exception {
+		return sign(xml, kp, null);
+	}
+
+	private static byte[] sign(final String xml, final KeyPair kp, final X509Certificate cert) throws Exception {
 		final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -112,12 +141,33 @@ final class TestLotlLoader {
 		final SignedInfo signedInfo = factory.newSignedInfo(
 				factory.newCanonicalizationMethod(
 						CanonicalizationMethod.INCLUSIVE,
-						(javax.xml.crypto.dsig.spec.C14NMethodParameterSpec) null),
+				(javax.xml.crypto.dsig.spec.C14NMethodParameterSpec) null),
 				factory.newSignatureMethod(SignatureMethod.RSA_SHA256, null),
 				Collections.singletonList(ref));
-		factory.newXMLSignature(signedInfo, null).sign(
+		final KeyInfo keyInfo;
+		if (cert != null) {
+			final KeyInfoFactory kif = factory.getKeyInfoFactory();
+			keyInfo = kif.newKeyInfo(List.of(kif.newX509Data(List.of(cert))));
+		}
+		else {
+			keyInfo = null;
+		}
+		factory.newXMLSignature(signedInfo, keyInfo).sign(
 				new DOMSignContext(kp.getPrivate(), doc.getDocumentElement()));
 		return serialize(doc);
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp) throws Exception {
+		final Instant now = Instant.now();
+		final X500Name dn = new X500Name("CN=TSL Test, O=AEAD"); //$NON-NLS-1$
+		final X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
+				dn, BigInteger.valueOf(System.currentTimeMillis()),
+				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				dn, kp.getPublic());
+		final ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate()); //$NON-NLS-1$
+		final X509CertificateHolder holder = builder.build(signer);
+		return (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
+				.generateCertificate(new ByteArrayInputStream(holder.getEncoded()));
 	}
 
 	private static byte[] serialize(final Document doc) throws Exception {

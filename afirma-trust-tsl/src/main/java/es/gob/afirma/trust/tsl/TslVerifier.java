@@ -4,6 +4,9 @@ package es.gob.afirma.trust.tsl;
 
 import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 import javax.xml.XMLConstants;
 import javax.xml.crypto.dsig.XMLSignature;
@@ -13,6 +16,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
@@ -31,6 +35,36 @@ import org.w3c.dom.NodeList;
  */
 public final class TslVerifier {
 
+	/** Verifica una TSL self-contained usando el certificado X.509 embebido en
+	 *  {@code ds:Signature/ds:KeyInfo/ds:X509Data}. */
+	public boolean verify(final byte[] xml) throws TslException {
+		if (xml == null || xml.length == 0) {
+			throw new TslException("TSL vacía"); //$NON-NLS-1$
+		}
+		try {
+			final Document doc = parseXml(xml);
+			final NodeList signatures = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature"); //$NON-NLS-1$
+			if (signatures.getLength() == 0) {
+				return false;
+			}
+			final Element signature = (Element) signatures.item(0);
+			final NodeList certificates = signature.getElementsByTagNameNS(XMLSignature.XMLNS, "X509Certificate"); //$NON-NLS-1$
+			if (certificates.getLength() == 0) {
+				throw new TslException("Firma TSL sin certificado X.509 en KeyInfo"); //$NON-NLS-1$
+			}
+			final byte[] der = Base64.getMimeDecoder().decode(certificates.item(0).getTextContent());
+			final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
+			final X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der));
+			return validate(doc, cert.getPublicKey());
+		}
+		catch (final TslException e) {
+			throw e;
+		}
+		catch (final Exception e) {
+			throw new TslException("Error verificando firma TSL self-contained: " + e.getMessage(), e); //$NON-NLS-1$
+		}
+	}
+
 	/** Verifica XMLDSig sobre el XML proporcionado contra la clave pública dada.
 	 *  Usa la implementación JSR-105 del JDK; Apache Santuario está en el
 	 *  classpath solo como fallback para algoritmos legacy. */
@@ -42,33 +76,33 @@ public final class TslVerifier {
 			throw new TslException("Clave de confianza no proporcionada"); //$NON-NLS-1$
 		}
 		try {
-			final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
-			dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-			dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); //$NON-NLS-1$
-			final DocumentBuilder db = dbf.newDocumentBuilder();
-			final Document doc;
-			try (ByteArrayInputStream bais = new ByteArrayInputStream(xml)) {
-				doc = db.parse(bais);
-			}
-
-			final NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature"); //$NON-NLS-1$
-			if (nl.getLength() == 0) {
-				return false;
-			}
-
-			final DOMValidateContext valContext = new DOMValidateContext(trustedKey, nl.item(0));
-			valContext.setProperty("org.jcp.xml.dsig.secureValidation", Boolean.TRUE); //$NON-NLS-1$
-			final XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM"); //$NON-NLS-1$
-			final XMLSignature signature = factory.unmarshalXMLSignature(valContext);
-			return signature.validate(valContext);
+			return validate(parseXml(xml), trustedKey);
 		}
 		catch (final Exception e) {
 			throw new TslException("Error verificando firma TSL: " + e.getMessage(), e); //$NON-NLS-1$
 		}
 	}
-	// TODO M4.x — soportar TSLs self-contained extrayendo la clave del propio
-	// <KeyInfo>/<X509Data>. La LOTL europea no es self-contained (su clave la
-	// publica la Comisión por separado), pero las TSLs nacionales pueden serlo
-	// según el reglamento de implementación de cada estado miembro.
+
+	private static Document parseXml(final byte[] xml) throws Exception {
+		final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(true);
+		dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); //$NON-NLS-1$
+		final DocumentBuilder db = dbf.newDocumentBuilder();
+		try (ByteArrayInputStream bais = new ByteArrayInputStream(xml)) {
+			return db.parse(bais);
+		}
+	}
+
+	private static boolean validate(final Document doc, final PublicKey trustedKey) throws Exception {
+		final NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature"); //$NON-NLS-1$
+		if (nl.getLength() == 0) {
+			return false;
+		}
+		final DOMValidateContext valContext = new DOMValidateContext(trustedKey, nl.item(0));
+		valContext.setProperty("org.jcp.xml.dsig.secureValidation", Boolean.TRUE); //$NON-NLS-1$
+		final XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM"); //$NON-NLS-1$
+		final XMLSignature signature = factory.unmarshalXMLSignature(valContext);
+		return signature.validate(valContext);
+	}
 }
