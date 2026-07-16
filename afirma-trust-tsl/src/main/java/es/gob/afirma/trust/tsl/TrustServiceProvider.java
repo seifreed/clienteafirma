@@ -31,6 +31,9 @@ public record TrustServiceProvider(
 		if (name.isBlank()) {
 			throw new IllegalArgumentException("Nombre TSP vacío"); //$NON-NLS-1$
 		}
+		if (!name.equals(name.strip())) {
+			throw new IllegalArgumentException("Nombre TSP no normalizado"); //$NON-NLS-1$
+		}
 		if (countryCode.isBlank()) {
 			throw new IllegalArgumentException("País TSP vacío"); //$NON-NLS-1$
 		}
