@@ -133,6 +133,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		final boolean jsonSerialization = Boolean.parseBoolean(jsonSerializationParam);
 		final String timestampTokenBase64 = params.getProperty(EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64);
 		final String tsaUrl = params.getProperty(EXTRA_PARAM_TSA_URL);
+		if (tsaUrl != null && !tsaUrl.equals(tsaUrl.strip())) {
+			throw new AOException("Parametro tsaURL JAdES no normalizado", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 		if (hasText(timestampTokenBase64) && hasText(tsaUrl)) {
 			throw new AOException("JAdES-T no admite timestampTokenBase64 y tsaURL a la vez", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
