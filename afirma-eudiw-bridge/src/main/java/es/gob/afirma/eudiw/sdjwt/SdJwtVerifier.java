@@ -22,6 +22,7 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jose.util.X509CertUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -117,11 +118,15 @@ public final class SdJwtVerifier {
 		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		for (final String disclosure : vc.disclosures()) {
+			final byte[] decoded;
 			try {
-				Base64.getUrlDecoder().decode(disclosure);
+				decoded = Base64.getUrlDecoder().decode(disclosure);
 			}
 			catch (final IllegalArgumentException e) {
 				throw new SdJwtVerificationException("Disclosure no es base64url válido", e); //$NON-NLS-1$
+			}
+			if (JSONArrayUtils.parse(new String(decoded, StandardCharsets.UTF_8)).size() < 2) {
+				throw new SdJwtVerificationException("Disclosure SD-JWT no es array JSON válido"); //$NON-NLS-1$
 			}
 			final String digest = Base64.getUrlEncoder().withoutPadding().encodeToString(
 					sha256.digest(disclosure.getBytes(StandardCharsets.US_ASCII)));
