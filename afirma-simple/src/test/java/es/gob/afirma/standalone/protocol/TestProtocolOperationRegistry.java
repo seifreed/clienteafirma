@@ -218,6 +218,12 @@ final class TestProtocolOperationRegistry {
 						+ "&presentationDefinitionUri=", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&dcqlQuery=%7B%22credentials%22%3A%5B%7B%22id%22%3A%22pid%22%2C%22format%22%3A%22dc%2Bsd-jwt%22%7D%5D%7D" //$NON-NLS-1$
+						+ "&dcql_query=%7B%22credentials%22%3A%5B%7B%22id%22%3A%22pid2%22%2C%22format%22%3A%22dc%2Bsd-jwt%22%7D%5D%7D", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=http%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,

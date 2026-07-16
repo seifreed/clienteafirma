@@ -94,6 +94,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		rejectBlankIfPresent(responseMode, "responseMode"); //$NON-NLS-1$
 		rejectBlankIfPresent(dcqlQueryCamel, "dcqlQuery"); //$NON-NLS-1$
 		rejectBlankIfPresent(dcqlQuerySnake, "dcql_query"); //$NON-NLS-1$
+		if (dcqlQueryCamel != null && dcqlQuerySnake != null) {
+			throw new IllegalArgumentException("dcqlQuery y dcql_query no pueden combinarse"); //$NON-NLS-1$
+		}
 		rejectBlankIfPresent(pdUri, "presentationDefinitionUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletUri, "walletUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
