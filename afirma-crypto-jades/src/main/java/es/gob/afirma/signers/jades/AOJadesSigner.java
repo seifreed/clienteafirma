@@ -120,7 +120,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 		final Properties params = extraParams != null ? extraParams : new Properties();
 		final String detachedParam = params.getProperty(EXTRA_PARAM_DETACHED, "true"); //$NON-NLS-1$
-		if (!detachedParam.equals(detachedParam.strip())) {
+		if (!detachedParam.equals(detachedParam.strip())
+				|| detachedParam.chars().anyMatch(Character::isISOControl)) {
 			throw new AOException("Parametro detached JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
@@ -129,7 +130,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		final String jsonSerializationParam = params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false"); //$NON-NLS-1$
-		if (!jsonSerializationParam.equals(jsonSerializationParam.strip())) {
+		if (!jsonSerializationParam.equals(jsonSerializationParam.strip())
+				|| jsonSerializationParam.chars().anyMatch(Character::isISOControl)) {
 			throw new AOException("Parametro jsonSerialization JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
