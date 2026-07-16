@@ -7,8 +7,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Objects;
@@ -71,7 +73,22 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			if (parent != null) {
 				Files.createDirectories(parent);
 			}
-			Files.write(this.cachePath, xml);
+			final Path tmp = Files.createTempFile(
+					parent != null ? parent : this.cachePath.toAbsolutePath().getParent(),
+					this.cachePath.getFileName().toString(), ".tmp"); //$NON-NLS-1$
+			try {
+				Files.write(tmp, xml);
+				try {
+					Files.move(tmp, this.cachePath,
+							StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+				}
+				catch (final AtomicMoveNotSupportedException e) {
+					Files.move(tmp, this.cachePath, StandardCopyOption.REPLACE_EXISTING);
+				}
+			}
+			finally {
+				Files.deleteIfExists(tmp);
+			}
 		}
 		catch (final IOException e) {
 			throw new TslException("No se pudo escribir la cache LOTL", e); //$NON-NLS-1$
