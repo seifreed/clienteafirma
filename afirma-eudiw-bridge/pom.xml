@@ -22,6 +22,11 @@
 			<version>${clienteafirma.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>es.gob.afirma</groupId>
+			<artifactId>afirma-trust-tsl</artifactId>
+			<version>${clienteafirma.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
 		</dependency>

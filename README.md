@@ -48,7 +48,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | **M3.4** | Repack del toolkit Mozilla NSS embebido (binarios de 2010) | 🟡 Linux + macOS hechos (NSS 3.123, **arm64 nativo macOS**); Windows pendiente (requiere host con Firefox) |
 | **M3.5** | Fork de iText 1.7 (2009) → OpenPDF | 🔴 **Bloqueado** — `afirma-lib-itext` es un hard fork con parches PAdES propios de la AEAD (`PdfPKCS7.getPkcs1()`, `InvalidPageNumberException`, firmas custom de `createSignature`/`preClose`/`PdfSignature`) que OpenPDF 1.3/2.x/3.x no tiene. Migración requiere portar parches o mantener fork propio (~2-3 semanas dedicadas). |
 | **M3.6** | Hardening (Jazzer, PIT, JaCoCo) y JUnit | ✅ Completado — JaCoCo siempre activo; PIT bajo `-Pmutation` con `pitest-junit5-plugin`; Jazzer bajo `-Pfuzz` con 3 harnesses (`DerValue`, `TriphaseData`, `ProtocolUri`); JUnit Platform 6.1.2 + Jupiter + Vintage Engine en classpath de tests (los 146 `Test*.java` JUnit 4 corren sin tocarse, vía Vintage; nuevos tests usan `org.junit.jupiter.api.*` directamente). |
-| **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | 🟡 Esqueleto fase 1 — `afirma-crypto-jades` (B-B compact JWS), `afirma-trust-tsl` (parser ETSI TS 119 612 + verificador XMLDSig + `TrustListService`), `afirma-eudiw-bridge` (OID4VP `AuthorizationRequest`, SD-JWT VC parser, cliente HTTP), `EudiwProtocolHandler` para `afirma://eudiw-present`. Niveles JAdES T/LT/LTA, integración con LOTL real, JAR/JARM, DCQL nativo, conformance EU Reference Wallet y coordinación móvil pendientes (TODO M4.x). |
+| **M4**  | eIDAS&nbsp;2 / EUDI Wallet — JAdES, TSL/LOTL, OID4VP, SD-JWT | 🟡 Esqueleto fase 2 — `afirma-crypto-jades` (B-B compact JWS), `afirma-trust-tsl` (parser ETSI TS 119 612 + verificador XMLDSig + cache 24h + `TrustListService`), `afirma-eudiw-bridge` (OID4VP `AuthorizationRequest` con DCQL, SD-JWT VC parser/verifier, cliente HTTP), `EudiwProtocolHandler` cableado en `ProtocolInvocationLauncher`. Niveles JAdES T/LT/LTA, integración con LOTL real, JAR/JARM, conformance EU Reference Wallet y coordinación móvil pendientes (TODO M4.x). |
 
 ### Diferencias principales frente al upstream
 
@@ -79,9 +79,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 - **M4 — fase 2 (después de fase 1).** Lo que la sesión 2026-05-07 dejó pendiente:
   - **JAdES T/LT/LTA:** integración con TSA real (timestamp), conexión con `afirma-trust-tsl` para LT/LTA, soporte JSON Serialization además del compact actual. Bloqueante: política sobre TSA (decisión CTT).
   - **TSL/LOTL real:** descarga periódica de la LOTL (<https://ec.europa.eu/tools/lotl/eu-lotl.xml>), pin del certificado de firma de la Comisión, persistencia local de la cache, refresh policy 24h.
-  - **OID4VP completo:** soporte JAR (RFC 9101), JARM (RFC 9207), DCQL nativo (draft-23 §6) en lugar del legacy `presentation_definition_uri`.
-  - **SD-JWT VC verificación:** validar Issuer-signed JWT contra `TrustListService`, recalcular hashes de cada disclosure, comprobar Key Binding JWT (audience, nonce, signature).
-  - **Cableado dispatcher:** integrar `EudiwProtocolHandler` dentro de `ProtocolInvocationLauncher.launch(...)`.
+  - **OID4VP completo:** soporte JAR (RFC 9101), JARM (RFC 9207) y perfiles finales de interoperabilidad. DCQL nativo ya sustituye al legacy `presentation_definition_uri` cuando se declara.
   - **Conformance:** suites EU Reference Wallet + eIDAS Test Bench.
   - **Mobile:** contratos REST/deep-link con `afirma-android` y `afirma-ios` (repos separados en CTT).
 

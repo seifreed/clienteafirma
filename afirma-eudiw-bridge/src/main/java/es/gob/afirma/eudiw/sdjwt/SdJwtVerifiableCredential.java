@@ -29,9 +29,7 @@ import com.nimbusds.jwt.SignedJWT;
  * el formato sin verificar firmas — la verificación criptográfica se delega
  * en el Verifier que combina esto con la TSL del issuer.</p>
  *
- * <p><strong>TODO M4.x:</strong> verificación del Issuer-signed JWT contra
- * {@code afirma-trust-tsl}, validación de cada digest contra los claims
- * revelados, y comprobación del Key Binding JWT (audience, nonce).</p>
+ * <p>La verificación criptográfica completa vive en {@link SdJwtVerifier}.</p>
  */
 public final class SdJwtVerifiableCredential {
 
@@ -63,6 +61,11 @@ public final class SdJwtVerifiableCredential {
 		return out;
 	}
 
+	/** Disclosures en su forma base64url original, usada para recomputar _sd. */
+	public List<String> disclosures() {
+		return this.disclosures;
+	}
+
 	/** Key Binding JWT (firmado por la wallet); presente solo en presentaciones. */
 	public Optional<SignedJWT> keyBindingJwt() {
 		return this.keyBindingJwt;
@@ -70,7 +73,7 @@ public final class SdJwtVerifiableCredential {
 
 	/**
 	 * Parsea un SD-JWT VC en formato compact (separadores {@code ~}).
-	 * No verifica firmas; ver {@link #issuerSignedJwt()} para hacerlo aparte.
+	 * No verifica firmas; ver {@link SdJwtVerifier} para hacerlo aparte.
 	 */
 	public static SdJwtVerifiableCredential parse(final String compact) throws ParseException {
 		Objects.requireNonNull(compact, "compact");
