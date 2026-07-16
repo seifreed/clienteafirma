@@ -195,7 +195,7 @@ final class TestAuthorizationRequest {
 	@DisplayName("Cada build genera un nonce distinto (high-entropy)")
 	void freshNoncesUnique() {
 		final AuthorizationRequestBuilder base = new AuthorizationRequestBuilder()
-				.clientId("c").responseUri(URI.create("https://x/r"));
+				.clientId("https://verifier.example.es").responseUri(URI.create("https://x/r"));
 		final String n1 = base.withFreshNonce().build().nonce();
 		final String n2 = base.withFreshNonce().build().nonce();
 		assertNotEquals(n1, n2, "Dos requests consecutivas deben usar nonces distintos");
@@ -208,15 +208,17 @@ final class TestAuthorizationRequest {
 		assertThrows(NullPointerException.class,
 				() -> new AuthorizationRequestBuilder().withFreshNonce().build());
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
-				.clientId("c").responseUri(URI.create("http://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
+				.clientId("http://c").responseUri(URI.create("https://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://c").responseUri(URI.create("http://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
-				() -> new AuthorizationRequest("c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"fragment", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest(" ", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
-				() -> new AuthorizationRequest("c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, " ", null)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 

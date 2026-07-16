@@ -56,6 +56,9 @@ public record AuthorizationRequest(
 		if (clientId.isBlank()) {
 			throw new IllegalArgumentException("OID4VP client_id vacío"); //$NON-NLS-1$
 		}
+		if (!"https".equalsIgnoreCase(URI.create(clientId).getScheme())) { //$NON-NLS-1$
+			throw new IllegalArgumentException("OID4VP client_id exige HTTPS"); //$NON-NLS-1$
+		}
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
