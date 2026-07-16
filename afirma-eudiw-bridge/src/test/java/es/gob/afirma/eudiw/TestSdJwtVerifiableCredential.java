@@ -157,6 +157,14 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(untypedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String noExpirationKb = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
+				true, null, null);
+		final SdJwtVerifiableCredential noExpirationKbVc = SdJwtVerifiableCredential.parse(
+				presentation + noExpirationKb);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(noExpirationKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String expiredKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, Date.from(Instant.now().minus(Duration.ofMinutes(1))), null);
@@ -343,7 +351,8 @@ final class TestSdJwtVerifiableCredential {
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
 			final String audience, final String nonce, final String sdHash,
 			final boolean typed) throws Exception {
-		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, typed, null, null);
+		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, typed,
+				Date.from(Instant.now().plus(Duration.ofMinutes(5))), null);
 	}
 
 	private static String signedKeyBindingJwt(final KeyPair holderKp,

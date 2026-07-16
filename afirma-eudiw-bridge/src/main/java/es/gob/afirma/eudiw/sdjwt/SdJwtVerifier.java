@@ -180,7 +180,10 @@ public final class SdJwtVerifier {
 		}
 		final Date now = new Date();
 		final Date expirationTime = claims.getExpirationTime();
-		if (expirationTime != null && !expirationTime.after(now)) {
+		if (expirationTime == null) {
+			throw new SdJwtVerificationException("Key Binding JWT sin caducidad"); //$NON-NLS-1$
+		}
+		if (!expirationTime.after(now)) {
 			throw new SdJwtVerificationException("Key Binding JWT caducado"); //$NON-NLS-1$
 		}
 		final Date notBeforeTime = claims.getNotBeforeTime();
