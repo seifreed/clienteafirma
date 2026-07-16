@@ -74,9 +74,10 @@ public final class TslParser {
 			if (nextUpdateNodes.getLength() > 0) {
 				final NodeList ts = ((Element) nextUpdateNodes.item(0))
 						.getElementsByTagNameNS(TSL_NS, "dateTime"); //$NON-NLS-1$
-				if (ts.getLength() > 0) {
-					nextUpdate = Instant.parse(normalizedText(ts.item(0), "NextUpdate")); //$NON-NLS-1$
+				if (ts.getLength() != 1) {
+					throw new TslException("NextUpdate sin dateTime"); //$NON-NLS-1$
 				}
+				nextUpdate = Instant.parse(normalizedText(ts.item(0), "NextUpdate")); //$NON-NLS-1$
 			}
 
 			final List<TrustServiceProvider> providers = parseProviders(root, territory);

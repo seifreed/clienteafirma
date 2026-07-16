@@ -263,6 +263,9 @@ final class TestTslParser {
 				.replace("<dateTime>2026-12-31T23:59:59Z</dateTime>", //$NON-NLS-1$
 						"<dateTime>2026-12-31T23:59:59Z\n</dateTime>") //$NON-NLS-1$
 				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<dateTime>2026-12-31T23:59:59Z</dateTime>", "") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	@Test
