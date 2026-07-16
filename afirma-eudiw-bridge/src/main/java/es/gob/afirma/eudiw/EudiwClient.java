@@ -52,6 +52,9 @@ public final class EudiwClient {
 		if (endpoint.getHost() == null || endpoint.getHost().isBlank()) {
 			throw new IOException("OID4VP exige endpoint HTTPS con host"); //$NON-NLS-1$
 		}
+		if (endpoint.getRawUserInfo() != null) {
+			throw new IOException("OID4VP endpoint no admite userinfo"); //$NON-NLS-1$
+		}
 		if (endpoint.getRawFragment() != null) {
 			throw new IOException("OID4VP endpoint no admite fragmento"); //$NON-NLS-1$
 		}
