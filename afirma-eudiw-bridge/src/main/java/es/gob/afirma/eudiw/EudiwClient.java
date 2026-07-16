@@ -93,7 +93,7 @@ public final class EudiwClient {
 			if (equals <= 0 || equals == pair.length() - 1) {
 				throw new IOException("OID4VP form body no es application/x-www-form-urlencoded"); //$NON-NLS-1$
 			}
-			final String key = URLDecoder.decode(pair.substring(0, equals), StandardCharsets.UTF_8);
+			final String key = decodeFormComponent(pair.substring(0, equals));
 			if (key.isBlank() || !key.equals(key.strip())
 					|| key.chars().anyMatch(Character::isISOControl)) {
 				throw new IOException("OID4VP form body contiene clave no normalizada"); //$NON-NLS-1$
@@ -101,6 +101,15 @@ public final class EudiwClient {
 			if (!keys.add(key)) {
 				throw new IOException("OID4VP form body contiene parámetros duplicados"); //$NON-NLS-1$
 			}
+		}
+	}
+
+	private static String decodeFormComponent(final String value) throws IOException {
+		try {
+			return URLDecoder.decode(value, StandardCharsets.UTF_8);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new IOException("OID4VP form body contiene percent-encoding inválido", e); //$NON-NLS-1$
 		}
 	}
 
