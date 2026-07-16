@@ -68,6 +68,9 @@ public final class SdJwtVerifier {
 			if (!ISSUER_TYPE.equals(vc.issuerSignedJwt().getHeader().getType())) {
 				throw new SdJwtVerificationException("Tipo Issuer JWT inválido"); //$NON-NLS-1$
 			}
+			if (!isSupportedJwsAlgorithm(vc.issuerSignedJwt().getHeader().getAlgorithm())) {
+				throw new SdJwtVerificationException("Algoritmo Issuer JWT no soportado"); //$NON-NLS-1$
+			}
 			final X509Certificate issuerCert = issuerCertificate(vc.issuerSignedJwt());
 			issuerCert.checkValidity();
 			if (!vc.issuerSignedJwt().verify(verifier(issuerCert))) {
@@ -232,6 +235,9 @@ public final class SdJwtVerifier {
 			final String audience, final String nonce) throws Exception {
 		final SignedJWT issuerJwt = vc.issuerSignedJwt();
 		final JWK holderKey = holderKey(issuerJwt);
+		if (!isSupportedJwsAlgorithm(kbJwt.getHeader().getAlgorithm())) {
+			throw new SdJwtVerificationException("Algoritmo Key Binding JWT no soportado"); //$NON-NLS-1$
+		}
 		if (holderKey.getAlgorithm() != null
 				&& !kbJwt.getHeader().getAlgorithm().getName().equals(holderKey.getAlgorithm().getName())) {
 			throw new SdJwtVerificationException("Algoritmo Key Binding JWT no coincide con cnf.jwk"); //$NON-NLS-1$
@@ -288,6 +294,10 @@ public final class SdJwtVerifier {
 		if (!expectedHash.equals(claims.getStringClaim("sd_hash"))) { //$NON-NLS-1$
 			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
 		}
+	}
+
+	private static boolean isSupportedJwsAlgorithm(final JWSAlgorithm algorithm) {
+		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
 	}
 
 	private static String sdHash(final SdJwtVerifiableCredential vc) throws Exception {

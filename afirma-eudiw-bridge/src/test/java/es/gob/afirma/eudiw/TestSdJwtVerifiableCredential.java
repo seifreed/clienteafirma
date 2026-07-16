@@ -177,6 +177,31 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(mismatchedAlgVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT validIssuerJwt = SignedJWT.parse(issuerJwt);
+		final SignedJWT symmetricIssuerJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.HS256)
+						.type(new JOSEObjectType("dc+sd-jwt")) //$NON-NLS-1$
+						.x509CertChain(validIssuerJwt.getHeader().getX509CertChain())
+						.build(),
+				validIssuerJwt.getJWTClaimsSet());
+		symmetricIssuerJwt.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
+		final SdJwtVerifiableCredential symmetricIssuerVc = SdJwtVerifiableCredential.parse(
+				symmetricIssuerJwt.serialize() + "~" + disclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(symmetricIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT validKbJwt = SignedJWT.parse(kbJwt);
+		final SignedJWT symmetricKbJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.HS256)
+						.type(new JOSEObjectType("kb+jwt")) //$NON-NLS-1$
+						.build(),
+				validKbJwt.getJWTClaimsSet());
+		symmetricKbJwt.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
+		final SdJwtVerifiableCredential symmetricKbVc = SdJwtVerifiableCredential.parse(
+				presentation + symmetricKbJwt.serialize());
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(symmetricKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String blankNonceKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", " ", presentationHash(presentation)); //$NON-NLS-1$ //$NON-NLS-2$
 		final SdJwtVerifiableCredential blankNonceKbVc = SdJwtVerifiableCredential.parse(
