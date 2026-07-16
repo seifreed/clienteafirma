@@ -16,6 +16,7 @@ import java.security.KeyPairGenerator;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -218,6 +219,15 @@ final class TestAuthorizationRequest {
 				"https://wallet.example.es"); //$NON-NLS-1$
 		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
+		final SignedJWT objectSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", Map.of("id", "ps-1")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						.build());
+		objectSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertEquals("{\"id\":\"ps-1\"}", JarmAuthorizationResponse.verify( //$NON-NLS-1$
+				objectSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1").presentationSubmission()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(

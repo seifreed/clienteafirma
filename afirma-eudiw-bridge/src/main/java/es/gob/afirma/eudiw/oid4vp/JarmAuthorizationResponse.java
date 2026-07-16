@@ -4,6 +4,8 @@ package es.gob.afirma.eudiw.oid4vp;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import com.nimbusds.jose.JOSEException;
@@ -75,22 +77,45 @@ public record JarmAuthorizationResponse(
 		if (vpToken == null || vpToken.isBlank()) {
 			throw new JOSEException("Respuesta JARM sin vp_token"); //$NON-NLS-1$
 		}
-		final String presentationSubmission = claims.getStringClaim("presentation_submission"); //$NON-NLS-1$
-		if (presentationSubmission != null) {
-			if (presentationSubmission.isBlank()) {
-				throw new JOSEException("presentation_submission JARM vacío"); //$NON-NLS-1$
-			}
-			try {
-				JSONObjectUtils.parse(presentationSubmission);
-			}
-			catch (final ParseException e) {
-				throw new JOSEException("presentation_submission JARM no es JSON válido", e); //$NON-NLS-1$
-			}
-		}
+		final String presentationSubmission = normalizePresentationSubmission(
+				claims.getClaim("presentation_submission")); //$NON-NLS-1$
 		return new JarmAuthorizationResponse(
 				vpToken,
 				state,
 				presentationSubmission);
+	}
+
+	private static String normalizePresentationSubmission(final Object claim) throws JOSEException {
+		if (claim == null) {
+			return null;
+		}
+		if (claim instanceof String text) {
+			if (text.isBlank()) {
+				throw new JOSEException("presentation_submission JARM vacío"); //$NON-NLS-1$
+			}
+			try {
+				JSONObjectUtils.parse(text);
+			}
+			catch (final ParseException e) {
+				throw new JOSEException("presentation_submission JARM no es JSON válido", e); //$NON-NLS-1$
+			}
+			return text;
+		}
+		if (claim instanceof Map<?, ?> map) {
+			return JSONObjectUtils.toJSONString(stringKeyMap(map));
+		}
+		throw new JOSEException("presentation_submission JARM no es objeto JSON"); //$NON-NLS-1$
+	}
+
+	private static Map<String, Object> stringKeyMap(final Map<?, ?> map) throws JOSEException {
+		final Map<String, Object> typed = new LinkedHashMap<>();
+		for (final Map.Entry<?, ?> entry : map.entrySet()) {
+			if (!(entry.getKey() instanceof String key)) {
+				throw new JOSEException("presentation_submission JARM contiene claves no textuales"); //$NON-NLS-1$
+			}
+			typed.put(key, entry.getValue());
+		}
+		return typed;
 	}
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
