@@ -18,13 +18,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequest;
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
+import es.gob.afirma.eudiw.oid4vp.JarmAuthorizationResponse;
 
 final class TestAuthorizationRequest {
 
@@ -114,6 +117,32 @@ final class TestAuthorizationRequest {
 				.nonce("nonce") //$NON-NLS-1$
 				.build();
 		assertTrue(req.toUri().getRawQuery().contains("response_mode=direct_post.jwt")); //$NON-NLS-1$
+	}
+
+	@Test
+	@DisplayName("JARM response valida firma, audience y state")
+	void verifiesJarmResponse() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair kp = kpg.generateKeyPair();
+		final SignedJWT jwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("presentation_submission", "{}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		jwt.sign(new RSASSASigner(kp.getPrivate()));
+
+		final RSASSAVerifier verifier = new RSASSAVerifier(
+				(java.security.interfaces.RSAPublicKey) kp.getPublic());
+		final JarmAuthorizationResponse response = JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
+		assertEquals("state-1", response.state()); //$NON-NLS-1$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
