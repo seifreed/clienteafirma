@@ -77,6 +77,9 @@ public final class SdJwtVerifiableCredential {
 	 */
 	public static SdJwtVerifiableCredential parse(final String compact) throws ParseException {
 		Objects.requireNonNull(compact, "compact");
+		if (!compact.equals(compact.strip())) {
+			throw new ParseException("Formato SD-JWT inválido: compact no normalizado", 0); //$NON-NLS-1$
+		}
 		final String[] parts = compact.split(SEPARATOR, -1);
 		if (parts.length < 1 || parts[0].isBlank()) {
 			throw new ParseException("Formato SD-JWT inválido: vacío o sin issuer JWT", 0); //$NON-NLS-1$
@@ -96,6 +99,9 @@ public final class SdJwtVerifiableCredential {
 			}
 			if (segment.isEmpty()) {
 				throw new ParseException("Formato SD-JWT inválido: segmento vacío", i); //$NON-NLS-1$
+			}
+			if (!segment.equals(segment.strip())) {
+				throw new ParseException("Formato SD-JWT inválido: segmento no normalizado", i); //$NON-NLS-1$
 			}
 			// El último segmento, si NO termina en '~', es el Key Binding JWT;
 			// si la cadena termina en '~', no hay Key Binding y todos los
