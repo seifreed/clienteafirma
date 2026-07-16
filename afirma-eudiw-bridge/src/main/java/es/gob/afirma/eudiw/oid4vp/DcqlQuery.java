@@ -61,12 +61,27 @@ public record DcqlQuery(String json) {
 								throw new IllegalArgumentException("claim DCQL con id duplicado"); //$NON-NLS-1$
 							}
 						}
+						final Object path = claimMap.get("path"); //$NON-NLS-1$
+						if (path != null) {
+							validateClaimPath(path);
+						}
 					}
 				}
 			}
 		}
 		catch (final ParseException e) {
 			throw new IllegalArgumentException("dcql_query debe ser un objeto JSON válido", e); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateClaimPath(final Object path) {
+		if (!(path instanceof List<?> components) || components.isEmpty()) {
+			throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
+		}
+		for (final Object component : components) {
+			if (!(component instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
+				throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
+			}
 		}
 	}
 
