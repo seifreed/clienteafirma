@@ -139,6 +139,7 @@ final class TestAuthorizationRequest {
 		final AuthorizationRequest req = new AuthorizationRequestBuilder()
 				.clientId("https://verifier.example.es") //$NON-NLS-1$
 				.responseUri(URI.create("https://verifier.example.es/oid4vp/response")) //$NON-NLS-1$
+				.dcqlQuery("{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\"}]}") //$NON-NLS-1$
 				.directPostJwtResponse()
 				.nonce("nonce") //$NON-NLS-1$
 				.build();
@@ -314,7 +315,9 @@ final class TestAuthorizationRequest {
 	@DisplayName("Cada build genera un nonce distinto (high-entropy)")
 	void freshNoncesUnique() {
 		final AuthorizationRequestBuilder base = new AuthorizationRequestBuilder()
-				.clientId("https://verifier.example.es").responseUri(URI.create("https://x/r"));
+				.clientId("https://verifier.example.es")
+				.responseUri(URI.create("https://x/r")) //$NON-NLS-1$
+				.presentationDefinitionUri(URI.create("https://x/pd")); //$NON-NLS-1$
 		final String n1 = base.withFreshNonce().build().nonce();
 		final String n2 = base.withFreshNonce().build().nonce();
 		assertNotEquals(n1, n2, "Dos requests consecutivas deben usar nonces distintos");
@@ -352,6 +355,8 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", " ")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://c").responseUri(URI.create("https://x/r")).nonce("n").build()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	@Test

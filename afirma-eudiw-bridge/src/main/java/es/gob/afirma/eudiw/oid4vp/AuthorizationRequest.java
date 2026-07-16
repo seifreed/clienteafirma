@@ -67,6 +67,9 @@ public record AuthorizationRequest(
 		if (presentationDefinitionUri != null) {
 			requireHttpsWithHost(presentationDefinitionUri, "presentation_definition_uri"); //$NON-NLS-1$
 		}
+		if (presentationDefinitionUri == null && dcqlQuery == null) {
+			throw new IllegalArgumentException("OID4VP sin consulta de credenciales"); //$NON-NLS-1$
+		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
 			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
