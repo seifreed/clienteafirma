@@ -103,6 +103,9 @@ public record JarmAuthorizationResponse(
 			return text;
 		}
 		if (claim instanceof List<?> list) {
+			if (list.isEmpty()) {
+				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
+			}
 			return JSONArrayUtils.toJSONString(list);
 		}
 		if (claim instanceof Map<?, ?> map) {

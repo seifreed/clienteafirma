@@ -16,6 +16,7 @@ import java.security.KeyPairGenerator;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
@@ -231,6 +232,15 @@ final class TestAuthorizationRequest {
 		assertEquals("{\"format\":\"dc+sd-jwt\"}", JarmAuthorizationResponse.verify( //$NON-NLS-1$
 				objectVpTokenJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1").vpToken()); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT emptyArrayVpTokenJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("vp_token", List.of()) //$NON-NLS-1$
+						.build());
+		emptyArrayVpTokenJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				emptyArrayVpTokenJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT objectSubmissionJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
