@@ -193,6 +193,9 @@ public final class SdJwtVerifier {
 					|| !(disclosureJson.get(1) instanceof String claimName) || claimName.isBlank()) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT no es array JSON válido"); //$NON-NLS-1$
 			}
+			if (!claimName.equals(claimName.strip())) {
+				throw new SdJwtVerificationException("Claim SD-JWT no normalizado: " + claimName); //$NON-NLS-1$
+			}
 			if (!seenClaimNames.add(claimName)) {
 				throw new SdJwtVerificationException("Claim SD-JWT duplicado: " + claimName); //$NON-NLS-1$
 			}

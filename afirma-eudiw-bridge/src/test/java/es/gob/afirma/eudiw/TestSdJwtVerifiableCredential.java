@@ -324,6 +324,20 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(blankNameVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String unnormalizedNameDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"salt\",\" family_name\",\"García\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String unnormalizedNameIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash(unnormalizedNameDisclosure));
+		final String unnormalizedNamePresentation = unnormalizedNameIssuerJwt + "~" + unnormalizedNameDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String unnormalizedNameKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(unnormalizedNamePresentation));
+		final SdJwtVerifiableCredential unnormalizedNameVc = SdJwtVerifiableCredential.parse(
+				unnormalizedNamePresentation + unnormalizedNameKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(unnormalizedNameVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String longDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("[\"salt\",\"family_name\",\"García\",\"extra\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
 		final String longDisclosureIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
