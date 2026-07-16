@@ -119,6 +119,9 @@ public final class SdJwtVerifier {
 		if (expected == null) {
 			throw new SdJwtVerificationException("Issuer JWT sin claim _sd"); //$NON-NLS-1$
 		}
+		if (new HashSet<>(expected).size() != expected.size()) {
+			throw new SdJwtVerificationException("Issuer JWT con _sd duplicado"); //$NON-NLS-1$
+		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		final Set<String> seenDisclosures = new HashSet<>();
 		for (final String disclosure : vc.disclosures()) {
