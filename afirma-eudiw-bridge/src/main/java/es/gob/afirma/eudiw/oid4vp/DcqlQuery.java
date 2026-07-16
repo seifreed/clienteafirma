@@ -26,7 +26,7 @@ public record DcqlQuery(String json) {
 		}
 		try {
 			final var parsed = JSONObjectUtils.parse(json);
-			validateObjectKeys(parsed);
+			validateJsonTree(parsed);
 			final var credentials = JSONObjectUtils.getJSONArray(parsed, "credentials"); //$NON-NLS-1$
 			if (credentials == null || credentials.isEmpty()) {
 				throw new IllegalArgumentException("dcql_query debe declarar credentials"); //$NON-NLS-1$
@@ -75,6 +75,23 @@ public record DcqlQuery(String json) {
 		}
 		catch (final ParseException e) {
 			throw new IllegalArgumentException("dcql_query debe ser un objeto JSON válido", e); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateJsonTree(final Object value) {
+		if (value instanceof Map<?, ?> map) {
+			validateObjectKeys(map);
+			for (final Object child : map.values()) {
+				validateJsonTree(child);
+			}
+		}
+		if (value instanceof List<?> list) {
+			for (final Object child : list) {
+				validateJsonTree(child);
+			}
+		}
+		if (value instanceof String text && !isNormalizedText(text)) {
+			throw new IllegalArgumentException("dcql_query contiene valores no normalizados"); //$NON-NLS-1$
 		}
 	}
 
