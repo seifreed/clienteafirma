@@ -103,6 +103,10 @@ public final class SdJwtVerifiableCredential {
 			if (isLast && !trailingSeparator && segment.indexOf('.') > 0) {
 				keyBinding = Optional.of(SignedJWT.parse(segment));
 			}
+			else if (isLast && !trailingSeparator) {
+				throw new ParseException(
+						"Formato SD-JWT inválido: falta separador final o Key Binding JWT", i); //$NON-NLS-1$
+			}
 			else {
 				disclosures.add(segment);
 			}
