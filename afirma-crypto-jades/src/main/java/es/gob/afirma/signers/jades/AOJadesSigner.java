@@ -548,6 +548,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				|| !(json.get("signature") instanceof String signature) || signature.isBlank()) { //$NON-NLS-1$
 			return false;
 		}
+		if (json.containsKey("header") && !(json.get("header") instanceof Map<?, ?>)) { //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
+		}
 		if (!isBase64Url(protectedHeader) || !isBase64Url(signature)) {
 			return false;
 		}

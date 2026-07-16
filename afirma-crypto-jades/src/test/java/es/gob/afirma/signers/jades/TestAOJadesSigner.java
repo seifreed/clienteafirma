@@ -597,6 +597,10 @@ final class TestAOJadesSigner {
 		json.put("payload", "not-base64url!!"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("payload", Base64URL.encode("payload".getBytes()).toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		json.put("header", "etsiU"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
