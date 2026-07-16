@@ -265,6 +265,21 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(expiredChainVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final X509Certificate unrelatedExtraX5c = selfSigned(kpg.generateKeyPair(),
+				"CN=EUDI Unrelated Extra, O=AEAD"); //$NON-NLS-1$
+		final String unlinkedChainIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert, unrelatedExtraX5c));
+		final String unlinkedChainPresentation = unlinkedChainIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String unlinkedChainKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(unlinkedChainPresentation));
+		final SdJwtVerifiableCredential unlinkedChainVc = SdJwtVerifiableCredential.parse(
+				unlinkedChainPresentation + unlinkedChainKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(unlinkedChainVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String nonArrayDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
 		final String nonArrayIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,

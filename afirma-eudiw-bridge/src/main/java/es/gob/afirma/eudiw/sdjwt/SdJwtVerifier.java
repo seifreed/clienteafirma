@@ -108,6 +108,7 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("Issuer JWT sin cadena x5c"); //$NON-NLS-1$
 		}
 		X509Certificate issuerCert = null;
+		X509Certificate previousCert = null;
 		for (final com.nimbusds.jose.util.Base64 encodedCert : chain) {
 			X509Certificate cert = X509CertUtils.parse(encodedCert.decode());
 			if (cert == null) {
@@ -115,9 +116,16 @@ public final class SdJwtVerifier {
 						.generateCertificate(new ByteArrayInputStream(encodedCert.decode()));
 			}
 			cert.checkValidity();
+			if (previousCert != null) {
+				if (!previousCert.getIssuerX500Principal().equals(cert.getSubjectX500Principal())) {
+					throw new SdJwtVerificationException("Cadena x5c SD-JWT no enlazada"); //$NON-NLS-1$
+				}
+				previousCert.verify(cert.getPublicKey());
+			}
 			if (issuerCert == null) {
 				issuerCert = cert;
 			}
+			previousCert = cert;
 		}
 		return issuerCert;
 	}
