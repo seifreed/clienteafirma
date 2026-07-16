@@ -36,6 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 public final class TrustListService {
 
 	private static final Duration DEFAULT_REFRESH_INTERVAL = Duration.ofHours(24);
+	private static final String SERVICE_TYPE_CA_QC =
+			"http://uri.etsi.org/TrstSvc/Svctype/CA/QC"; //$NON-NLS-1$
 
 	private final ConcurrentMap<String, TslDocument> byTerritory = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, Instant> loadedAt = new ConcurrentHashMap<>();
@@ -114,7 +116,7 @@ public final class TrustListService {
 		for (final TslDocument tsl : this.byTerritory.values()) {
 			for (final TrustServiceProvider tsp : tsl.providers()) {
 				for (final TrustServiceProvider.TrustService svc : tsp.services()) {
-					if (!svc.isGranted()) {
+					if (!svc.isGranted() || !SERVICE_TYPE_CA_QC.equals(svc.typeIdentifier())) {
 						continue;
 					}
 					for (final X509Certificate sdi : svc.serviceDigitalIdentities()) {
