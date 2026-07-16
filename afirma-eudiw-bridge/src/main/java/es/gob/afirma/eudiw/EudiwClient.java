@@ -49,6 +49,12 @@ public final class EudiwClient {
 		if (!"https".equalsIgnoreCase(endpoint.getScheme())) { //$NON-NLS-1$
 			throw new IOException("OID4VP exige HTTPS, recibido: " + endpoint.getScheme()); //$NON-NLS-1$
 		}
+		if (endpoint.getHost() == null || endpoint.getHost().isBlank()) {
+			throw new IOException("OID4VP exige endpoint HTTPS con host"); //$NON-NLS-1$
+		}
+		if (formBody.isBlank()) {
+			throw new IOException("OID4VP form body vacío"); //$NON-NLS-1$
+		}
 
 		final HttpRequest request = HttpRequest.newBuilder(endpoint)
 				.timeout(DEFAULT_TIMEOUT)
