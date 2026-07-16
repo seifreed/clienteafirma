@@ -146,7 +146,6 @@ public final class LotlLoader implements TrustListService.TslLoader {
 		private final URI uri;
 		private final HttpClient http = HttpClient.newBuilder()
 				.connectTimeout(Duration.ofSeconds(10))
-				.followRedirects(HttpClient.Redirect.NORMAL)
 				.build();
 
 		HttpTslXmlSource(final URI uri) {

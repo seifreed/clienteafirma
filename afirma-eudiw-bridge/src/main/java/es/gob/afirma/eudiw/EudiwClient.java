@@ -29,7 +29,6 @@ public final class EudiwClient {
 	public EudiwClient() {
 		this(HttpClient.newBuilder()
 				.connectTimeout(Duration.ofSeconds(10))
-				.followRedirects(HttpClient.Redirect.NORMAL)
 				.build());
 	}
 
