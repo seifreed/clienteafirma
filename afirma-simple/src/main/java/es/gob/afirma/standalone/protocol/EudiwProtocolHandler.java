@@ -241,6 +241,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (uri.getHost() == null || uri.getHost().isBlank()) {
 			throw new IllegalArgumentException("Parámetro " + key + " debe declarar host HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (uri.getRawUserInfo() != null) {
+			throw new IllegalArgumentException("Parámetro " + key + " no admite userinfo"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		if (uri.getRawFragment() != null) {
 			throw new IllegalArgumentException("Parámetro " + key + " no admite fragmento"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
