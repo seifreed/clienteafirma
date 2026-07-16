@@ -435,6 +435,7 @@ final class TestAOJadesSigner {
 			assertTrue(!signer.isSign(new byte[0]));
 			assertTrue(!signer.isSign("a.b.c".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("eyJhbGciOiJSUzI1NiJ9..".getBytes())); //$NON-NLS-1$
+			assertTrue(!signer.isSign("eyJhbGciOiJSUzI1NiJ9..not-base64url!!".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{\"protected\":\"x\",\"signature\":\"\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{\"protected\":\"not-base64url!!\",\"signature\":\"abc\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{\"protected\":\"bm90LWpzb24\",\"signature\":\"abc\"}".getBytes())); //$NON-NLS-1$

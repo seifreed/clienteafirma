@@ -457,6 +457,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		if (firstDot <= 0 || lastDot <= firstDot || lastDot == s.length() - 1) {
 			return false;
 		}
+		if (!isBase64Url(s.substring(0, firstDot)) || !isBase64Url(s.substring(lastDot + 1))) {
+			return false;
+		}
 		try {
 			JWSHeader.parse(Base64URL.from(s.substring(0, firstDot)));
 			return Base64URL.from(s.substring(lastDot + 1)).decode().length > 0;
