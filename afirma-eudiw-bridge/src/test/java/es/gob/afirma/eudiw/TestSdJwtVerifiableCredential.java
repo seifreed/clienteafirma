@@ -191,6 +191,17 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(expiredVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String noExpirationIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				disclosureHash, null);
+		final String noExpirationPresentation = noExpirationIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String noExpirationKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(noExpirationPresentation));
+		final SdJwtVerifiableCredential noExpirationVc = SdJwtVerifiableCredential.parse(
+				noExpirationPresentation + noExpirationKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(noExpirationVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
 		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,
 				"CN=EUDI Issuer Expired, O=AEAD", expiredCertTime, //$NON-NLS-1$
@@ -325,20 +336,22 @@ final class TestSdJwtVerifiableCredential {
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final List<String> sdHashes, final Date expirationTime,
 			final boolean publicHolderJwk) throws Exception {
+		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
+				.issuer("https://issuer.example.es") //$NON-NLS-1$
+				.subject("pid-1") //$NON-NLS-1$
+				.claim("_sd_alg", "sha-256") //$NON-NLS-1$ //$NON-NLS-2$
+				.claim("_sd", sdHashes) //$NON-NLS-1$
+				.claim("cnf", Map.of("jwk", (publicHolderJwk //$NON-NLS-1$ //$NON-NLS-2$
+						? holderJwk.toPublicJWK() : holderJwk).toJSONObject()));
+		if (expirationTime != null) {
+			claims.expirationTime(expirationTime);
+		}
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)
 						.x509CertChain(List.of(com.nimbusds.jose.util.Base64
 								.encode(issuerCert.getEncoded())))
 						.build(),
-				new JWTClaimsSet.Builder()
-						.issuer("https://issuer.example.es") //$NON-NLS-1$
-						.subject("pid-1") //$NON-NLS-1$
-						.expirationTime(expirationTime)
-						.claim("_sd_alg", "sha-256") //$NON-NLS-1$ //$NON-NLS-2$
-						.claim("_sd", sdHashes) //$NON-NLS-1$
-						.claim("cnf", Map.of("jwk", (publicHolderJwk //$NON-NLS-1$ //$NON-NLS-2$
-								? holderJwk.toPublicJWK() : holderJwk).toJSONObject()))
-						.build());
+				claims.build());
 		jwt.sign(new RSASSASigner(issuerKp.getPrivate()));
 		return jwt.serialize();
 	}

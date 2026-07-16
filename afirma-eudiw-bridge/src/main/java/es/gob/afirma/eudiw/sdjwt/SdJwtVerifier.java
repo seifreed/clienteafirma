@@ -85,7 +85,10 @@ public final class SdJwtVerifier {
 			throws SdJwtVerificationException {
 		final Date now = new Date();
 		final Date expirationTime = claims.getExpirationTime();
-		if (expirationTime != null && !expirationTime.after(now)) {
+		if (expirationTime == null) {
+			throw new SdJwtVerificationException("Issuer JWT sin caducidad"); //$NON-NLS-1$
+		}
+		if (!expirationTime.after(now)) {
 			throw new SdJwtVerificationException("Issuer JWT caducado"); //$NON-NLS-1$
 		}
 		final Date notBeforeTime = claims.getNotBeforeTime();
