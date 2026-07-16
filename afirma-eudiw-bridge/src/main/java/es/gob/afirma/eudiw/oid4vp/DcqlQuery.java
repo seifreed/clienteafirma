@@ -4,6 +4,7 @@ package es.gob.afirma.eudiw.oid4vp;
 
 import java.text.ParseException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -40,6 +41,10 @@ public record DcqlQuery(String json) {
 				final String format = requireText(credentialMap, "format"); //$NON-NLS-1$
 				if (!SUPPORTED_FORMAT.equals(format)) {
 					throw new IllegalArgumentException("credential DCQL con format no soportado: " + format); //$NON-NLS-1$
+				}
+				final Object claims = credentialMap.get("claims"); //$NON-NLS-1$
+				if (claims != null && (!(claims instanceof List<?> claimList) || claimList.isEmpty())) {
+					throw new IllegalArgumentException("credential DCQL con claims inválido"); //$NON-NLS-1$
 				}
 			}
 		}
