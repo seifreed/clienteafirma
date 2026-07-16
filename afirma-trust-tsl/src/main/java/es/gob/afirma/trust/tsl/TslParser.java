@@ -51,6 +51,12 @@ public final class TslParser {
 					TSL_NS, "SchemeOperatorName"); //$NON-NLS-1$
 			final String territory = textOrEmpty(root,
 					TSL_NS, "SchemeTerritory"); //$NON-NLS-1$
+			if (schemeOperator.isEmpty()) {
+				throw new TslException("TSL sin SchemeOperatorName"); //$NON-NLS-1$
+			}
+			if (territory.isEmpty()) {
+				throw new TslException("TSL sin SchemeTerritory"); //$NON-NLS-1$
+			}
 
 			Instant nextUpdate = null;
 			final NodeList nextUpdateNodes = root.getElementsByTagNameNS(TSL_NS, "NextUpdate"); //$NON-NLS-1$
@@ -62,13 +68,12 @@ public final class TslParser {
 				}
 			}
 
-			final String resolvedTerritory = territory.isEmpty() ? "??" : territory; //$NON-NLS-1$
-			final List<TrustServiceProvider> providers = parseProviders(root, resolvedTerritory);
+			final List<TrustServiceProvider> providers = parseProviders(root, territory);
 			final boolean signed = root.getElementsByTagNameNS(DSIG_NS, "Signature").getLength() > 0; //$NON-NLS-1$
 
 			return new TslDocument(
-					schemeOperator.isEmpty() ? "?" : schemeOperator, //$NON-NLS-1$
-					resolvedTerritory,
+					schemeOperator,
+					territory,
 					nextUpdate,
 					providers,
 					signed);
