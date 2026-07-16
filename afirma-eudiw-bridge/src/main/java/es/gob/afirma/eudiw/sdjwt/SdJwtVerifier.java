@@ -248,6 +248,15 @@ public final class SdJwtVerifier {
 		if (notBeforeTime != null && notBeforeTime.after(now)) {
 			throw new SdJwtVerificationException("Key Binding JWT no válido aún"); //$NON-NLS-1$
 		}
+		if (claims.getAudience().isEmpty()) {
+			throw new SdJwtVerificationException("Audience Key Binding JWT ausente"); //$NON-NLS-1$
+		}
+		for (final String claimAudience : claims.getAudience()) {
+			if (claimAudience == null || claimAudience.isBlank()
+					|| !claimAudience.equals(claimAudience.strip())) {
+				throw new SdJwtVerificationException("Audience Key Binding JWT no normalizada"); //$NON-NLS-1$
+			}
+		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
 		}

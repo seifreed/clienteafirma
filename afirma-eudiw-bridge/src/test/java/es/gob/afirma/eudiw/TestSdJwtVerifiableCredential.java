@@ -175,6 +175,21 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(mismatchedAlgVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String noAudienceKbJwt = signedKeyBindingJwt(holderKp,
+				List.of(), "nonce-1", presentationHash(presentation)); //$NON-NLS-1$
+		final SdJwtVerifiableCredential noAudienceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + noAudienceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(noAudienceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String unnormalizedAudienceKbJwt = signedKeyBindingJwt(holderKp,
+				List.of("https://verifier.example.es", " other"), "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				presentationHash(presentation));
+		final SdJwtVerifiableCredential unnormalizedAudienceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + unnormalizedAudienceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(unnormalizedAudienceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noExpirationKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, null, null);
@@ -554,6 +569,23 @@ final class TestSdJwtVerifiableCredential {
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
 			final String audience, final String nonce, final String sdHash) throws Exception {
 		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, true);
+	}
+
+	private static String signedKeyBindingJwt(final KeyPair holderKp,
+			final List<String> audiences, final String nonce, final String sdHash) throws Exception {
+		final SignedJWT jwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("kb+jwt")) //$NON-NLS-1$
+						.build(),
+				new JWTClaimsSet.Builder()
+						.audience(audiences)
+						.issueTime(new Date())
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("nonce", nonce) //$NON-NLS-1$
+						.claim("sd_hash", sdHash) //$NON-NLS-1$
+						.build());
+		jwt.sign(new RSASSASigner(holderKp.getPrivate()));
+		return jwt.serialize();
 	}
 
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
