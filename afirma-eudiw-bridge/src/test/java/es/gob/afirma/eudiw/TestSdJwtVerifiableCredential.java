@@ -382,6 +382,20 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(privateHolderVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String paddedDisclosure = Base64.getUrlEncoder()
+				.encodeToString(DISCLOSURE_JSON.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		final String paddedIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				disclosureHash(paddedDisclosure));
+		final String paddedPresentation = paddedIssuerJwt + "~" + paddedDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String paddedKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(paddedPresentation));
+		final SdJwtVerifiableCredential paddedVc = SdJwtVerifiableCredential.parse(
+				paddedPresentation + paddedKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(paddedVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash(badDisclosure));

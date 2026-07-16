@@ -163,6 +163,9 @@ public final class SdJwtVerifier {
 			if (!seenDisclosures.add(disclosure)) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT duplicada"); //$NON-NLS-1$
 			}
+			if (disclosure.indexOf('=') >= 0) {
+				throw new SdJwtVerificationException("Disclosure SD-JWT debe ser base64url sin padding"); //$NON-NLS-1$
+			}
 			final byte[] decoded;
 			try {
 				decoded = Base64.getUrlDecoder().decode(disclosure);
