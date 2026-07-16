@@ -101,6 +101,9 @@ public record AuthorizationRequest(
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		try {
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
+			if (!this.clientId.equals(claims.getIssuer())) {
+				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
+			}
 			for (final Map.Entry<String, String> entry : params().entrySet()) {
 				if (!entry.getValue().equals(claims.getStringClaim(entry.getKey()))) {
 					throw new IllegalArgumentException("Request Object JAR no coincide con " + entry.getKey()); //$NON-NLS-1$
