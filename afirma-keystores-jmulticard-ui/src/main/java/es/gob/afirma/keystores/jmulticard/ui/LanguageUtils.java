@@ -21,7 +21,7 @@ public class LanguageUtils {
 
 	private static final String FALLBACK_LOCALE = "fallback.locale"; //$NON-NLS-1$
 	
-	public static final Locale [] AFIRMA_DEFAULT_LOCALES = {
+	private static final Locale [] AFIRMA_DEFAULT_LOCALES = {
 	    	new Locale("es", "ES"), //$NON-NLS-1$ //$NON-NLS-2$     
 	        new Locale("ca", "ES"), //$NON-NLS-1$ //$NON-NLS-2$
 	        new Locale("gl", "ES"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -106,7 +106,7 @@ public class LanguageUtils {
 	 * @return Directorio de instalaci&oacute;n.
 	 */
 	private static File getMacOsXAlternativeAppDir() {
-		final String userDir = System.getenv("HOME"); //$NON-NLS-1$
+		final String userDir = System.getProperty("user.home"); //$NON-NLS-1$
 		return new File (userDir, "Library/Application Support/Autofirma"); //$NON-NLS-1$
 	}
 	

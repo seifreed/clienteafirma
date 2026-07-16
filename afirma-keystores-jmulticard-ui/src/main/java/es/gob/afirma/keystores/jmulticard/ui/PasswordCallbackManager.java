@@ -40,6 +40,7 @@
 package es.gob.afirma.keystores.jmulticard.ui;
 
 import java.awt.Component;
+import java.lang.ref.WeakReference;
 
 /** Gestor de opciones est&aacute;ticas de los <i>PasswordCallback</i>.
  * Mediante este gestor es posible establecer opciones en los <i>PasswordCallback</i>
@@ -47,21 +48,21 @@ import java.awt.Component;
  * @author Tom&aacute;s Garc&iacute;a-Mer&aacute;s. */
 public final class PasswordCallbackManager {
 
-	private static Component dialogOwner = null;
+	private static WeakReference<Component> dialogOwner = new WeakReference<>(null);
 
 	/** Establece el componente padre de los di&aacute;logos gr&aacute;ficos (para la modalidad)
 	 * @param comp Componente (<code>java.awt.Component</code>) padre de los
 	 *             di&aacute;logos gr&aacute;ficos (para la modalidad). */
 	public static void setDialogOwner(final Object comp) {
 		if (comp instanceof Component) {
-			dialogOwner = (Component) comp;
+			dialogOwner = new WeakReference<>((Component) comp);
 		}
 	}
 
 	/** Obtiene el componente padre de los di&aacute;logos gr&aacute;ficos (para la modalidad)
 	 * @return Componente padre de los di&aacute;logos gr&aacute;ficos (para la modalidad) */
 	public static Component getDialogOwner() {
-		return dialogOwner;
+		return dialogOwner.get();
 	}
 
 	private PasswordCallbackManager(){

@@ -85,17 +85,17 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
     private static final int PIN_MAX_LENGTH = 16;
 
     /** Bot&oacute;n de aceptar. */
-    private static JButton okButton = null;
+    private transient JButton okButton = null;
 
-    static JButton getOkButton() {
-        return okButton;
+    JButton getOkButton() {
+        return this.okButton;
     }
 
     /** Bot&oacute;n de cancelar. */
-    private static JButton cancelButton = null;
+    private transient JButton cancelButton = null;
 
-    static JButton getCancelButton() {
-        return cancelButton;
+    JButton getCancelButton() {
+        return this.cancelButton;
     }
 
     /** Texto para el bot&oacute;n */
@@ -410,8 +410,8 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
 
         // OK button
         final JPanel okPanel = new JPanel();
-        okButton = getButton(Messages.getString("PrincipalGUI.aceptar"), KeyEvent.VK_A); //$NON-NLS-1$
-        okButton.addKeyListener(
+        this.okButton = getButton(Messages.getString("PrincipalGUI.aceptar"), KeyEvent.VK_A); //$NON-NLS-1$
+        this.okButton.addKeyListener(
     		new KeyListener() {
 
 				@Override public void keyTyped(final KeyEvent arg0) { /* No necesario */ }
@@ -429,10 +429,10 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
 			}
 		);
 
-        okPanel.add(okButton);
+        okPanel.add(this.okButton);
         this.buttonsPanel.add(okPanel, consButtons);
 
-        okButton.addActionListener(this);
+        this.okButton.addActionListener(this);
 
     }
 
@@ -465,7 +465,7 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
     			defaultUseCache
     	);
 
-        okButton.setEnabled(false);
+        inputPasswordDialog.getOkButton().setEnabled(false);
         inputPasswordDialog.getRootPane().setDefaultButton(null);
 
         // Configuramos el componente de insercion de contrasenas
@@ -480,20 +480,20 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
 	            	final int length = inputPasswordDialog.getSecurePasswordLabel().getPasswordLength();
 	                //Control de los botones aceptar/cancelar
 	                if (length >= PIN_MIN_LENGTH && length <= PIN_MAX_LENGTH) {
-	                    getOkButton().setEnabled(true);
+	                    inputPasswordDialog.getOkButton().setEnabled(true);
 	                	if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
-	    					getOkButton().doClick();
+	    					inputPasswordDialog.getOkButton().doClick();
 	    				}
 	                }
 	                else {
-	                    getOkButton().setEnabled(false);
+	                    inputPasswordDialog.getOkButton().setEnabled(false);
 	                }
 	            }
 
 	            @Override
 	            public void keyPressed(final KeyEvent ke) {
 					if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
-						getCancelButton().doClick();
+						inputPasswordDialog.getCancelButton().doClick();
 					}
 	            }
 	        }
@@ -524,10 +524,10 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
 	    			@Override
 	    			public void keyPressed(final KeyEvent ke) {
 	    				if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
-	    					getOkButton().doClick();
+	    					inputPasswordDialog.getOkButton().doClick();
 	    				}
 	    				else if (ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
-	    					getCancelButton().doClick();
+	    					inputPasswordDialog.getCancelButton().doClick();
 	    				}
 	    			}
 	    		}
@@ -545,12 +545,12 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
         cons.insets = new Insets(0, 0, 0, 10); // right padding
 
         // Cancel button
-        cancelButton = inputPasswordDialog.getButton(cancellText, KeyEvent.VK_C);
+        inputPasswordDialog.cancelButton = inputPasswordDialog.getButton(cancellText, KeyEvent.VK_C);
         final JPanel cancelPanel = new JPanel();
-        cancelPanel.add(cancelButton);
+        cancelPanel.add(inputPasswordDialog.getCancelButton());
         inputPasswordDialog.buttonsPanel.add(cancelPanel, cons);
-        cancelButton.addActionListener(inputPasswordDialog);
-        cancelButton.addKeyListener(
+        inputPasswordDialog.getCancelButton().addActionListener(inputPasswordDialog);
+        inputPasswordDialog.getCancelButton().addKeyListener(
     		new KeyListener() {
 
 				@Override public void keyTyped(final KeyEvent arg0) { /* No necesario */ }
@@ -559,7 +559,7 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
 				@Override
 				public void keyPressed(final KeyEvent ke) {
 					if (ke.getKeyCode() == KeyEvent.VK_ENTER || ke.getKeyCode() == KeyEvent.VK_ESCAPE) {
-						getCancelButton().doClick();
+						inputPasswordDialog.getCancelButton().doClick();
 					}
 				}
 			}
@@ -568,7 +568,7 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
         inputPasswordDialog.infoLabel.setHorizontalAlignment(SwingConstants.LEFT); // Se centra el texto
         inputPasswordDialog.securePasswordLabel.setVisible(true); // Se hace visible el campo de texto
 
-        cancelButton.addActionListener(inputPasswordDialog);
+        inputPasswordDialog.getCancelButton().addActionListener(inputPasswordDialog);
 
         inputPasswordDialog.pack();
         inputPasswordDialog.setSize(inputPasswordDialog.getInitialWidth() + 1, inputPasswordDialog.getInitialHeight() + 1); // Hacemos un resize para forzar un repintado
@@ -584,7 +584,6 @@ public final class InputPasswordSmartcardDialog extends AbstractJAccessibilityCu
         	inputPasswordDialog.securePasswordLabel.setText(null);
         	inputPasswordDialog.securePasswordLabel = null;
         	inputPasswordDialog.dispose();
-        	System.gc();
 
         	// Recuperamos el valor del checkbox de usar cache si existe
         	boolean useCache = false;

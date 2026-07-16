@@ -40,6 +40,7 @@
 package es.gob.afirma.keystores.jmulticard.ui;
 
 import java.awt.Component;
+import java.lang.ref.WeakReference;
 
 import javax.security.auth.callback.PasswordCallback;
 
@@ -57,7 +58,7 @@ public final class UIPasswordCallbackAccessibility extends PasswordCallback {
 
     /** Componente padre sobre el que se mostrar&aacute; el di&aacute;logo para
      * la inserci&oacute;n de la contrase&ntilde;a. */
-    private transient final Component parent;
+    private transient final WeakReference<Component> parent;
 
     /** T&iacute;tulo del di&aacute;logo. */
     private transient final String title;
@@ -95,7 +96,7 @@ public final class UIPasswordCallbackAccessibility extends PasswordCallback {
     		                               final boolean allowDniCache,
     		                               final boolean defaultDniCache) {
         super(prompt, false);
-        this.parent = parentComponent;
+        this.parent = new WeakReference<>(parentComponent);
         if (prompt != null) {
             this.message = prompt;
         }
@@ -113,7 +114,7 @@ public final class UIPasswordCallbackAccessibility extends PasswordCallback {
     @Override
     public char[] getPassword() {
     	PasswordResult result = InputPasswordSmartcardDialog.showInputPasswordDialog(
-			this.parent,
+			this.parent.get(),
 			true, // Modal
 			this.message,
 			this.mnemonic,

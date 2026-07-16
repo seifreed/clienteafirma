@@ -77,7 +77,7 @@ final class JSecurePasswordLabel extends JLabel {
 
     private static final long serialVersionUID = -4343328489072897605L;
 
-    private transient final int delay = 500;
+    private static final int DELAY = 500;
 
     transient ImageIcon eyeIcon;
     transient ImageIcon eyeOffIcon;
@@ -90,7 +90,7 @@ final class JSecurePasswordLabel extends JLabel {
     }
 
     private final int maxChars;
-    transient int passwordLength;
+    private transient volatile int passwordLength;
 
     private final Timer timer;
     Timer getTimer() {
@@ -102,7 +102,7 @@ final class JSecurePasswordLabel extends JLabel {
         return this.maxChars;
     }
 
-    private boolean showPassword = false;
+    private volatile boolean showPassword = false;
 
     void setShowPassword(final boolean show) {
         this.showPassword = show;
@@ -237,7 +237,7 @@ final class JSecurePasswordLabel extends JLabel {
                 .getImage().getScaledInstance(this.iconSize, this.iconSize, Image.SCALE_SMOOTH));
 
         // Timer para cursor parpadeante
-        this.timer = new Timer(this.delay, new ActionListener() {
+        this.timer = new Timer(DELAY, new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent arg0) {
                 if (arg0.getSource().equals(getTimer()) && hasFocus()) {
