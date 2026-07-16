@@ -454,6 +454,16 @@ final class TestAOJadesSigner {
 		final int secondDot = jades.indexOf('.', firstDot + 1);
 		assertTrue(!signer.isSign((jades.substring(0, firstDot + 1)
 				+ "not-base64url!!" + jades.substring(secondDot)).getBytes())); //$NON-NLS-1$
+		final Properties attachedJson = new Properties();
+		attachedJson.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		attachedJson.setProperty(AOJadesSigner.EXTRA_PARAM_DETACHED, "false"); //$NON-NLS-1$
+		final Map<String, Object> json = JSONObjectUtils.parse(new String(
+				signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, attachedJson),
+				java.nio.charset.StandardCharsets.UTF_8));
+		json.put("payload", "not-base64url!!"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {

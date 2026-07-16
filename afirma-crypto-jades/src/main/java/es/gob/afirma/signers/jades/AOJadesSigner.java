@@ -483,6 +483,11 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		if (!isBase64Url(protectedHeader) || !isBase64Url(signature)) {
 			return false;
 		}
+		final Object payload = json.get("payload"); //$NON-NLS-1$
+		if (payload != null && (!(payload instanceof String payloadText)
+				|| payloadText.isBlank() || !isBase64Url(payloadText))) {
+			return false;
+		}
 		try {
 			final JWSHeader header = JWSHeader.parse(Base64URL.from(protectedHeader));
 			if (!isJadesHeader(header)) {
