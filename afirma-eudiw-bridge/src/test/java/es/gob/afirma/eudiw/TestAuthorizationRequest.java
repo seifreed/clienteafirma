@@ -113,6 +113,9 @@ final class TestAuthorizationRequest {
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[\"family_name\"]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"id\":\" family_name\"}]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(

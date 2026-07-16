@@ -62,9 +62,10 @@ public record DcqlQuery(String json) {
 							}
 						}
 						final Object path = claimMap.get("path"); //$NON-NLS-1$
-						if (path != null) {
-							validateClaimPath(path);
+						if (path == null) {
+							throw new IllegalArgumentException("claim DCQL sin path"); //$NON-NLS-1$
 						}
+						validateClaimPath(path);
 					}
 				}
 			}
