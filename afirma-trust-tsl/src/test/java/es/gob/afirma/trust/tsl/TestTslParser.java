@@ -92,6 +92,8 @@ final class TestTslParser {
 		final TrustListService svc = new TrustListService();
 		assertEquals(0, svc.loadedCount());
 		assertTrue(svc.findIssuer(null).isEmpty());
+		assertThrows(IllegalArgumentException.class, () -> svc.get(null));
+		assertThrows(IllegalArgumentException.class, () -> svc.get(" ")); //$NON-NLS-1$
 	}
 
 	@Test

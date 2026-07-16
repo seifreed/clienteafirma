@@ -63,7 +63,7 @@ public final class TrustListService {
 	 */
 	public TslDocument getOrRefresh(final String territory, final TslLoader loader)
 			throws TslException {
-		final String key = territory.toUpperCase();
+		final String key = territoryKey(territory);
 		final TslDocument cached = this.byTerritory.get(key);
 		if (cached != null && !isExpired(key, cached)) {
 			return cached;
@@ -78,7 +78,7 @@ public final class TrustListService {
 
 	/** Lookup directo por código ISO-3166-1 alpha-2. */
 	public Optional<TslDocument> get(final String territory) {
-		return Optional.ofNullable(this.byTerritory.get(territory.toUpperCase()));
+		return Optional.ofNullable(this.byTerritory.get(territoryKey(territory)));
 	}
 
 	/** Total de TSLs cargadas. */
@@ -144,6 +144,13 @@ public final class TrustListService {
 			return true;
 		}
 		return cached.nextUpdate() != null && !now.isBefore(cached.nextUpdate());
+	}
+
+	private static String territoryKey(final String territory) {
+		if (territory == null || territory.isBlank()) {
+			throw new IllegalArgumentException("Territorio TSL vacío"); //$NON-NLS-1$
+		}
+		return territory.toUpperCase();
 	}
 
 	@FunctionalInterface
