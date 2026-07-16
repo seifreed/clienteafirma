@@ -200,6 +200,20 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(nonArrayVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String shortDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"salt\",\"family_name\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String shortDisclosureIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash(shortDisclosure));
+		final String shortDisclosurePresentation = shortDisclosureIssuerJwt + "~" + shortDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String shortDisclosureKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(shortDisclosurePresentation));
+		final SdJwtVerifiableCredential shortDisclosureVc = SdJwtVerifiableCredential.parse(
+				shortDisclosurePresentation + shortDisclosureKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(shortDisclosureVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash(badDisclosure));

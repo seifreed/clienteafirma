@@ -126,7 +126,11 @@ public final class SdJwtVerifier {
 			catch (final IllegalArgumentException e) {
 				throw new SdJwtVerificationException("Disclosure no es base64url válido", e); //$NON-NLS-1$
 			}
-			if (JSONArrayUtils.parse(new String(decoded, StandardCharsets.UTF_8)).size() < 2) {
+			final List<Object> disclosureJson = JSONArrayUtils.parse(
+					new String(decoded, StandardCharsets.UTF_8));
+			if (disclosureJson.size() < 3
+					|| !(disclosureJson.get(0) instanceof String)
+					|| !(disclosureJson.get(1) instanceof String)) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT no es array JSON válido"); //$NON-NLS-1$
 			}
 			final String digest = Base64.getUrlEncoder().withoutPadding().encodeToString(
