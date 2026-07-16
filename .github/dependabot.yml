@@ -5,9 +5,9 @@ version: 2
 # Maven dependencies are handled by Renovate (see /renovate.json) which has
 # better grouping support for this multi-module project.
 #
-# Dependabot pins all third-party Actions by SHA, per OSSF Scorecard
-# recommendation. When a new release of an Action lands, dependabot opens
-# a PR with both the new SHA and the version comment updated.
+# Dependabot keeps third-party Actions pinned by SHA, per OSSF Scorecard
+# recommendation. When a new release of an Action lands, it opens a PR with
+# the refreshed SHA.
 
 updates:
   - package-ecosystem: github-actions
