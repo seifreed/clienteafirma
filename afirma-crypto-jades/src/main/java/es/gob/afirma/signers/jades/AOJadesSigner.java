@@ -572,6 +572,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	}
 
 	private static boolean isJadesSigningTime(final String sigT) {
+		if (!sigT.endsWith("Z") || sigT.contains(".")) { //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
+		}
 		try {
 			Instant.parse(sigT);
 			return true;
