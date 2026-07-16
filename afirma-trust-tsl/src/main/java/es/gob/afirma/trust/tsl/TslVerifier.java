@@ -105,6 +105,9 @@ public final class TslVerifier {
 		if (nl.getLength() == 0) {
 			return false;
 		}
+		if (nl.getLength() > 1) {
+			throw new TslException("TSL con varias firmas XMLDSig"); //$NON-NLS-1$
+		}
 		final DOMValidateContext valContext = new DOMValidateContext(trustedKey, nl.item(0));
 		valContext.setProperty("org.jcp.xml.dsig.secureValidation", Boolean.TRUE); //$NON-NLS-1$
 		final XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM"); //$NON-NLS-1$

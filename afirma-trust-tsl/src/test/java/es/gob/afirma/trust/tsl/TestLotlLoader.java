@@ -152,6 +152,21 @@ final class TestLotlLoader {
 				() -> new TslVerifier().verify(xml.getBytes(StandardCharsets.UTF_8), rsa().getPublic()));
 	}
 
+	@Test
+	@DisplayName("TslVerifier rechaza TSL con varias firmas XMLDSig")
+	void rejectsMultipleXmlSignatures() throws Exception {
+		final KeyPair kp = rsa();
+		final String signed = new String(sign(LOTL, kp), StandardCharsets.UTF_8);
+		final int signatureStart = signed.indexOf("<Signature"); //$NON-NLS-1$
+		final int signatureEnd = signed.indexOf("</Signature>") + "</Signature>".length(); //$NON-NLS-1$ //$NON-NLS-2$
+		final String duplicateSignature = signed.substring(0, signatureEnd)
+				+ signed.substring(signatureStart, signatureEnd)
+				+ signed.substring(signatureEnd);
+
+		assertThrows(TslException.class,
+				() -> new TslVerifier().verify(duplicateSignature.getBytes(StandardCharsets.UTF_8), kp.getPublic()));
+	}
+
 	private static KeyPair rsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
 		kpg.initialize(2048);
