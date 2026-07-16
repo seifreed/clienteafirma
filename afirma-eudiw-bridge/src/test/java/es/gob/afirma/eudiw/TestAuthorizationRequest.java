@@ -579,5 +579,6 @@ final class TestAuthorizationRequest {
 		assertThrows(IOException.class, () -> client.postFormUrlencoded(URI.create("https://user@wallet.example/request"), "a=b")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IOException.class, () -> client.postFormUrlencoded(URI.create("https://wallet.example/request#frag"), "a=b")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IOException.class, () -> client.postFormUrlencoded(URI.create("https://wallet.example"), " ")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IOException.class, () -> client.postFormUrlencoded(URI.create("https://wallet.example"), " a=b")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
