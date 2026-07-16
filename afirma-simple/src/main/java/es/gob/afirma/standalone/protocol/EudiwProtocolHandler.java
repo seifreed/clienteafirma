@@ -93,8 +93,13 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 				.responseUri(responseUri)
 				.withFreshNonce()
 				.withFreshState();
-		if ("direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$
-			builder.directPostJwtResponse();
+		if (responseMode != null && !responseMode.isBlank()) {
+			if ("direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$
+				builder.directPostJwtResponse();
+			}
+			else if (!"direct_post".equals(responseMode)) { //$NON-NLS-1$
+				throw new IllegalArgumentException("responseMode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
+			}
 		}
 		if (dcqlQuery != null) {
 			builder.dcqlQuery(dcqlQuery);
