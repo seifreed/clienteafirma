@@ -124,7 +124,7 @@ final class TestAuthorizationRequest {
 		assertTrue(req.toUriWithRequestObject(jar).getRawQuery().contains("request=")); //$NON-NLS-1$
 
 		final SignedJWT unsignedJar = new SignedJWT(
-				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				jarHeader(),
 				jar.getJWTClaimsSet());
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unsignedJar));
 		final SignedJWT untypedJar = new SignedJWT(
@@ -133,19 +133,40 @@ final class TestAuthorizationRequest {
 		untypedJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(untypedJar));
 		final SignedJWT mismatchedJar = new SignedJWT(
-				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
 						.claim("client_id", "https://otro-verifier.example.es") //$NON-NLS-1$ //$NON-NLS-2$
 						.build());
 		mismatchedJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedJar));
 		final SignedJWT mismatchedIssuerJar = new SignedJWT(
-				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
 						.issuer("https://otro-verifier.example.es") //$NON-NLS-1$
 						.build());
 		mismatchedIssuerJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedIssuerJar));
+		final SignedJWT noExpirationJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.expirationTime(null)
+						.build());
+		noExpirationJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(noExpirationJar));
+		final SignedJWT expiredJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.expirationTime(Date.from(Instant.now().minus(Duration.ofMinutes(1))))
+						.build());
+		expiredJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(expiredJar));
+		final SignedJWT futureIatJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.issueTime(Date.from(Instant.now().plus(Duration.ofMinutes(1))))
+						.build());
+		futureIatJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(futureIatJar));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " ")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
@@ -335,6 +356,12 @@ final class TestAuthorizationRequest {
 				(java.security.interfaces.RSAPublicKey) kp.getPublic());
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private static com.nimbusds.jose.JWSHeader jarHeader() {
+		return new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
+				.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$
+				.build();
 	}
 
 	private static com.nimbusds.jose.JWSHeader jarmHeader() {

@@ -106,6 +106,7 @@ public record AuthorizationRequest(
 				throw new IllegalArgumentException("Request Object JAR con typ inválido"); //$NON-NLS-1$
 			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
+			validateRequestObjectTime(claims);
 			if (!this.clientId.equals(claims.getIssuer())) {
 				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
 			}
@@ -123,6 +124,25 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException("Request Object JAR sin firma", e); //$NON-NLS-1$
 		}
 		return toUri(params);
+	}
+
+	private static void validateRequestObjectTime(final JWTClaimsSet claims) {
+		final Date now = new Date();
+		final Date issueTime = claims.getIssueTime();
+		if (issueTime != null && issueTime.after(now)) {
+			throw new IllegalArgumentException("Request Object JAR emitido en el futuro"); //$NON-NLS-1$
+		}
+		final Date expirationTime = claims.getExpirationTime();
+		if (expirationTime == null) {
+			throw new IllegalArgumentException("Request Object JAR sin caducidad"); //$NON-NLS-1$
+		}
+		if (!expirationTime.after(now)) {
+			throw new IllegalArgumentException("Request Object JAR caducado"); //$NON-NLS-1$
+		}
+		final Date notBeforeTime = claims.getNotBeforeTime();
+		if (notBeforeTime != null && notBeforeTime.after(now)) {
+			throw new IllegalArgumentException("Request Object JAR no válido aún"); //$NON-NLS-1$
+		}
 	}
 
 	/** Genera un Request Object JAR (RFC 9101) firmado. */
