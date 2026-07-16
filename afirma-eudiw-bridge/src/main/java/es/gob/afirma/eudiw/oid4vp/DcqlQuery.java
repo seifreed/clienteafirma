@@ -47,9 +47,19 @@ public record DcqlQuery(String json) {
 					throw new IllegalArgumentException("credential DCQL con claims inválido"); //$NON-NLS-1$
 				}
 				if (claims instanceof List<?> claimList) {
+					final Set<String> claimIds = new HashSet<>();
 					for (final Object claim : claimList) {
-						if (!(claim instanceof Map<?, ?>)) {
+						if (!(claim instanceof Map<?, ?> claimMap)) {
 							throw new IllegalArgumentException("claims DCQL debe contener objetos"); //$NON-NLS-1$
+						}
+						final Object claimId = claimMap.get("id"); //$NON-NLS-1$
+						if (claimId != null) {
+							if (!(claimId instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
+								throw new IllegalArgumentException("claim DCQL con id inválido"); //$NON-NLS-1$
+							}
+							if (!claimIds.add(text)) {
+								throw new IllegalArgumentException("claim DCQL con id duplicado"); //$NON-NLS-1$
+							}
 						}
 					}
 				}
