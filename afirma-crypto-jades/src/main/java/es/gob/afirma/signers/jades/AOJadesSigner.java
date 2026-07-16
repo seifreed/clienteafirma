@@ -42,7 +42,9 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.tsp.TimeStampToken;
@@ -267,7 +269,15 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("El token JAdES-T no incluye certificado TSA", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
-		tst.validate(new JcaSimpleSignerInfoVerifierBuilder().build(certificates.iterator().next()));
+		final X509CertificateHolder tsaHolder = certificates.iterator().next();
+		final X509Certificate tsaCert = new JcaX509CertificateConverter().getCertificate(tsaHolder);
+		tsaCert.checkValidity();
+		final List<String> eku = tsaCert.getExtendedKeyUsage();
+		if (eku == null || !eku.contains(KeyPurposeId.id_kp_timeStamping.getId())) {
+			throw new AOException("El certificado TSA de JAdES-T no permite sellado de tiempo", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		tst.validate(new JcaSimpleSignerInfoVerifierBuilder().build(tsaHolder));
 	}
 
 	private static String digestAlgorithmName(final ASN1ObjectIdentifier oid) throws AOException {
