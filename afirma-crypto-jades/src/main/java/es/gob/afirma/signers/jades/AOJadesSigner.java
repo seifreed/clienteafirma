@@ -239,7 +239,11 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static String normalizeTimestampToken(final String timestampTokenBase64,
 			final byte[] signatureBytes) throws AOException {
-		final String token = timestampTokenBase64.trim();
+		if (!timestampTokenBase64.equals(timestampTokenBase64.strip())) {
+			throw new AOException("El token RFC 3161 de JAdES-T no esta normalizado", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		final String token = timestampTokenBase64;
 		final byte[] der;
 		try {
 			der = Base64.getDecoder().decode(token);
