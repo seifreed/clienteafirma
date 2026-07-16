@@ -256,6 +256,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (value != null && value.isBlank()) {
 			throw new IllegalArgumentException("Parámetro vacío en eudiw-present: " + key); //$NON-NLS-1$
 		}
+		if (value != null && !value.equals(value.strip())) {
+			throw new IllegalArgumentException("Parámetro no normalizado en eudiw-present: " + key); //$NON-NLS-1$
+		}
 	}
 
 	private static String firstNonBlank(final String first, final String second) {

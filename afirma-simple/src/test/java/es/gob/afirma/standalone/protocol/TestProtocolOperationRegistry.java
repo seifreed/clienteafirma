@@ -211,7 +211,17 @@ final class TestProtocolOperationRegistry {
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&state=%20abc", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
 						+ "&responseMode=", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&responseMode=direct_post%20", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
