@@ -94,7 +94,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 				.clientId(verifier)
 				.responseUri(responseUri)
 				.withFreshNonce();
-		if (state != null && !state.isBlank()) {
+		if (state != null) {
 			builder.state(state);
 		}
 		else {
