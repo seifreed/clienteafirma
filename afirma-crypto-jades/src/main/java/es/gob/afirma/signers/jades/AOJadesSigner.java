@@ -123,9 +123,17 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("Parametro detached JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
+		if (!isBoolean(detachedParam)) {
+			throw new AOException("Parametro detached JAdES no es booleano", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 		final String jsonSerializationParam = params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false"); //$NON-NLS-1$
 		if (!jsonSerializationParam.equals(jsonSerializationParam.strip())) {
 			throw new AOException("Parametro jsonSerialization JAdES no normalizado", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		if (!isBoolean(jsonSerializationParam)) {
+			throw new AOException("Parametro jsonSerialization JAdES no es booleano", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		final boolean detached = !"false".equalsIgnoreCase( //$NON-NLS-1$
@@ -345,6 +353,11 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static boolean hasText(final String value) {
 		return value != null && !value.isBlank();
+	}
+
+	private static boolean isBoolean(final String value) {
+		return Boolean.TRUE.toString().equalsIgnoreCase(value)
+				|| Boolean.FALSE.toString().equalsIgnoreCase(value);
 	}
 
 	private static void assertKeyMatchesCertificate(final String algorithm, final PrivateKey key,
