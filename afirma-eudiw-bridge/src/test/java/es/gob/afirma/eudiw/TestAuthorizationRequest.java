@@ -127,6 +127,8 @@ final class TestAuthorizationRequest {
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				jar.getJWTClaimsSet());
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unsignedJar));
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " ")); //$NON-NLS-1$
 	}
 
 	@Test

@@ -108,6 +108,9 @@ public record AuthorizationRequest(
 		if (keyId != null && !keyId.isBlank()) {
 			header.keyID(keyId);
 		}
+		if (audience != null && audience.isBlank()) {
+			throw new IllegalArgumentException("OID4VP JAR audience vacío"); //$NON-NLS-1$
+		}
 		final Date now = new Date();
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.issuer(this.clientId)
@@ -116,7 +119,7 @@ public record AuthorizationRequest(
 		for (final Map.Entry<String, String> entry : params().entrySet()) {
 			claims.claim(entry.getKey(), entry.getValue());
 		}
-		if (audience != null && !audience.isBlank()) {
+		if (audience != null) {
 			claims.audience(audience);
 		}
 		final SignedJWT jwt = new SignedJWT(header.build(), claims.build());
