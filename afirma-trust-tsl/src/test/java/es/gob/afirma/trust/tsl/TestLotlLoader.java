@@ -211,6 +211,17 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("TslVerifier rechaza KeyInfo con certificado X.509 inválido")
+	void rejectsInvalidKeyInfoCertificate() throws Exception {
+		final KeyPair kp = rsa();
+		final String signed = new String(sign(LOTL, kp, selfSigned(kp)), StandardCharsets.UTF_8)
+				.replaceFirst("(?s)<X509Certificate>.*?</X509Certificate>", //$NON-NLS-1$
+						"<X509Certificate>AAAA</X509Certificate>"); //$NON-NLS-1$
+
+		assertThrows(TslException.class, () -> new TslVerifier().verify(signed.getBytes(StandardCharsets.UTF_8)));
+	}
+
+	@Test
 	@DisplayName("TslVerifier rechaza XML con DOCTYPE")
 	void rejectsDoctype() throws Exception {
 		final String xml = """
