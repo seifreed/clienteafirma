@@ -53,6 +53,9 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(clientId, "clientId");
 		Objects.requireNonNull(responseUri, "responseUri");
 		Objects.requireNonNull(nonce, "nonce");
+		if (!"https".equalsIgnoreCase(responseUri.getScheme())) { //$NON-NLS-1$
+			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
+		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 	}
 

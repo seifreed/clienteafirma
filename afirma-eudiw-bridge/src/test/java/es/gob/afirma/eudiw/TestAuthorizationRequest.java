@@ -205,6 +205,8 @@ final class TestAuthorizationRequest {
 	void rejectsMissingFields() {
 		assertThrows(NullPointerException.class,
 				() -> new AuthorizationRequestBuilder().withFreshNonce().build());
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("c").responseUri(URI.create("http://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
