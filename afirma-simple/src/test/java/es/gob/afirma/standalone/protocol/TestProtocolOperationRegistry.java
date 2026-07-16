@@ -203,6 +203,21 @@ final class TestProtocolOperationRegistry {
 						+ "&responseMode=", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&dcqlQuery=", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&dcql_query=", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&presentationDefinitionUri=", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=http%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
