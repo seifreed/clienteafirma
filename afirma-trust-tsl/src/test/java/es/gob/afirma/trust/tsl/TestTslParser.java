@@ -116,6 +116,7 @@ final class TestTslParser {
 		final TrustListService fresh = new TrustListService(
 				Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC),
 				Duration.ofHours(24));
+		assertThrows(NullPointerException.class, () -> fresh.getOrRefresh("ES", null)); //$NON-NLS-1$
 
 		assertEquals(es, fresh.getOrRefresh("ES", () -> {
 			loads.incrementAndGet();

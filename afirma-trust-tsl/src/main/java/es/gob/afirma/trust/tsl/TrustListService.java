@@ -65,6 +65,7 @@ public final class TrustListService {
 	public TslDocument getOrRefresh(final String territory, final TslLoader loader)
 			throws TslException {
 		final String key = territoryKey(territory);
+		Objects.requireNonNull(loader, "loader"); //$NON-NLS-1$
 		final TslDocument cached = this.byTerritory.get(key);
 		if (cached != null && !isExpired(key, cached)) {
 			return cached;
