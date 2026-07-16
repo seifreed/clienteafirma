@@ -63,8 +63,14 @@ public record AuthorizationRequest(
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
+		if (!nonce.equals(nonce.strip())) {
+			throw new IllegalArgumentException("OID4VP nonce no normalizado"); //$NON-NLS-1$
+		}
 		if (state != null && state.isBlank()) {
 			throw new IllegalArgumentException("OID4VP state vacío"); //$NON-NLS-1$
+		}
+		if (state != null && !state.equals(state.strip())) {
+			throw new IllegalArgumentException("OID4VP state no normalizado"); //$NON-NLS-1$
 		}
 		requireHttpsWithHost(responseUri, "response_uri"); //$NON-NLS-1$
 		if (presentationDefinitionUri != null) {
