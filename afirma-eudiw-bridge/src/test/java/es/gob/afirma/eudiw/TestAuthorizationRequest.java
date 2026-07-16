@@ -440,6 +440,21 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				blankSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final SignedJWT unnormalizedSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("presentation_submission", " {}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		unnormalizedSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				unnormalizedSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
