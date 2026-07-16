@@ -54,7 +54,7 @@ public record DcqlQuery(String json) {
 						}
 						final Object claimId = claimMap.get("id"); //$NON-NLS-1$
 						if (claimId != null) {
-							if (!(claimId instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
+							if (!(claimId instanceof String text) || !isNormalizedText(text)) {
 								throw new IllegalArgumentException("claim DCQL con id inválido"); //$NON-NLS-1$
 							}
 							if (!claimIds.add(text)) {
@@ -80,7 +80,7 @@ public record DcqlQuery(String json) {
 			throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
 		}
 		for (final Object component : components) {
-			if (!(component instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
+			if (!(component instanceof String text) || !isNormalizedText(text)) {
 				throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
 			}
 		}
@@ -91,9 +91,15 @@ public record DcqlQuery(String json) {
 		if (!(value instanceof String text) || text.isBlank()) {
 			throw new IllegalArgumentException("credential DCQL sin " + key); //$NON-NLS-1$
 		}
-		if (!text.equals(text.strip())) {
+		if (!isNormalizedText(text)) {
 			throw new IllegalArgumentException("credential DCQL con " + key + " no normalizado"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return text;
+	}
+
+	private static boolean isNormalizedText(final String text) {
+		return !text.isBlank()
+				&& text.equals(text.strip())
+				&& text.chars().noneMatch(Character::isISOControl);
 	}
 }
