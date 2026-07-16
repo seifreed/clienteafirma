@@ -51,6 +51,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build (compile + SBOM, no tests)
+        shell: bash
         run: >
           mvn -B -ntp -Denv=install -DskipTests
           -Ddependency-check.skip=true
