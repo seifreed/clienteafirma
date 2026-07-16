@@ -203,6 +203,21 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(symmetricKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT noHolderJwkIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of()) //$NON-NLS-1$
+						.build());
+		noHolderJwkIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String noHolderJwkPresentation = noHolderJwkIssuerJwt.serialize() + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String noHolderJwkKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(noHolderJwkPresentation));
+		final SdJwtVerifiableCredential noHolderJwkVc = SdJwtVerifiableCredential.parse(
+				noHolderJwkPresentation + noHolderJwkKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(noHolderJwkVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String blankNonceKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", " ", presentationHash(presentation)); //$NON-NLS-1$ //$NON-NLS-2$
 		final SdJwtVerifiableCredential blankNonceKbVc = SdJwtVerifiableCredential.parse(

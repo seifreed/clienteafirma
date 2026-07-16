@@ -339,6 +339,10 @@ public final class SdJwtVerifier {
 			}
 			cnfJson.put(key, entry.getValue());
 		}
+		final Object jwkJson = cnfJson.get("jwk"); //$NON-NLS-1$
+		if (!(jwkJson instanceof Map<?, ?>)) {
+			throw new SdJwtVerificationException("Issuer JWT sin cnf.jwk"); //$NON-NLS-1$
+		}
 		final JWK jwk = JWK.parse(JSONObjectUtils.getJSONObject(cnfJson, "jwk")); //$NON-NLS-1$
 		if (jwk.isPrivate()) {
 			throw new SdJwtVerificationException("cnf.jwk no debe contener clave privada"); //$NON-NLS-1$
