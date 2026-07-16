@@ -559,6 +559,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			if (!isJadesHeader(header)) {
 				return false;
 			}
+			if (json.get("header") instanceof Map<?, ?> unprotectedHeader //$NON-NLS-1$
+					&& !java.util.Collections.disjoint(unprotectedHeader.keySet(), header.toJSONObject().keySet())) {
+				return false;
+			}
 			return Base64URL.from(signature).decode().length > 0;
 		}
 		catch (final Exception e) {
