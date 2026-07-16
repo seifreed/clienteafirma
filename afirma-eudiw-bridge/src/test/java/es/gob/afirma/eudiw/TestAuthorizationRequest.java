@@ -122,6 +122,11 @@ final class TestAuthorizationRequest {
 		assertEquals("nonce", jar.getJWTClaimsSet().getStringClaim("nonce")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(jar.getJWTClaimsSet().getAudience().contains("openid4vp://wallet")); //$NON-NLS-1$
 		assertTrue(req.toUriWithRequestObject(jar).getRawQuery().contains("request=")); //$NON-NLS-1$
+
+		final SignedJWT unsignedJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				jar.getJWTClaimsSet());
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unsignedJar));
 	}
 
 	@Test

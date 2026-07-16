@@ -88,7 +88,12 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(requestObject, "requestObject"); //$NON-NLS-1$
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
-		params.put("request", requestObject.serialize()); //$NON-NLS-1$
+		try {
+			params.put("request", requestObject.serialize()); //$NON-NLS-1$
+		}
+		catch (final IllegalStateException e) {
+			throw new IllegalArgumentException("Request Object JAR sin firma", e); //$NON-NLS-1$
+		}
 		return toUri(params);
 	}
 
