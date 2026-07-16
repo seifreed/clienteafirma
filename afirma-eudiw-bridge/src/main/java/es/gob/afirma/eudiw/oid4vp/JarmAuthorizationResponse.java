@@ -190,7 +190,7 @@ public record JarmAuthorizationResponse(
 				throw new JOSEException("presentation_submission JARM con descriptor_map duplicado"); //$NON-NLS-1$
 			}
 			final String path = requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
-			if (!path.startsWith("$")) { //$NON-NLS-1$
+			if (!isSupportedJsonPath(path)) {
 				throw new JOSEException("presentation_submission JARM con path inválido"); //$NON-NLS-1$
 			}
 			if (typedDescriptor.containsKey("format")) { //$NON-NLS-1$
@@ -200,6 +200,10 @@ public record JarmAuthorizationResponse(
 				}
 			}
 		}
+	}
+
+	private static boolean isSupportedJsonPath(final String path) {
+		return "$".equals(path) || path.startsWith("$.") || path.startsWith("$["); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	private static String requireNormalizedString(final Map<String, Object> map, final String name) throws JOSEException {
