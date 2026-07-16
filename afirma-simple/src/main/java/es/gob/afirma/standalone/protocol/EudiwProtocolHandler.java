@@ -89,6 +89,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String walletUri = params.get("walletUri"); //$NON-NLS-1$
 		final String walletEndpoint = params.get("walletEndpoint"); //$NON-NLS-1$
 		final String state = params.get("state"); //$NON-NLS-1$
+		rejectBlankIfPresent(responseMode, "responseMode"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletUri, "walletUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
 
