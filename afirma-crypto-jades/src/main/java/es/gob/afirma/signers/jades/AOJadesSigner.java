@@ -471,6 +471,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				|| !(json.get("signature") instanceof String signature) || signature.isBlank()) { //$NON-NLS-1$
 			return false;
 		}
+		if (!isBase64Url(protectedHeader) || !isBase64Url(signature)) {
+			return false;
+		}
 		try {
 			JWSHeader.parse(Base64URL.from(protectedHeader));
 			return Base64URL.from(signature).decode().length > 0;
@@ -478,6 +481,17 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		catch (final Exception e) {
 			return false;
 		}
+	}
+
+	private static boolean isBase64Url(final String value) {
+		for (int i = 0; i < value.length(); i++) {
+			final char c = value.charAt(i);
+			if (!(c >= 'A' && c <= 'Z') && !(c >= 'a' && c <= 'z')
+					&& !(c >= '0' && c <= '9') && c != '-' && c != '_') {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** Helper visible solo dentro del paquete (incluido el test): decodifica
