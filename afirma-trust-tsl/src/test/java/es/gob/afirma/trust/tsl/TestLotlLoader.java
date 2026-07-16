@@ -138,6 +138,15 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("TslVerifier rechaza KeyInfo con varios certificados X.509")
+	void rejectsMultipleKeyInfoCertificates() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp, selfSigned(kp), selfSigned(rsa()));
+
+		assertThrows(TslException.class, () -> new TslVerifier().verify(signed));
+	}
+
+	@Test
 	@DisplayName("TslVerifier rechaza XML con DOCTYPE")
 	void rejectsDoctype() throws Exception {
 		final String xml = """
@@ -177,7 +186,7 @@ final class TestLotlLoader {
 		return sign(xml, kp, null);
 	}
 
-	private static byte[] sign(final String xml, final KeyPair kp, final X509Certificate cert) throws Exception {
+	private static byte[] sign(final String xml, final KeyPair kp, final X509Certificate... certs) throws Exception {
 		final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -202,9 +211,9 @@ final class TestLotlLoader {
 				factory.newSignatureMethod(SignatureMethod.RSA_SHA256, null),
 				Collections.singletonList(ref));
 		final KeyInfo keyInfo;
-		if (cert != null) {
+		if (certs != null && certs.length > 0) {
 			final KeyInfoFactory kif = factory.getKeyInfoFactory();
-			keyInfo = kif.newKeyInfo(List.of(kif.newX509Data(List.of(cert))));
+			keyInfo = kif.newKeyInfo(List.of(kif.newX509Data(List.of(certs))));
 		}
 		else {
 			keyInfo = null;

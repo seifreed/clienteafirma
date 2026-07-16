@@ -52,6 +52,9 @@ public final class TslVerifier {
 			if (certificates.getLength() == 0) {
 				throw new TslException("Firma TSL sin certificado X.509 en KeyInfo"); //$NON-NLS-1$
 			}
+			if (certificates.getLength() > 1) {
+				throw new TslException("Firma TSL con varios certificados X.509 en KeyInfo"); //$NON-NLS-1$
+			}
 			final byte[] der = Base64.getMimeDecoder().decode(certificates.item(0).getTextContent());
 			final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
 			final X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der));
