@@ -134,6 +134,21 @@ final class TestProtocolOperationRegistry {
 	}
 
 	@Test
+	@DisplayName("EudiwProtocolHandler envuelve la request en walletUri si se declara")
+	void eudiwWrapsRequestInWalletDeepLink() throws Exception {
+		final EudiwProtocolHandler handler = new EudiwProtocolHandler();
+		final String url = "afirma://eudiw-present" //$NON-NLS-1$
+				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&walletUri=eudiw%3A%2F%2Fpresent%3Fclient%3Dautofirma"; //$NON-NLS-1$
+		final LaunchContext ctx = new LaunchContext(null, false,
+				Collections.emptyMap(), 1);
+		final String result = handler.process(url, ctx);
+		assertTrue(result.startsWith("eudiw://present?client=autofirma&request=")); //$NON-NLS-1$
+		assertTrue(result.contains("openid4vp%3A%2F%2Fauthorize")); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("EudiwProtocolHandler.process exige verifier y responseUri")
 	void eudiwRejectsMissingRequired() {
 		final EudiwProtocolHandler handler = new EudiwProtocolHandler();

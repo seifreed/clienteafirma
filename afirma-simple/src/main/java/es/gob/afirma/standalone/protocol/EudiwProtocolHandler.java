@@ -7,6 +7,7 @@ package es.gob.afirma.standalone.protocol;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -33,6 +34,7 @@ import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
  *     responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse&
  *     responseMode=direct_post.jwt&
  *     dcqlQuery=%7B%22credentials%22%3A%5B...%5D%7D&
+ *     walletUri=eudiw%3A%2F%2Fpresent&
  *     presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1&
  *     state=optional-state}</pre>
  *
@@ -81,6 +83,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String responseMode = params.get("responseMode"); //$NON-NLS-1$
 		final String dcqlQuery = firstNonBlank(params.get("dcqlQuery"), params.get("dcql_query")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
+		final String walletUri = params.get("walletUri"); //$NON-NLS-1$
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)
@@ -99,6 +102,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final AuthorizationRequest request = builder.build();
 		final String openid4vpUri = request.toUri().toString();
 		LOGGER.fine(() -> "OID4VP request construido para verifier=" + verifier); //$NON-NLS-1$
+		if (walletUri != null && !walletUri.isBlank()) {
+			return appendQueryParam(URI.create(walletUri), "request", openid4vpUri).toString(); //$NON-NLS-1$
+		}
 		// TODO M4.x: entregar la URI a la wallet (deep-link móvil, QR para
 		// flujo cross-device, o POST al endpoint de la wallet de escritorio
 		// cuando exista). De momento, devolvemos la URI canónica.
@@ -174,5 +180,13 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			return first;
 		}
 		return second != null && !second.isBlank() ? second : null;
+	}
+
+	private static URI appendQueryParam(final URI uri, final String key, final String value) {
+		final String separator = uri.getRawQuery() == null ? "?" : "&"; //$NON-NLS-1$ //$NON-NLS-2$
+		return URI.create(uri.toString() + separator
+				+ URLEncoder.encode(key, StandardCharsets.UTF_8)
+				+ "=" //$NON-NLS-1$
+				+ URLEncoder.encode(value, StandardCharsets.UTF_8));
 	}
 }
