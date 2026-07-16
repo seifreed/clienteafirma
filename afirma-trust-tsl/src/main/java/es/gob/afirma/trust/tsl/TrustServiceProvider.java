@@ -34,6 +34,12 @@ public record TrustServiceProvider(
 		if (countryCode.isBlank()) {
 			throw new IllegalArgumentException("País TSP vacío"); //$NON-NLS-1$
 		}
+		if (!countryCode.equals(countryCode.strip())) {
+			throw new IllegalArgumentException("País TSP no normalizado"); //$NON-NLS-1$
+		}
+		if (!countryCode.matches("[A-Z]{2}")) { //$NON-NLS-1$
+			throw new IllegalArgumentException("País TSP no es ISO alpha-2"); //$NON-NLS-1$
+		}
 		services = services == null ? List.of() : List.copyOf(services);
 	}
 

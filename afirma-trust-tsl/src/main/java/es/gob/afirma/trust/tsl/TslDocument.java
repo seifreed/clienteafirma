@@ -36,6 +36,9 @@ public record TslDocument(
 		if (!territory.equals(territory.strip())) {
 			throw new IllegalArgumentException("Territorio TSL no normalizado"); //$NON-NLS-1$
 		}
+		if (!territory.matches("[A-Z]{2}")) { //$NON-NLS-1$
+			throw new IllegalArgumentException("Territorio TSL no es ISO alpha-2"); //$NON-NLS-1$
+		}
 		providers = providers == null ? List.of() : List.copyOf(providers);
 	}
 }
