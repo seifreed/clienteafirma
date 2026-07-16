@@ -35,6 +35,9 @@ public record JarmAuthorizationResponse(
 			final String expectedState, final String expectedIssuer) throws ParseException, JOSEException {
 		Objects.requireNonNull(responseJwt, "responseJwt"); //$NON-NLS-1$
 		Objects.requireNonNull(verifier, "verifier"); //$NON-NLS-1$
+		rejectBlankExpected(expectedAudience, "audience"); //$NON-NLS-1$
+		rejectBlankExpected(expectedState, "state"); //$NON-NLS-1$
+		rejectBlankExpected(expectedIssuer, "issuer"); //$NON-NLS-1$
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
 		if (!jwt.verify(verifier)) {
 			throw new JOSEException("Firma JARM inválida"); //$NON-NLS-1$
@@ -81,6 +84,13 @@ public record JarmAuthorizationResponse(
 		final Date notBeforeTime = claims.getNotBeforeTime();
 		if (notBeforeTime != null && notBeforeTime.after(now)) {
 			throw new JOSEException("Respuesta JARM no válida aún"); //$NON-NLS-1$
+		}
+	}
+
+	private static void rejectBlankExpected(final String value, final String claim)
+			throws JOSEException {
+		if (value != null && value.isBlank()) {
+			throw new JOSEException("Valor esperado JARM vacío: " + claim); //$NON-NLS-1$
 		}
 	}
 }
