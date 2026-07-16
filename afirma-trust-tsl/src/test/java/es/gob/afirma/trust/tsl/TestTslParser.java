@@ -175,6 +175,19 @@ final class TestTslParser {
 			  </SchemeInformation>
 			</TrustServiceStatusList>
 			""".getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse("""
+			<?xml version="1.0" encoding="UTF-8"?>
+			<TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#">
+			  <SchemeInformation>
+			    <SchemeTerritory>ES</SchemeTerritory>
+			  </SchemeInformation>
+			  <TrustServiceProviderList>
+			    <TrustServiceProvider>
+			      <TSPInformation><Name>FNMT-RCM</Name></TSPInformation>
+			    </TrustServiceProvider>
+			  </TrustServiceProviderList>
+			</TrustServiceStatusList>
+			""".getBytes(StandardCharsets.UTF_8)));
 	}
 
 	@Test

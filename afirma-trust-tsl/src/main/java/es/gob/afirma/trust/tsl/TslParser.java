@@ -51,9 +51,14 @@ public final class TslParser {
 				throw new TslException("La raíz XML no es TrustServiceStatusList"); //$NON-NLS-1$
 			}
 
-			final String schemeOperator = textOrEmpty(root,
+			final Element schemeInformation = firstElement(root, TSL_NS, "SchemeInformation"); //$NON-NLS-1$
+			if (schemeInformation == null) {
+				throw new TslException("TSL sin SchemeInformation"); //$NON-NLS-1$
+			}
+
+			final String schemeOperator = textOrEmpty(schemeInformation,
 					TSL_NS, "SchemeOperatorName"); //$NON-NLS-1$
-			final String territory = textOrEmpty(root,
+			final String territory = textOrEmpty(schemeInformation,
 					TSL_NS, "SchemeTerritory"); //$NON-NLS-1$
 			if (schemeOperator.isEmpty()) {
 				throw new TslException("TSL sin SchemeOperatorName"); //$NON-NLS-1$
@@ -63,7 +68,7 @@ public final class TslParser {
 			}
 
 			Instant nextUpdate = null;
-			final NodeList nextUpdateNodes = root.getElementsByTagNameNS(TSL_NS, "NextUpdate"); //$NON-NLS-1$
+			final NodeList nextUpdateNodes = schemeInformation.getElementsByTagNameNS(TSL_NS, "NextUpdate"); //$NON-NLS-1$
 			if (nextUpdateNodes.getLength() > 0) {
 				final NodeList ts = ((Element) nextUpdateNodes.item(0))
 						.getElementsByTagNameNS(TSL_NS, "dateTime"); //$NON-NLS-1$
@@ -151,5 +156,10 @@ public final class TslParser {
 		}
 		final Node first = nl.item(0);
 		return first.getTextContent() == null ? "" : first.getTextContent().trim(); //$NON-NLS-1$
+	}
+
+	private static Element firstElement(final Element parent, final String ns, final String localName) {
+		final NodeList nl = parent.getElementsByTagNameNS(ns, localName);
+		return nl.getLength() == 0 ? null : (Element) nl.item(0);
 	}
 }
