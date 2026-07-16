@@ -83,6 +83,9 @@ public record AuthorizationRequest(
 		if (uri.getHost() == null || uri.getHost().isBlank()) {
 			throw new IllegalArgumentException("OID4VP " + field + " exige host"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (uri.getRawFragment() != null) {
+			throw new IllegalArgumentException("OID4VP " + field + " no admite fragmento"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 	}
 
 	/** Serializa la request a una URI {@code openid4vp://authorize?...}. */
