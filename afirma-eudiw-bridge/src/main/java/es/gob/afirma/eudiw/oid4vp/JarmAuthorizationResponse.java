@@ -88,6 +88,10 @@ public record JarmAuthorizationResponse(
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
 		final Date now = new Date();
+		final Date issueTime = claims.getIssueTime();
+		if (issueTime != null && issueTime.after(now)) {
+			throw new JOSEException("Respuesta JARM emitida en el futuro"); //$NON-NLS-1$
+		}
 		final Date expirationTime = claims.getExpirationTime();
 		if (expirationTime == null) {
 			throw new JOSEException("Respuesta JARM sin caducidad"); //$NON-NLS-1$
