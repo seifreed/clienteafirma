@@ -57,6 +57,9 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
 		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
+		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
+			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
+		}
 	}
 
 	/** Serializa la request a una URI {@code openid4vp://authorize?...}. */

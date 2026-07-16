@@ -207,6 +207,9 @@ final class TestAuthorizationRequest {
 				() -> new AuthorizationRequestBuilder().withFreshNonce().build());
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
 				.clientId("c").responseUri(URI.create("http://x/r")).build()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"fragment", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
