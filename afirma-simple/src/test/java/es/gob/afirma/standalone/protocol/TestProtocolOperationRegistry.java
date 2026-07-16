@@ -182,9 +182,9 @@ final class TestProtocolOperationRegistry {
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
 
-		final IllegalStateException ex = assertThrows(IllegalStateException.class,
+		final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
 				() -> handler.process(url, ctx));
-		assertTrue(ex.getMessage().contains("OID4VP exige HTTPS")); //$NON-NLS-1$
+		assertTrue(ex.getMessage().contains("walletEndpoint debe ser HTTPS")); //$NON-NLS-1$
 	}
 
 	@Test

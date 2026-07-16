@@ -105,6 +105,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (walletUri != null && walletEndpoint != null) {
 			throw new IllegalArgumentException("walletUri y walletEndpoint no pueden combinarse"); //$NON-NLS-1$
 		}
+		if (walletEndpoint != null) {
+			requireHttpsUri(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
+		}
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)
@@ -230,6 +233,12 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final URI uri = URI.create(value);
 		if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
 			throw new IllegalArgumentException("Parámetro " + key + " debe ser HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (uri.getHost() == null || uri.getHost().isBlank()) {
+			throw new IllegalArgumentException("Parámetro " + key + " debe declarar host HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (uri.getRawFragment() != null) {
+			throw new IllegalArgumentException("Parámetro " + key + " no admite fragmento"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
