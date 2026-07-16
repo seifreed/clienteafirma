@@ -371,9 +371,10 @@ public final class SdJwtVerifier {
 			cnfJson.put(key, entry.getValue());
 		}
 		final Object jwkJson = cnfJson.get("jwk"); //$NON-NLS-1$
-		if (!(jwkJson instanceof Map<?, ?>)) {
+		if (!(jwkJson instanceof Map<?, ?> jwkMap)) {
 			throw new SdJwtVerificationException("Issuer JWT sin cnf.jwk"); //$NON-NLS-1$
 		}
+		validateCnfJson(jwkMap);
 		final JWK jwk = JWK.parse(JSONObjectUtils.getJSONObject(cnfJson, "jwk")); //$NON-NLS-1$
 		if (jwk.isPrivate()) {
 			throw new SdJwtVerificationException("cnf.jwk no debe contener clave privada"); //$NON-NLS-1$
@@ -383,6 +384,27 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("cnf.jwk contiene kid no normalizado"); //$NON-NLS-1$
 		}
 		return jwk;
+	}
+
+	private static void validateCnfJson(final Object value) throws SdJwtVerificationException {
+		if (value instanceof Map<?, ?> map) {
+			for (final Map.Entry<?, ?> entry : map.entrySet()) {
+				if (!(entry.getKey() instanceof String key)
+						|| key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+					throw new SdJwtVerificationException("cnf.jwk contiene claves no normalizadas"); //$NON-NLS-1$
+				}
+				validateCnfJson(entry.getValue());
+			}
+		}
+		if (value instanceof List<?> list) {
+			for (final Object item : list) {
+				validateCnfJson(item);
+			}
+		}
+		if (value instanceof String text
+				&& (text.isBlank() || !text.equals(text.strip()) || containsControlChars(text))) {
+			throw new SdJwtVerificationException("cnf.jwk contiene valores no normalizados"); //$NON-NLS-1$
+		}
 	}
 
 	private static JWSVerifier verifier(final JWK jwk) throws Exception {

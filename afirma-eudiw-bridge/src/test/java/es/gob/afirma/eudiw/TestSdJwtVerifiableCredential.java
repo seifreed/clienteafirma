@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -244,6 +245,24 @@ final class TestSdJwtVerifiableCredential {
 				controlCnfKeyPresentation + controlCnfKeyKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlCnfKeyVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final Map<String, Object> controlJwk = new LinkedHashMap<>(holderJwk.toPublicJWK().toJSONObject());
+		controlJwk.put("ignored\nkey", "x"); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT controlJwkKeyIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of("jwk", controlJwk)) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		controlJwkKeyIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String controlJwkKeyPresentation = controlJwkKeyIssuerJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String controlJwkKeyKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(controlJwkKeyPresentation));
+		final SdJwtVerifiableCredential controlJwkKeyVc = SdJwtVerifiableCredential.parse(
+				controlJwkKeyPresentation + controlJwkKeyKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(controlJwkKeyVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final RSAKey controlKidHolderJwk = new RSAKey.Builder(
 				(java.security.interfaces.RSAPublicKey) holderKp.getPublic())
