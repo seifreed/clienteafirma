@@ -178,6 +178,20 @@ final class TestAuthorizationRequest {
 		expiredJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				expiredJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final SignedJWT malformedSubmissionJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("presentation_submission", "not-json") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		malformedSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				malformedSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test

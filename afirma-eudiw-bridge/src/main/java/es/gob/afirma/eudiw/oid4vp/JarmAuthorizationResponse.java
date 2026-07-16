@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.Objects;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -53,10 +54,19 @@ public record JarmAuthorizationResponse(
 		if (vpToken == null || vpToken.isBlank()) {
 			throw new JOSEException("Respuesta JARM sin vp_token"); //$NON-NLS-1$
 		}
+		final String presentationSubmission = claims.getStringClaim("presentation_submission"); //$NON-NLS-1$
+		if (presentationSubmission != null && !presentationSubmission.isBlank()) {
+			try {
+				JSONObjectUtils.parse(presentationSubmission);
+			}
+			catch (final ParseException e) {
+				throw new JOSEException("presentation_submission JARM no es JSON válido", e); //$NON-NLS-1$
+			}
+		}
 		return new JarmAuthorizationResponse(
 				vpToken,
 				claims.getStringClaim("state"), //$NON-NLS-1$
-				claims.getStringClaim("presentation_submission")); //$NON-NLS-1$
+				presentationSubmission);
 	}
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
