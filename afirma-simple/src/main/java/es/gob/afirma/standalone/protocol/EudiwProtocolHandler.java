@@ -166,7 +166,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 	public static boolean handles(final URI uri) {
 		return uri != null
 				&& "afirma".equalsIgnoreCase(uri.getScheme()) //$NON-NLS-1$
-				&& OPERATION.equalsIgnoreCase(uri.getHost());
+				&& OPERATION.equalsIgnoreCase(uri.getHost())
+				&& (uri.getRawPath() == null || uri.getRawPath().isEmpty()
+						|| "/".equals(uri.getRawPath())); //$NON-NLS-1$
 	}
 
 	/**
