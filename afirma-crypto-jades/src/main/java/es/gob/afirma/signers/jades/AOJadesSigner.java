@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
@@ -140,6 +141,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				throw new AOException("El certificado firmante JAdES no esta vigente", e, //$NON-NLS-1$
 						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 			}
+			assertKeyMatchesCertificate(algorithm, key, signerCert);
 
 			final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(jwsAlg)
 					.type(JOSEObjectType.JOSE)
@@ -312,6 +314,31 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static boolean hasText(final String value) {
 		return value != null && !value.isBlank();
+	}
+
+	private static void assertKeyMatchesCertificate(final String algorithm, final PrivateKey key,
+			final X509Certificate cert) throws AOException {
+		final String signatureAlgorithm = algorithm == null ? AOSignConstants.SIGN_ALGORITHM_SHA256WITHRSA : algorithm;
+		try {
+			final Signature signature = Signature.getInstance(signatureAlgorithm);
+			final byte[] probe = "JAdES".getBytes(java.nio.charset.StandardCharsets.US_ASCII); //$NON-NLS-1$
+			signature.initSign(key);
+			signature.update(probe);
+			final byte[] signed = signature.sign();
+			signature.initVerify(cert);
+			signature.update(probe);
+			if (!signature.verify(signed)) {
+				throw new AOException("La clave privada JAdES no corresponde al certificado firmante", //$NON-NLS-1$
+						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+			}
+		}
+		catch (final AOException e) {
+			throw e;
+		}
+		catch (final Exception e) {
+			throw new AOException("No se pudo comprobar la clave privada JAdES contra el certificado", e, //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 	}
 
 	private static JWSAlgorithm mapAlgorithm(final String algorithm, final PrivateKey key) throws AOException {

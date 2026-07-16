@@ -203,6 +203,20 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("sign rechaza clave privada que no corresponde al certificado firmante")
+	void rejectsSignerCertificateWithDifferentPrivateKey() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final Certificate[] otherChain = new Certificate[] {
+				selfSigned(kpg.generateKeyPair(), "CN=JAdES Otro, O=AEAD") }; //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), otherChain, new Properties()));
+	}
+
+	@Test
 	@DisplayName("sign rechaza certificado firmante caducado")
 	void rejectsExpiredSignerCertificate() throws Exception {
 		final Instant expired = Instant.now().minus(Duration.ofDays(2));
