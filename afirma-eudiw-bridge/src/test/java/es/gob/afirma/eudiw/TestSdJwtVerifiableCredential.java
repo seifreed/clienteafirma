@@ -303,6 +303,20 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(duplicatedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String sameClaimDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"otra-sal\",\"family_name\",\"López\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String sameClaimIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of(disclosureHash, disclosureHash(sameClaimDisclosure)));
+		final String sameClaimPresentation = sameClaimIssuerJwt + "~" + disclosure + "~" + sameClaimDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		final String sameClaimKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(sameClaimPresentation));
+		final SdJwtVerifiableCredential sameClaimVc = SdJwtVerifiableCredential.parse(
+				sameClaimPresentation + sameClaimKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(sameClaimVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String duplicatedSdIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
 				holderJwk, List.of(disclosureHash, disclosureHash));
 		final String duplicatedSdPresentation = duplicatedSdIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$

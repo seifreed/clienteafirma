@@ -143,6 +143,7 @@ public final class SdJwtVerifier {
 		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		final Set<String> seenDisclosures = new HashSet<>();
+		final Set<String> seenClaimNames = new HashSet<>();
 		for (final String disclosure : vc.disclosures()) {
 			if (!seenDisclosures.add(disclosure)) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT duplicada"); //$NON-NLS-1$
@@ -160,6 +161,9 @@ public final class SdJwtVerifier {
 					|| !(disclosureJson.get(0) instanceof String salt) || salt.isBlank()
 					|| !(disclosureJson.get(1) instanceof String claimName) || claimName.isBlank()) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT no es array JSON válido"); //$NON-NLS-1$
+			}
+			if (!seenClaimNames.add(claimName)) {
+				throw new SdJwtVerificationException("Claim SD-JWT duplicado: " + claimName); //$NON-NLS-1$
 			}
 			final String digest = Base64.getUrlEncoder().withoutPadding().encodeToString(
 					sha256.digest(disclosure.getBytes(StandardCharsets.US_ASCII)));
