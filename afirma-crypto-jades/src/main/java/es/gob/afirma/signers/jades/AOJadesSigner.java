@@ -211,9 +211,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			}
 
 			final JWSHeader header = headerBuilder.build();
-			final Payload payload = detached
-					? new Payload(Base64URL.encode(data).toString())
-					: new Payload(data);
+			final Payload payload = new Payload(data);
 
 			if (jsonSerialization) {
 				final JWSObjectJSON jws = new JWSObjectJSON(payload);

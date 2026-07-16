@@ -58,6 +58,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSObjectJSON;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.sun.net.httpserver.HttpServer;
@@ -125,6 +129,8 @@ final class TestAOJadesSigner {
 		final int firstDot = s.indexOf('.');
 		final int secondDot = s.indexOf('.', firstDot + 1);
 		assertEquals(firstDot + 1, secondDot, "Sección de payload debe estar vacía en detached");
+		assertTrue(JWSObject.parse(s, new Payload("payload".getBytes())) //$NON-NLS-1$
+				.verify(jadesVerifier()));
 		final Properties params = new Properties();
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_DETACHED, " false"); //$NON-NLS-1$
 		assertThrows(es.gob.afirma.core.AOException.class,
@@ -180,6 +186,10 @@ final class TestAOJadesSigner {
 		assertTrue(json.contains("\"protected\""));
 		assertTrue(json.contains("\"signature\""));
 		assertTrue(!json.contains("\"payload\""), "Detached JSON serialization no debe incluir payload");
+		final Map<String, Object> parsed = JSONObjectUtils.parse(json);
+		parsed.put("payload", Base64URL.encode("payload".getBytes()).toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(JWSObjectJSON.parse(parsed).getSignatures().get(0)
+				.verify(jadesVerifier()));
 		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, " true"); //$NON-NLS-1$
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
@@ -583,6 +593,12 @@ final class TestAOJadesSigner {
 			@Override
 			public PublicKey getPublicKey() { return RSA_KEY.getPublic(); }
 		};
+	}
+
+	private static RSASSAVerifier jadesVerifier() {
+		return new RSASSAVerifier(
+				(java.security.interfaces.RSAPublicKey) RSA_KEY.getPublic(),
+				java.util.Set.of("sigT")); //$NON-NLS-1$
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject, final boolean timestamping) throws Exception {
