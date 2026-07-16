@@ -120,6 +120,19 @@ final class TestTslParser {
 		assertThrows(TslException.class,
 				() -> expired.getOrRefresh("ES",
 						() -> new TslDocument("Operator", "FR", null, List.of(), false)));
+
+		final AtomicInteger nextUpdateLoads = new AtomicInteger();
+		final TrustListService nextUpdateExpired = new TrustListService(
+				Clock.fixed(Instant.parse("2026-01-02T00:00:00Z"), ZoneOffset.UTC),
+				Duration.ofHours(24));
+		final TslDocument oldNextUpdate = new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
+				Instant.parse("2026-01-01T23:59:59Z"), List.of(), false);
+		nextUpdateExpired.ingest(oldNextUpdate);
+		nextUpdateExpired.getOrRefresh("ES", () -> { //$NON-NLS-1$
+			nextUpdateLoads.incrementAndGet();
+			return es;
+		});
+		assertEquals(1, nextUpdateLoads.get(), "NextUpdate caducado debe forzar recarga"); //$NON-NLS-1$
 	}
 
 	@Test

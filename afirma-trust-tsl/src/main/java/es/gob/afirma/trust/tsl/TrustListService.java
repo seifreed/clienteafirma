@@ -29,9 +29,8 @@ import java.util.concurrent.ConcurrentMap;
  * las identidades de servicio publicadas en la TSL; no basta con que coincida
  * el DN del issuer.</p>
  *
- * <p><strong>TODO M4.x:</strong> persistencia local de la cache, feed de la LOTL europea
- * (https://ec.europa.eu/tools/lotl/eu-lotl.xml) y validación cruzada del
- * certificado firmante de la LOTL contra la lista pública de la Comisión.</p>
+ * <p>La descarga HTTPS, persistencia local y verificación de la LOTL se hacen
+ * en {@link LotlLoader}; aquí solo se gobierna la cache en memoria.</p>
  */
 public final class TrustListService {
 
@@ -66,7 +65,7 @@ public final class TrustListService {
 			throws TslException {
 		final String key = territory.toUpperCase();
 		final TslDocument cached = this.byTerritory.get(key);
-		if (cached != null && !isExpired(key)) {
+		if (cached != null && !isExpired(key, cached)) {
 			return cached;
 		}
 		final TslDocument loaded = loader.load();
@@ -125,10 +124,16 @@ public final class TrustListService {
 		}
 	}
 
-	private boolean isExpired(final String territory) {
+	private boolean isExpired(final String territory, final TslDocument cached) {
 		final Instant timestamp = this.loadedAt.get(territory);
-		return timestamp == null
-				|| !Instant.now(this.clock).isBefore(timestamp.plus(this.refreshInterval));
+		if (timestamp == null) {
+			return true;
+		}
+		final Instant now = Instant.now(this.clock);
+		if (!now.isBefore(timestamp.plus(this.refreshInterval))) {
+			return true;
+		}
+		return cached.nextUpdate() != null && !now.isBefore(cached.nextUpdate());
 	}
 
 	@FunctionalInterface
