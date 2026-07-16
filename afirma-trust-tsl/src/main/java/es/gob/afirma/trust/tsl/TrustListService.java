@@ -97,6 +97,12 @@ public final class TrustListService {
 		if (cert == null) {
 			return Optional.empty();
 		}
+		try {
+			cert.checkValidity();
+		}
+		catch (final Exception e) {
+			return Optional.empty();
+		}
 		for (final TslDocument tsl : this.byTerritory.values()) {
 			for (final TrustServiceProvider tsp : tsl.providers()) {
 				for (final TrustServiceProvider.TrustService svc : tsp.services()) {

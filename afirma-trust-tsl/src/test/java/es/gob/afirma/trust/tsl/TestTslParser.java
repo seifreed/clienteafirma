@@ -241,6 +241,28 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("findIssuer ignora certificados consultados caducados")
+	void findIssuerIgnoresExpiredLeafCertificates() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair caKp = kpg.generateKeyPair();
+		final X509Certificate caCert = selfSigned(caKp, "CN=CA Test, O=AEAD"); //$NON-NLS-1$
+		final Instant expired = Instant.now().minus(Duration.ofDays(2));
+		final X509Certificate leaf = issuedBy(caKp, caCert, kpg.generateKeyPair(),
+				"CN=Suscriptor, O=Prueba", expired, expired.plus(Duration.ofDays(1))); //$NON-NLS-1$
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted", //$NON-NLS-1$
+						List.of(caCert))));
+		final TrustListService svc = new TrustListService();
+		svc.ingest(new TslDocument("Operator", "ES", null, List.of(tsp), false)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertTrue(svc.findIssuer(leaf).isEmpty());
+	}
+
+	@Test
 	@DisplayName("Parser endurecido contra DOCTYPE (XXE)")
 	void rejectsDoctype() {
 		final String xxe = """
@@ -273,6 +295,13 @@ final class TestTslParser {
 	private static X509Certificate issuedBy(final KeyPair issuerKp, final X509Certificate issuerCert,
 			final KeyPair subjectKp, final String subjectDn) throws Exception {
 		final Instant now = Instant.now();
+		return issuedBy(issuerKp, issuerCert, subjectKp, subjectDn,
+				now, now.plus(Duration.ofDays(365)));
+	}
+
+	private static X509Certificate issuedBy(final KeyPair issuerKp, final X509Certificate issuerCert,
+			final KeyPair subjectKp, final String subjectDn,
+			final Instant notBefore, final Instant notAfter) throws Exception {
 		// Reconstruir issuer desde los bytes del DN del CA evita la inversión RDN
 		// que produce X500Name(String) sobre un nombre con varios componentes.
 		final X500Name issuer = X500Name.getInstance(
@@ -282,7 +311,7 @@ final class TestTslParser {
 				.build(issuerKp.getPrivate());
 		final X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
 				issuer, BigInteger.valueOf(System.currentTimeMillis() + 1),
-				Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
+				Date.from(notBefore), Date.from(notAfter),
 				subject, subjectKp.getPublic())
 				.build(signer);
 		return (X509Certificate) CertificateFactory.getInstance("X.509")
