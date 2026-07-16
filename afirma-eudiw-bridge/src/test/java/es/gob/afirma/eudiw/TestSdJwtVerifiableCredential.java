@@ -144,6 +144,22 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(untypedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String expiredKb = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
+				true, Date.from(Instant.now().minus(Duration.ofMinutes(1))), null);
+		final SdJwtVerifiableCredential expiredKbVc = SdJwtVerifiableCredential.parse(
+				presentation + expiredKb);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(expiredKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String earlyKb = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
+				true, null, Date.from(Instant.now().plus(Duration.ofMinutes(1))));
+		final SdJwtVerifiableCredential earlyKbVc = SdJwtVerifiableCredential.parse(
+				presentation + earlyKb);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(earlyKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String expiredIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash, Date.from(Instant.now().minus(Duration.ofDays(1))));
 		final String expiredPresentation = expiredIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -238,18 +254,31 @@ final class TestSdJwtVerifiableCredential {
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
 			final String audience, final String nonce, final String sdHash,
 			final boolean typed) throws Exception {
+		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, typed, null, null);
+	}
+
+	private static String signedKeyBindingJwt(final KeyPair holderKp,
+			final String audience, final String nonce, final String sdHash,
+			final boolean typed, final Date expirationTime, final Date notBeforeTime)
+			throws Exception {
 		final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
 		if (typed) {
 			headerBuilder.type(new JOSEObjectType("kb+jwt")); //$NON-NLS-1$
 		}
+		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
+				.audience(audience)
+				.issueTime(new Date())
+				.claim("nonce", nonce) //$NON-NLS-1$
+				.claim("sd_hash", sdHash); //$NON-NLS-1$
+		if (expirationTime != null) {
+			claims.expirationTime(expirationTime);
+		}
+		if (notBeforeTime != null) {
+			claims.notBeforeTime(notBeforeTime);
+		}
 		final SignedJWT jwt = new SignedJWT(
 				headerBuilder.build(),
-				new JWTClaimsSet.Builder()
-						.audience(audience)
-						.issueTime(new Date())
-						.claim("nonce", nonce) //$NON-NLS-1$
-						.claim("sd_hash", sdHash) //$NON-NLS-1$
-						.build());
+				claims.build());
 		jwt.sign(new RSASSASigner(holderKp.getPrivate()));
 		return jwt.serialize();
 	}

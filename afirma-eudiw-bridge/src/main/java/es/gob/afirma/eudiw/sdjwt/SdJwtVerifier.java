@@ -153,6 +153,15 @@ public final class SdJwtVerifier {
 		if (issueTime == null) {
 			throw new SdJwtVerificationException("Key Binding JWT sin iat"); //$NON-NLS-1$
 		}
+		final Date now = new Date();
+		final Date expirationTime = claims.getExpirationTime();
+		if (expirationTime != null && !expirationTime.after(now)) {
+			throw new SdJwtVerificationException("Key Binding JWT caducado"); //$NON-NLS-1$
+		}
+		final Date notBeforeTime = claims.getNotBeforeTime();
+		if (notBeforeTime != null && notBeforeTime.after(now)) {
+			throw new SdJwtVerificationException("Key Binding JWT no válido aún"); //$NON-NLS-1$
+		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
 		}
