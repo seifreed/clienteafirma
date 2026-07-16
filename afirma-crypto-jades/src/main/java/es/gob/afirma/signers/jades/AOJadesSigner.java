@@ -567,12 +567,24 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				|| JWSAlgorithm.Family.EC.contains(header.getAlgorithm()))
 				&& header.getX509CertSHA256Thumbprint() != null
 				&& header.getX509CertChain() != null && !header.getX509CertChain().isEmpty()
+				&& thumbprintMatchesChain(header)
 				&& header.getCustomParam("sigT") instanceof String sigT && !sigT.isBlank() //$NON-NLS-1$
 				&& sigT.equals(sigT.strip())
 				&& isJadesSigningTime(sigT)
 				&& header.getCriticalParams() != null
 				&& header.getCriticalParams().size() == 1
 				&& header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
+	}
+
+	private static boolean thumbprintMatchesChain(final JWSHeader header) {
+		try {
+			final byte[] cert = header.getX509CertChain().get(0).decode();
+			return header.getX509CertSHA256Thumbprint().equals(Base64URL.encode(
+					MessageDigest.getInstance("SHA-256").digest(cert))); //$NON-NLS-1$
+		}
+		catch (final RuntimeException | NoSuchAlgorithmException e) {
+			return false;
+		}
 	}
 
 	private static boolean isJadesSigningTime(final String sigT) {
