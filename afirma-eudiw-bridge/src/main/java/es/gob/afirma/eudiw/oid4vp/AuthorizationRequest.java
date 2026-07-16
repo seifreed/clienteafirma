@@ -65,6 +65,10 @@ public record AuthorizationRequest(
 		if (!"https".equalsIgnoreCase(responseUri.getScheme())) { //$NON-NLS-1$
 			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
 		}
+		if (presentationDefinitionUri != null
+				&& !"https".equalsIgnoreCase(presentationDefinitionUri.getScheme())) { //$NON-NLS-1$
+			throw new IllegalArgumentException("OID4VP presentation_definition_uri exige HTTPS"); //$NON-NLS-1$
+		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
 			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
