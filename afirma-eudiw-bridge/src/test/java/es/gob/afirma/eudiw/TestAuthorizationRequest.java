@@ -90,6 +90,9 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\" \",\"format\":\"dc+sd-jwt\"}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\"},{\"id\":\"pid\",\"format\":\"mso_mdoc\"}]}")); //$NON-NLS-1$
 	}
 
 	@Test
