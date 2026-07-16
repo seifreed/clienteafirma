@@ -245,6 +245,16 @@ final class TestTslParser {
 						"<TrustServiceStatusList xmlns=\"http://uri.etsi.org/02231/v2#\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">") //$NON-NLS-1$
 				.replace("</ServiceInformation>", "</ServiceInformation><ds:X509Certificate>AAAA</ds:X509Certificate>") //$NON-NLS-1$ //$NON-NLS-2$
 				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<SchemeTerritory>ES</SchemeTerritory>", "<SchemeTerritory> ES</SchemeTerritory>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<Name>FNMT-RCM</Name>", "<Name> FNMT-RCM</Name>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>", //$NON-NLS-1$
+						"<ServiceStatus> http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>") //$NON-NLS-1$
+				.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	@Test

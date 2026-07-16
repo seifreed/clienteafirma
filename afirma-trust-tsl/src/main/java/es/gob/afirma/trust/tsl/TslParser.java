@@ -56,8 +56,10 @@ public final class TslParser {
 				throw new TslException("TSL sin SchemeInformation"); //$NON-NLS-1$
 			}
 
-			final String schemeOperator = textOrEmpty(schemeInformation,
+			final Element schemeOperatorName = firstElement(schemeInformation,
 					TSL_NS, "SchemeOperatorName"); //$NON-NLS-1$
+			final String schemeOperator = schemeOperatorName == null ? "" : //$NON-NLS-1$
+					textOrEmpty(schemeOperatorName, TSL_NS, "Name"); //$NON-NLS-1$
 			final String territory = textOrEmpty(schemeInformation,
 					TSL_NS, "SchemeTerritory"); //$NON-NLS-1$
 			if (schemeOperator.isEmpty()) {
@@ -166,7 +168,7 @@ public final class TslParser {
 			return ""; //$NON-NLS-1$
 		}
 		final Node first = nl.item(0);
-		return first.getTextContent() == null ? "" : first.getTextContent().trim(); //$NON-NLS-1$
+		return first.getTextContent() == null ? "" : first.getTextContent(); //$NON-NLS-1$
 	}
 
 	private static Element firstElement(final Element parent, final String ns, final String localName) {
