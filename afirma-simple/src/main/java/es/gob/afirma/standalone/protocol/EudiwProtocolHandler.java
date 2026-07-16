@@ -212,8 +212,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			final String key;
 			final String value;
 			if (eq < 0) {
-				key = decodeQueryComponent(pair);
-				value = ""; //$NON-NLS-1$
+				throw new IllegalArgumentException("Parámetro sin valor en URI eudiw-present"); //$NON-NLS-1$
 			}
 			else {
 				key = decodeQueryComponent(pair.substring(0, eq));
