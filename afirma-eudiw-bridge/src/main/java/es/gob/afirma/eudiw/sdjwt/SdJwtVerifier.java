@@ -47,7 +47,7 @@ public final class SdJwtVerifier {
 					.orElseThrow(() -> new SdJwtVerificationException(
 							"Certificado emisor SD-JWT VC no encontrado en TSL")); //$NON-NLS-1$
 			verifyDisclosures(vc);
-			verifyKeyBinding(vc.issuerSignedJwt(), vc.keyBindingJwt()
+			verifyKeyBinding(vc, vc.keyBindingJwt()
 					.orElseThrow(() -> new SdJwtVerificationException(
 							"Key Binding JWT ausente")), audience, nonce); //$NON-NLS-1$
 			return provider;
@@ -114,8 +114,9 @@ public final class SdJwtVerifier {
 		}
 	}
 
-	private static void verifyKeyBinding(final SignedJWT issuerJwt, final SignedJWT kbJwt,
+	private static void verifyKeyBinding(final SdJwtVerifiableCredential vc, final SignedJWT kbJwt,
 			final String audience, final String nonce) throws Exception {
+		final SignedJWT issuerJwt = vc.issuerSignedJwt();
 		final JWK holderKey = holderKey(issuerJwt);
 		if (!kbJwt.verify(verifier(holderKey))) {
 			throw new SdJwtVerificationException("Firma Key Binding JWT inválida"); //$NON-NLS-1$
@@ -127,6 +128,25 @@ public final class SdJwtVerifier {
 		if (!nonce.equals(claims.getStringClaim("nonce"))) { //$NON-NLS-1$
 			throw new SdJwtVerificationException("Nonce Key Binding JWT inválido"); //$NON-NLS-1$
 		}
+		final String expectedHash = sdHash(vc);
+		if (!expectedHash.equals(claims.getStringClaim("sd_hash"))) { //$NON-NLS-1$
+			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
+		}
+	}
+
+	private static String sdHash(final SdJwtVerifiableCredential vc) throws Exception {
+		final JWTClaimsSet claims = vc.issuerSignedJwt().getJWTClaimsSet();
+		final String alg = claims.getStringClaim("_sd_alg"); //$NON-NLS-1$
+		if (alg != null && !"sha-256".equalsIgnoreCase(alg)) { //$NON-NLS-1$
+			throw new SdJwtVerificationException("Algoritmo _sd no soportado: " + alg); //$NON-NLS-1$
+		}
+		final StringBuilder encoded = new StringBuilder(vc.issuerSignedJwt().serialize()).append('~');
+		for (final String disclosure : vc.disclosures()) {
+			encoded.append(disclosure).append('~');
+		}
+		return Base64.getUrlEncoder().withoutPadding().encodeToString(
+				MessageDigest.getInstance("SHA-256").digest( //$NON-NLS-1$
+						encoded.toString().getBytes(StandardCharsets.US_ASCII)));
 	}
 
 	private static JWK holderKey(final SignedJWT issuerJwt)

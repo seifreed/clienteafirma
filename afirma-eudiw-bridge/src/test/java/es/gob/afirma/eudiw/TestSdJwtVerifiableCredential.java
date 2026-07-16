@@ -106,11 +106,13 @@ final class TestSdJwtVerifiableCredential {
 
 		final String disclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString(DISCLOSURE_JSON.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-		final String sdHash = sdHash(disclosure);
-		final String issuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHash);
-		final String kbJwt = signedKeyBindingJwt(holderKp, "https://verifier.example.es", "nonce-1"); //$NON-NLS-1$ //$NON-NLS-2$
+		final String disclosureHash = disclosureHash(disclosure);
+		final String issuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk, disclosureHash);
+		final String presentation = issuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String kbJwt = signedKeyBindingJwt(holderKp, "https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(presentation));
 		final SdJwtVerifiableCredential vc = SdJwtVerifiableCredential.parse(
-				issuerJwt + "~" + disclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
+				presentation + kbJwt);
 
 		final TrustListService trust = new TrustListService();
 		final TrustServiceProvider.TrustService service =
@@ -127,10 +129,17 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", "wrong")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String replayedKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(issuerJwt + "~")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		final SdJwtVerifiableCredential replayedVc = SdJwtVerifiableCredential.parse(
+				presentation + replayedKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(replayedVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
-				sdHash(badDisclosure));
+				disclosureHash(badDisclosure));
 		final SdJwtVerifiableCredential badVc = SdJwtVerifiableCredential.parse(
 				badIssuerJwt + "~" + badDisclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
@@ -168,21 +177,30 @@ final class TestSdJwtVerifiableCredential {
 	}
 
 	private static String signedKeyBindingJwt(final KeyPair holderKp,
-			final String audience, final String nonce) throws Exception {
+			final String audience, final String nonce, final String sdHash) throws Exception {
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
 						.audience(audience)
 						.claim("nonce", nonce) //$NON-NLS-1$
+						.claim("sd_hash", sdHash) //$NON-NLS-1$
 						.build());
 		jwt.sign(new RSASSASigner(holderKp.getPrivate()));
 		return jwt.serialize();
 	}
 
-	private static String sdHash(final String disclosure) throws Exception {
+	private static String disclosureHash(final String disclosure) throws Exception {
+		return sha256Base64Url(disclosure);
+	}
+
+	private static String presentationHash(final String presentation) throws Exception {
+		return sha256Base64Url(presentation);
+	}
+
+	private static String sha256Base64Url(final String value) throws Exception {
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(
 				java.security.MessageDigest.getInstance("SHA-256") //$NON-NLS-1$
-						.digest(disclosure.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+						.digest(value.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject)
