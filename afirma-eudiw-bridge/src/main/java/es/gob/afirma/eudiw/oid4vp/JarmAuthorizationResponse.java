@@ -69,6 +69,9 @@ public record JarmAuthorizationResponse(
 		if (!issuer.equals(issuer.strip())) {
 			throw new JOSEException("Issuer JARM no normalizado"); //$NON-NLS-1$
 		}
+		if (containsControlChars(issuer)) {
+			throw new JOSEException("Issuer JARM contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (expectedIssuer != null && !expectedIssuer.equals(issuer)) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
@@ -78,6 +81,9 @@ public record JarmAuthorizationResponse(
 		for (final String audience : claims.getAudience()) {
 			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
 				throw new JOSEException("Audience JARM no normalizada"); //$NON-NLS-1$
+			}
+			if (containsControlChars(audience)) {
+				throw new JOSEException("Audience JARM contiene caracteres de control"); //$NON-NLS-1$
 			}
 		}
 		if (!claims.getAudience().contains(expectedAudience)) {
@@ -89,6 +95,9 @@ public record JarmAuthorizationResponse(
 		}
 		if (!state.equals(state.strip())) {
 			throw new JOSEException("State JARM no normalizado"); //$NON-NLS-1$
+		}
+		if (containsControlChars(state)) {
+			throw new JOSEException("State JARM contiene caracteres de control"); //$NON-NLS-1$
 		}
 		if (!expectedState.equals(state)) {
 			throw new JOSEException("State JARM inválido"); //$NON-NLS-1$
@@ -113,6 +122,9 @@ public record JarmAuthorizationResponse(
 			}
 			if (!text.equals(text.strip())) {
 				throw new JOSEException("presentation_submission JARM no normalizado"); //$NON-NLS-1$
+			}
+			if (containsControlChars(text)) {
+				throw new JOSEException("presentation_submission JARM contiene caracteres de control"); //$NON-NLS-1$
 			}
 			try {
 				validatePresentationSubmission(JSONObjectUtils.parse(text));
@@ -212,7 +224,14 @@ public record JarmAuthorizationResponse(
 		if (!(value instanceof String text) || text.isBlank() || !text.equals(text.strip())) {
 			throw new JOSEException("presentation_submission JARM con " + name + " inválido"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (containsControlChars(text)) {
+			throw new JOSEException("presentation_submission JARM con " + name + " con caracteres de control"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		return text;
+	}
+
+	private static boolean containsControlChars(final String text) {
+		return text.chars().anyMatch(Character::isISOControl);
 	}
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {
@@ -241,6 +260,9 @@ public record JarmAuthorizationResponse(
 		}
 		if (value != null && !value.equals(value.strip())) {
 			throw new JOSEException("Valor esperado JARM no normalizado: " + claim); //$NON-NLS-1$
+		}
+		if (value != null && containsControlChars(value)) {
+			throw new JOSEException("Valor esperado JARM contiene caracteres de control: " + claim); //$NON-NLS-1$
 		}
 	}
 
