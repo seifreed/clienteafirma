@@ -559,6 +559,7 @@ final class TestAOJadesSigner {
 				java.util.Base64.getUrlDecoder().decode(jades.substring(0, firstDot)),
 				java.nio.charset.StandardCharsets.UTF_8));
 		final Object originalThumbprint = header.get("x5t#S256"); //$NON-NLS-1$
+		final Object originalChain = header.get("x5c"); //$NON-NLS-1$
 		header.put("sigT", " " + header.get("sigT")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
 				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
@@ -576,6 +577,12 @@ final class TestAOJadesSigner {
 		header.put("x5t#S256", Base64URL.encode(new byte[32]).toString()); //$NON-NLS-1$
 		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
 				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		final byte[] notCertificate = new byte[] { 1, 2, 3 };
+		header.put("x5c", List.of(java.util.Base64.getEncoder().encodeToString(notCertificate))); //$NON-NLS-1$
+		header.put("x5t#S256", Base64URL.encode(MessageDigest.getInstance("SHA-256").digest(notCertificate)).toString()); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
+				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		header.put("x5c", originalChain); //$NON-NLS-1$
 		header.put("x5t#S256", originalThumbprint); //$NON-NLS-1$
 		header.put("alg", "HS256"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))

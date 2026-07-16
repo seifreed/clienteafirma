@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
@@ -578,11 +579,14 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static boolean thumbprintMatchesChain(final JWSHeader header) {
 		try {
-			final byte[] cert = header.getX509CertChain().get(0).decode();
+			final byte[] encoded = header.getX509CertChain().get(0).decode();
+			final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
+					.generateCertificate(new java.io.ByteArrayInputStream(encoded));
+			cert.checkValidity();
 			return header.getX509CertSHA256Thumbprint().equals(Base64URL.encode(
-					MessageDigest.getInstance("SHA-256").digest(cert))); //$NON-NLS-1$
+					MessageDigest.getInstance("SHA-256").digest(cert.getEncoded()))); //$NON-NLS-1$
 		}
-		catch (final RuntimeException | NoSuchAlgorithmException e) {
+		catch (final Exception e) {
 			return false;
 		}
 	}
