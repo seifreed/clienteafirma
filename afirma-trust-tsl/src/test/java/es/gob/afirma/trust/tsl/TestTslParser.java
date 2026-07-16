@@ -131,7 +131,7 @@ final class TestTslParser {
 	}
 
 	@Test
-	@DisplayName("findIssuer resuelve un certificado a su TSP (O(1) index)")
+	@DisplayName("findIssuer resuelve un certificado a su TSP verificando la clave issuer")
 	void findIssuerByIssuerSubject() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
 		kpg.initialize(2048);
@@ -155,8 +155,32 @@ final class TestTslParser {
 		final TrustListService svc = new TrustListService();
 		svc.ingest(tsl);
 		assertEquals(1, svc.loadedCount());
-		assertTrue(svc.findIssuer(leaf).isPresent(), "Debe resolver leaf → TSP por issuer DN");
+		assertTrue(svc.findIssuer(leaf).isPresent(), "Debe resolver leaf → TSP por issuer DN y firma");
 		assertEquals("FNMT-RCM", svc.findIssuer(leaf).get().name());
+	}
+
+	@Test
+	@DisplayName("findIssuer rechaza un issuer con el mismo DN pero distinta clave")
+	void findIssuerRejectsSameSubjectDifferentKey() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair trustedCaKp = kpg.generateKeyPair();
+		final X509Certificate trustedCa = selfSigned(trustedCaKp, "CN=CA Test, O=AEAD"); //$NON-NLS-1$
+		final KeyPair otherCaKp = kpg.generateKeyPair();
+		final X509Certificate otherCa = selfSigned(otherCaKp, "CN=CA Test, O=AEAD"); //$NON-NLS-1$
+		final X509Certificate leaf = issuedBy(otherCaKp, otherCa, kpg.generateKeyPair(),
+				"CN=Suscriptor, O=Prueba"); //$NON-NLS-1$
+
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted", //$NON-NLS-1$
+						List.of(trustedCa))));
+		final TrustListService svc = new TrustListService();
+		svc.ingest(new TslDocument("Operator", "ES", null, List.of(tsp), false)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertTrue(svc.findIssuer(leaf).isEmpty());
 	}
 
 	@Test

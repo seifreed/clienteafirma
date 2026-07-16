@@ -11,8 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.security.auth.x500.X500Principal;
-
 /**
  * API consultable de la TSL: «¿este certificado pertenece a un proveedor
  * calificado para servicio X?». Carga TSLs en memoria y las cachea por
@@ -27,22 +25,19 @@ import javax.security.auth.x500.X500Principal;
  *       {@link Optional#empty()} si no es de un emisor cualificado).</li>
  * </ol>
  *
- * <p>El lookup es O(1): al ingestar una TSL se construye un índice
- * {@code issuer subject DN → TSP}. Reemplazar una TSL del mismo territorio
- * limpia las entradas previas asociadas a ella.</p>
+ * <p>El lookup comprueba que el certificado consultado fue firmado por una de
+ * las identidades de servicio publicadas en la TSL; no basta con que coincida
+ * el DN del issuer.</p>
  *
  * <p><strong>TODO M4.x:</strong> persistencia local de la cache, feed de la LOTL europea
  * (https://ec.europa.eu/tools/lotl/eu-lotl.xml) y validación cruzada del
- * certificado firmante de la LOTL contra la lista pública de la Comisión.
- * Comparación issuer+serial (RFC 5280) en lugar de solo subject DN para evitar
- * falsos positivos por re-emisión de CA.</p>
+ * certificado firmante de la LOTL contra la lista pública de la Comisión.</p>
  */
 public final class TrustListService {
 
 	private static final Duration DEFAULT_REFRESH_INTERVAL = Duration.ofHours(24);
 
 	private final ConcurrentMap<String, TslDocument> byTerritory = new ConcurrentHashMap<>();
-	private final ConcurrentMap<X500Principal, TrustServiceProvider> byIssuerSubject = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, Instant> loadedAt = new ConcurrentHashMap<>();
 	private final Clock clock;
 	private final Duration refreshInterval;
@@ -56,15 +51,11 @@ public final class TrustListService {
 		this.refreshInterval = Objects.requireNonNull(refreshInterval, "refreshInterval"); //$NON-NLS-1$
 	}
 
-	/** Añade o reemplaza la TSL de un territorio. Reconstruye el índice de issuers. */
+	/** Añade o reemplaza la TSL de un territorio. */
 	public void ingest(final TslDocument tsl) {
 		final String key = tsl.territory().toUpperCase();
-		final TslDocument previous = this.byTerritory.put(key, tsl);
+		this.byTerritory.put(key, tsl);
 		this.loadedAt.put(key, Instant.now(this.clock));
-		if (previous != null) {
-			removeFromIssuerIndex(previous);
-		}
-		addToIssuerIndex(tsl);
 	}
 
 	/**
@@ -97,37 +88,40 @@ public final class TrustListService {
 	}
 
 	/**
-	 * Resuelve un certificado de firma a su {@link TrustServiceProvider} en O(1).
+	 * Resuelve un certificado de firma a su {@link TrustServiceProvider}.
 	 *
-	 * <p>Compara el {@code issuer DN} del certificado contra los <em>service
-	 * digital identities</em> indexados al ingestar.</p>
+	 * <p>Compara el {@code issuer DN} contra los <em>service digital identities</em>
+	 * y verifica criptográficamente la firma del certificado con la clave pública
+	 * de la identidad candidata.</p>
 	 */
 	public Optional<TrustServiceProvider> findIssuer(final X509Certificate cert) {
 		if (cert == null) {
 			return Optional.empty();
 		}
-		return Optional.ofNullable(this.byIssuerSubject.get(cert.getIssuerX500Principal()));
-	}
-
-	private void addToIssuerIndex(final TslDocument tsl) {
-		for (final TrustServiceProvider tsp : tsl.providers()) {
-			for (final TrustServiceProvider.TrustService svc : tsp.services()) {
-				for (final X509Certificate sdi : svc.serviceDigitalIdentities()) {
-					this.byIssuerSubject.put(sdi.getSubjectX500Principal(), tsp);
+		for (final TslDocument tsl : this.byTerritory.values()) {
+			for (final TrustServiceProvider tsp : tsl.providers()) {
+				for (final TrustServiceProvider.TrustService svc : tsp.services()) {
+					for (final X509Certificate sdi : svc.serviceDigitalIdentities()) {
+						if (isIssuedBy(cert, sdi)) {
+							return Optional.of(tsp);
+						}
+					}
 				}
 			}
 		}
+		return Optional.empty();
 	}
 
-	private void removeFromIssuerIndex(final TslDocument tsl) {
-		for (final TrustServiceProvider tsp : tsl.providers()) {
-			for (final TrustServiceProvider.TrustService svc : tsp.services()) {
-				for (final X509Certificate sdi : svc.serviceDigitalIdentities()) {
-					// Solo limpiamos si la entrada actual aún apunta a este TSP — otra
-					// TSL del mismo territorio puede haber registrado la misma identidad.
-					this.byIssuerSubject.remove(sdi.getSubjectX500Principal(), tsp);
-				}
-			}
+	private static boolean isIssuedBy(final X509Certificate cert, final X509Certificate issuer) {
+		if (!cert.getIssuerX500Principal().equals(issuer.getSubjectX500Principal())) {
+			return false;
+		}
+		try {
+			cert.verify(issuer.getPublicKey());
+			return true;
+		}
+		catch (final Exception e) {
+			return false;
 		}
 	}
 
