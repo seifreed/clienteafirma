@@ -144,6 +144,16 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(untypedVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String expiredIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				disclosureHash, Date.from(Instant.now().minus(Duration.ofDays(1))));
+		final String expiredPresentation = expiredIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String expiredKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(expiredPresentation)); //$NON-NLS-1$ //$NON-NLS-2$
+		final SdJwtVerifiableCredential expiredVc = SdJwtVerifiableCredential.parse(
+				expiredPresentation + expiredKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(expiredVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
@@ -168,6 +178,13 @@ final class TestSdJwtVerifiableCredential {
 	private static String signedIssuerJwt(final KeyPair issuerKp,
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final String sdHash) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHash,
+				Date.from(Instant.now().plus(Duration.ofDays(1))));
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final String sdHash, final Date expirationTime) throws Exception {
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)
 						.x509CertChain(List.of(com.nimbusds.jose.util.Base64
@@ -176,6 +193,7 @@ final class TestSdJwtVerifiableCredential {
 				new JWTClaimsSet.Builder()
 						.issuer("https://issuer.example.es") //$NON-NLS-1$
 						.subject("pid-1") //$NON-NLS-1$
+						.expirationTime(expirationTime)
 						.claim("_sd_alg", "sha-256") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("_sd", List.of(sdHash)) //$NON-NLS-1$
 						.claim("cnf", Map.of("jwk", holderJwk.toPublicJWK().toJSONObject())) //$NON-NLS-1$ //$NON-NLS-2$

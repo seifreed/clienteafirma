@@ -47,6 +47,7 @@ public final class SdJwtVerifier {
 			if (!vc.issuerSignedJwt().verify(verifier(issuerCert))) {
 				throw new SdJwtVerificationException("Firma del issuer JWT inválida"); //$NON-NLS-1$
 			}
+			verifyIssuerValidity(vc.issuerSignedJwt().getJWTClaimsSet());
 			final TrustServiceProvider provider = trust.findIssuer(issuerCert)
 					.orElseThrow(() -> new SdJwtVerificationException(
 							"Certificado emisor SD-JWT VC no encontrado en TSL")); //$NON-NLS-1$
@@ -61,6 +62,19 @@ public final class SdJwtVerifier {
 		}
 		catch (final Exception e) {
 			throw new SdJwtVerificationException("Error verificando SD-JWT VC", e); //$NON-NLS-1$
+		}
+	}
+
+	private static void verifyIssuerValidity(final JWTClaimsSet claims)
+			throws SdJwtVerificationException {
+		final Date now = new Date();
+		final Date expirationTime = claims.getExpirationTime();
+		if (expirationTime != null && !expirationTime.after(now)) {
+			throw new SdJwtVerificationException("Issuer JWT caducado"); //$NON-NLS-1$
+		}
+		final Date notBeforeTime = claims.getNotBeforeTime();
+		if (notBeforeTime != null && notBeforeTime.after(now)) {
+			throw new SdJwtVerificationException("Issuer JWT no válido aún"); //$NON-NLS-1$
 		}
 	}
 
