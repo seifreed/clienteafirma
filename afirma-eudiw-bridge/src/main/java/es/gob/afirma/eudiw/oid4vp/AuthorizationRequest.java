@@ -5,6 +5,8 @@ package es.gob.afirma.eudiw.oid4vp;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -45,6 +47,8 @@ public record AuthorizationRequest(
 		String nonce,
 		String state) {
 
+	private static final Duration REQUEST_OBJECT_VALIDITY = Duration.ofMinutes(5);
+
 	public AuthorizationRequest {
 		Objects.requireNonNull(clientId, "clientId");
 		Objects.requireNonNull(responseUri, "responseUri");
@@ -77,7 +81,11 @@ public record AuthorizationRequest(
 		if (keyId != null && !keyId.isBlank()) {
 			header.keyID(keyId);
 		}
-		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder();
+		final Date now = new Date();
+		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
+				.issuer(this.clientId)
+				.issueTime(now)
+				.expirationTime(Date.from(now.toInstant().plus(REQUEST_OBJECT_VALIDITY)));
 		for (final Map.Entry<String, String> entry : params().entrySet()) {
 			claims.claim(entry.getKey(), entry.getValue());
 		}

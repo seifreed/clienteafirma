@@ -102,6 +102,9 @@ final class TestAuthorizationRequest {
 				(java.security.interfaces.RSAPublicKey) kp.getPublic())));
 		assertEquals(new JOSEObjectType("oauth-authz-req+jwt"), jar.getHeader().getType()); //$NON-NLS-1$
 		assertEquals("kid-1", jar.getHeader().getKeyID()); //$NON-NLS-1$
+		assertEquals("https://verifier.example.es", jar.getJWTClaimsSet().getIssuer()); //$NON-NLS-1$
+		assertNotNull(jar.getJWTClaimsSet().getIssueTime());
+		assertTrue(jar.getJWTClaimsSet().getExpirationTime().after(new Date()));
 		assertEquals("https://verifier.example.es", //$NON-NLS-1$
 				jar.getJWTClaimsSet().getStringClaim("client_id")); //$NON-NLS-1$
 		assertEquals("vp_token", jar.getJWTClaimsSet().getStringClaim("response_type")); //$NON-NLS-1$ //$NON-NLS-2$
