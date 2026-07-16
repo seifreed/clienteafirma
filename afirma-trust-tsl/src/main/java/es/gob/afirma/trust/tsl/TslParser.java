@@ -75,7 +75,7 @@ public final class TslParser {
 				final NodeList ts = ((Element) nextUpdateNodes.item(0))
 						.getElementsByTagNameNS(TSL_NS, "dateTime"); //$NON-NLS-1$
 				if (ts.getLength() > 0) {
-					nextUpdate = Instant.parse(ts.item(0).getTextContent().trim());
+					nextUpdate = Instant.parse(normalizedText(ts.item(0), "NextUpdate")); //$NON-NLS-1$
 				}
 			}
 
@@ -169,6 +169,20 @@ public final class TslParser {
 		}
 		final Node first = nl.item(0);
 		return first.getTextContent() == null ? "" : first.getTextContent(); //$NON-NLS-1$
+	}
+
+	private static String normalizedText(final Node node, final String fieldName) throws TslException {
+		final String text = node.getTextContent();
+		if (text == null || text.isBlank()) {
+			throw new TslException(fieldName + " vacío"); //$NON-NLS-1$
+		}
+		if (!text.equals(text.strip())) {
+			throw new TslException(fieldName + " no normalizado"); //$NON-NLS-1$
+		}
+		if (text.chars().anyMatch(Character::isISOControl)) {
+			throw new TslException(fieldName + " contiene caracteres de control"); //$NON-NLS-1$
+		}
+		return text;
 	}
 
 	private static Element firstElement(final Element parent, final String ns, final String localName) {
