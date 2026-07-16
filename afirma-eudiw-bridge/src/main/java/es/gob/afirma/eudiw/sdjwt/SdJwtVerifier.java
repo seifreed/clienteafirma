@@ -10,9 +10,11 @@ import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -118,7 +120,11 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("Issuer JWT sin claim _sd"); //$NON-NLS-1$
 		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
+		final Set<String> seenDisclosures = new HashSet<>();
 		for (final String disclosure : vc.disclosures()) {
+			if (!seenDisclosures.add(disclosure)) {
+				throw new SdJwtVerificationException("Disclosure SD-JWT duplicada"); //$NON-NLS-1$
+			}
 			final byte[] decoded;
 			try {
 				decoded = Base64.getUrlDecoder().decode(disclosure);

@@ -214,6 +214,15 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(shortDisclosureVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String duplicatedPresentation = issuerJwt + "~" + disclosure + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		final String duplicatedKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(duplicatedPresentation)); //$NON-NLS-1$ //$NON-NLS-2$
+		final SdJwtVerifiableCredential duplicatedVc = SdJwtVerifiableCredential.parse(
+				duplicatedPresentation + duplicatedKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(duplicatedVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash(badDisclosure));
