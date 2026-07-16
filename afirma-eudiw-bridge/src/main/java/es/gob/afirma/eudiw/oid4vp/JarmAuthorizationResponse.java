@@ -157,6 +157,9 @@ public record JarmAuthorizationResponse(
 			if (!text.equals(text.strip())) {
 				throw new JOSEException(name + " JARM no normalizado"); //$NON-NLS-1$
 			}
+			if (containsControlChars(text)) {
+				throw new JOSEException(name + " JARM contiene caracteres de control"); //$NON-NLS-1$
+			}
 			return text;
 		}
 		if (claim instanceof List<?> list) {
