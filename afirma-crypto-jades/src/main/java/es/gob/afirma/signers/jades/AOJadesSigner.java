@@ -568,7 +568,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				&& header.getCustomParam("sigT") instanceof String sigT && !sigT.isBlank() //$NON-NLS-1$
 				&& sigT.equals(sigT.strip())
 				&& isJadesSigningTime(sigT)
-				&& header.getCriticalParams() != null && header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
+				&& header.getCriticalParams() != null
+				&& header.getCriticalParams().size() == 1
+				&& header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
 	}
 
 	private static boolean isJadesSigningTime(final String sigT) {
