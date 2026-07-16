@@ -152,7 +152,7 @@ public final class SdJwtVerifier {
 			}
 			final List<Object> disclosureJson = JSONArrayUtils.parse(
 					new String(decoded, StandardCharsets.UTF_8));
-			if (disclosureJson.size() < 3
+			if (disclosureJson.size() != 3
 					|| !(disclosureJson.get(0) instanceof String)
 					|| !(disclosureJson.get(1) instanceof String)) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT no es array JSON válido"); //$NON-NLS-1$
