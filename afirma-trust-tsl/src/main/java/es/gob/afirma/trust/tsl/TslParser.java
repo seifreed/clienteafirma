@@ -46,6 +46,10 @@ public final class TslParser {
 		try {
 			final Document doc = parseXml(xml);
 			final Element root = doc.getDocumentElement();
+			if (!TSL_NS.equals(root.getNamespaceURI())
+					|| !"TrustServiceStatusList".equals(root.getLocalName())) { //$NON-NLS-1$
+				throw new TslException("La raíz XML no es TrustServiceStatusList"); //$NON-NLS-1$
+			}
 
 			final String schemeOperator = textOrEmpty(root,
 					TSL_NS, "SchemeOperatorName"); //$NON-NLS-1$

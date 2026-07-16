@@ -60,6 +60,9 @@ final class TestLotlLoader {
 		  </SchemeInformation>
 		</TrustServiceStatusList>
 		""";
+	private static final String NOT_A_TSL = LOTL
+			.replace("<TrustServiceStatusList", "<NotTrustServiceStatusList") //$NON-NLS-1$ //$NON-NLS-2$
+			.replace("</TrustServiceStatusList>", "</NotTrustServiceStatusList>"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	@TempDir
 	Path temp;
@@ -119,6 +122,16 @@ final class TestLotlLoader {
 		final KeyPair kp = rsa();
 		final LotlLoader loader = new LotlLoader(
 				() -> LOTL.getBytes(StandardCharsets.UTF_8), kp.getPublic(), null);
+		assertThrows(TslException.class, loader::load);
+	}
+
+	@Test
+	@DisplayName("LotlLoader rechaza XML firmado que no es una TSL")
+	void rejectsSignedNonTslRoot() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(NOT_A_TSL, kp);
+		final LotlLoader loader = new LotlLoader(
+				() -> signed, kp.getPublic(), null);
 		assertThrows(TslException.class, loader::load);
 	}
 
