@@ -77,6 +77,21 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("LotlLoader reutiliza cache fresca verificada sin descargar")
+	void reusesFreshVerifiedCache() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp);
+		final Path cache = this.temp.resolve("eu-lotl.xml"); //$NON-NLS-1$
+		Files.write(cache, signed);
+
+		final LotlLoader loader = new LotlLoader(() -> {
+			throw new AssertionError("No debe descargar con cache LOTL fresca"); //$NON-NLS-1$
+		}, kp.getPublic(), cache);
+
+		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("LotlLoader rechaza LOTL sin firma válida")
 	void rejectsUnsignedLotl() throws Exception {
 		final KeyPair kp = rsa();

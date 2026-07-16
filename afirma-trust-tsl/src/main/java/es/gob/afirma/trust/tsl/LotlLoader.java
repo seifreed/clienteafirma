@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 
 /** Descarga, verifica y cachea la LOTL europea. */
@@ -22,6 +23,7 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			"https://ec.europa.eu/tools/lotl/eu-lotl.xml"); //$NON-NLS-1$
 
 	private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(20);
+	private static final Duration CACHE_REFRESH_INTERVAL = Duration.ofHours(24);
 
 	private final TslXmlSource source;
 	private final PublicKey trustedKey;
@@ -44,6 +46,15 @@ public final class LotlLoader implements TrustListService.TslLoader {
 	@Override
 	public TslDocument load() throws TslException {
 		try {
+			final TslDocument cached = readFreshCache();
+			if (cached != null) {
+				return cached;
+			}
+		}
+		catch (final TslException e) {
+			// Cache corrupta o ilegible: se intentara refrescar desde la fuente.
+		}
+		try {
 			final byte[] xml = this.source.load();
 			final TslDocument doc = parseVerified(xml);
 			writeCache(xml);
@@ -57,6 +68,22 @@ public final class LotlLoader implements TrustListService.TslLoader {
 				Thread.currentThread().interrupt();
 			}
 			return readCache(e);
+		}
+	}
+
+	private TslDocument readFreshCache() throws TslException {
+		if (this.cachePath == null || !Files.isRegularFile(this.cachePath)) {
+			return null;
+		}
+		try {
+			if (!Instant.now().isBefore(Files.getLastModifiedTime(this.cachePath)
+					.toInstant().plus(CACHE_REFRESH_INTERVAL))) {
+				return null;
+			}
+			return parseVerified(Files.readAllBytes(this.cachePath));
+		}
+		catch (final IOException e) {
+			throw new TslException("No se pudo leer la cache LOTL", e); //$NON-NLS-1$
 		}
 	}
 
