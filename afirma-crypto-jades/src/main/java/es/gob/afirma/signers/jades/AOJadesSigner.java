@@ -189,7 +189,11 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			critical.add("sigT"); //$NON-NLS-1$
 
 			final String contentType = params.getProperty(EXTRA_PARAM_CONTENT_TYPE);
-			if (contentType != null && !contentType.isBlank()) {
+			if (contentType != null) {
+				if (contentType.isBlank()) {
+					throw new AOException("Content-Type JAdES vacio", //$NON-NLS-1$
+							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+				}
 				if (!contentType.equals(contentType.strip())) {
 					throw new AOException("Content-Type JAdES no normalizado", //$NON-NLS-1$
 							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
