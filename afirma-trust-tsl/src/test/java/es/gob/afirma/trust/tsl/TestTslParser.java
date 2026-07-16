@@ -109,6 +109,9 @@ final class TestTslParser {
 		assertThrows(IllegalArgumentException.class,
 				() -> new TslDocument("Operator", "es", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
+				() -> new TslDocument("Operator", "ES", null, //$NON-NLS-1$ //$NON-NLS-2$
+						java.util.Arrays.asList((TrustServiceProvider) null), false));
+		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider(" ", null, "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider(" TSP", null, "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
