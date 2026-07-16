@@ -160,6 +160,9 @@ public final class TrustListService {
 		if (territory == null || territory.isBlank()) {
 			throw new IllegalArgumentException("Territorio TSL vacío"); //$NON-NLS-1$
 		}
+		if (!territory.equals(territory.strip())) {
+			throw new IllegalArgumentException("Territorio TSL no normalizado"); //$NON-NLS-1$
+		}
 		return territory.toUpperCase(Locale.ROOT);
 	}
 
