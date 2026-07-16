@@ -418,7 +418,21 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				return false;
 			}
 		}
-		return dots == 2;
+		if (dots != 2) {
+			return false;
+		}
+		final int firstDot = s.indexOf('.');
+		final int lastDot = s.lastIndexOf('.');
+		if (firstDot <= 0 || lastDot <= firstDot || lastDot == s.length() - 1) {
+			return false;
+		}
+		try {
+			JWSHeader.parse(Base64URL.from(s.substring(0, firstDot)));
+			return Base64URL.from(s.substring(lastDot + 1)).decode().length > 0;
+		}
+		catch (final java.text.ParseException | IllegalArgumentException e) {
+			return false;
+		}
 	}
 
 	/** Helper visible solo dentro del paquete (incluido el test): decodifica
