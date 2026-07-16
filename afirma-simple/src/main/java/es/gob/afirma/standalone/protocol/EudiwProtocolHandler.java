@@ -12,6 +12,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -60,10 +61,11 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (url == null) {
 			return false;
 		}
-		return url.startsWith(SCHEME_PREFIX + "?") //$NON-NLS-1$
-				|| url.startsWith(SCHEME_PREFIX + "/?") //$NON-NLS-1$
-				|| url.equals(SCHEME_PREFIX)
-				|| url.equals(SCHEME_PREFIX + "/"); //$NON-NLS-1$
+		final String normalizedUrl = url.toLowerCase(Locale.ROOT);
+		return normalizedUrl.startsWith(SCHEME_PREFIX + "?") //$NON-NLS-1$
+				|| normalizedUrl.startsWith(SCHEME_PREFIX + "/?") //$NON-NLS-1$
+				|| normalizedUrl.equals(SCHEME_PREFIX)
+				|| normalizedUrl.equals(SCHEME_PREFIX + "/"); //$NON-NLS-1$
 	}
 
 	@Override

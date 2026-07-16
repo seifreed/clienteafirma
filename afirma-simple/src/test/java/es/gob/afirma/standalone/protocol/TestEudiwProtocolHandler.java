@@ -19,7 +19,9 @@ final class TestEudiwProtocolHandler {
 	@DisplayName("handles() reconoce solo afirma://eudiw-present")
 	void detectsScheme() {
 		assertTrue(EudiwProtocolHandler.handles(URI.create("afirma://eudiw-present?x=1")));
+		assertTrue(new EudiwProtocolHandler().handles("AFIRMA://EUDIW-PRESENT?x=1"));
 		assertFalse(EudiwProtocolHandler.handles(URI.create("afirma://sign?x=1")));
+		assertFalse(new EudiwProtocolHandler().handles("AFIRMA://EUDIW-PRESENT/path?x=1"));
 		assertFalse(EudiwProtocolHandler.handles(URI.create("https://eudiw-present?x=1")));
 		assertFalse(EudiwProtocolHandler.handles((URI) null));
 	}
