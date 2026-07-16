@@ -214,6 +214,14 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
 						RSA_KEY.getPrivate(), expiredChain, new Properties()));
+		final Instant future = Instant.now().plus(Duration.ofDays(1));
+		final Certificate[] futureChain = new Certificate[] {
+				RSA_CHAIN[0],
+				selfSigned(RSA_KEY, "CN=JAdES Intermediate Future, O=AEAD", false, //$NON-NLS-1$
+						future, future.plus(Duration.ofDays(1))) };
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), futureChain, new Properties()));
 	}
 
 	@Test
