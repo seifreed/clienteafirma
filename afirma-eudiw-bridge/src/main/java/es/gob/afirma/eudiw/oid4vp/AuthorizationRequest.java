@@ -9,6 +9,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+
 /**
  * OpenID for Verifiable Presentations (OID4VP) — Authorization Request.
  * Modela la URI {@code openid4vp://authorize?...} (o equivalente) que el
@@ -28,9 +36,7 @@ import java.util.Objects;
  *   <li>{@code nonce} y {@code state} — protección replay/CSRF.</li>
  * </ul>
  *
- * <p><strong>TODO M4.x:</strong> JAR (JWT-Signed Authorization Requests, RFC 9101)
- * para los Verifiers que requieren request object firmado; cifrado de respuesta
- * con JARM (RFC 9207).</p>
+ * <p><strong>TODO M4.x:</strong> cifrado de respuesta con JARM (RFC 9207).</p>
  */
 public record AuthorizationRequest(
 		String clientId,
@@ -48,6 +54,42 @@ public record AuthorizationRequest(
 
 	/** Serializa la request a una URI {@code openid4vp://authorize?...}. */
 	public URI toUri() {
+		return toUri(params());
+	}
+
+	/** Serializa la request usando JAR by value ({@code request=<jwt>}). */
+	public URI toUriWithRequestObject(final SignedJWT requestObject) {
+		Objects.requireNonNull(requestObject, "requestObject"); //$NON-NLS-1$
+		final Map<String, String> params = new LinkedHashMap<>();
+		params.put("client_id", this.clientId); //$NON-NLS-1$
+		params.put("request", requestObject.serialize()); //$NON-NLS-1$
+		return toUri(params);
+	}
+
+	/** Genera un Request Object JAR (RFC 9101) firmado. */
+	public SignedJWT toSignedRequestObject(final JWSSigner signer,
+			final JWSAlgorithm algorithm, final String keyId, final String audience)
+			throws JOSEException {
+		Objects.requireNonNull(signer, "signer"); //$NON-NLS-1$
+		Objects.requireNonNull(algorithm, "algorithm"); //$NON-NLS-1$
+		final JWSHeader.Builder header = new JWSHeader.Builder(algorithm)
+				.type(new JOSEObjectType("oauth-authz-req+jwt")); //$NON-NLS-1$
+		if (keyId != null && !keyId.isBlank()) {
+			header.keyID(keyId);
+		}
+		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder();
+		for (final Map.Entry<String, String> entry : params().entrySet()) {
+			claims.claim(entry.getKey(), entry.getValue());
+		}
+		if (audience != null && !audience.isBlank()) {
+			claims.audience(audience);
+		}
+		final SignedJWT jwt = new SignedJWT(header.build(), claims.build());
+		jwt.sign(signer);
+		return jwt;
+	}
+
+	private Map<String, String> params() {
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		params.put("response_type", "vp_token"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -63,7 +105,10 @@ public record AuthorizationRequest(
 		if (this.state != null) {
 			params.put("state", this.state); //$NON-NLS-1$
 		}
+		return params;
+	}
 
+	private static URI toUri(final Map<String, String> params) {
 		final StringBuilder sb = new StringBuilder("openid4vp://authorize?"); //$NON-NLS-1$
 		boolean first = true;
 		for (final Map.Entry<String, String> e : params.entrySet()) {

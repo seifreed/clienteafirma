@@ -11,9 +11,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jwt.SignedJWT;
 
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequest;
 import es.gob.afirma.eudiw.oid4vp.AuthorizationRequestBuilder;
@@ -64,6 +72,36 @@ final class TestAuthorizationRequest {
 				"DCQL sustituye al presentation_definition_uri legacy");
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery("not-json"));
+	}
+
+	@Test
+	@DisplayName("Builder genera Request Object JAR firmado")
+	void buildsSignedRequestObject() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair kp = kpg.generateKeyPair();
+		final AuthorizationRequest req = new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es")
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response"))
+				.dcqlQuery("{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\"}]}")
+				.nonce("nonce")
+				.state("state")
+				.build();
+
+		final SignedJWT jar = req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256,
+				"kid-1", "openid4vp://wallet"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertTrue(jar.verify(new RSASSAVerifier(
+				(java.security.interfaces.RSAPublicKey) kp.getPublic())));
+		assertEquals(new JOSEObjectType("oauth-authz-req+jwt"), jar.getHeader().getType()); //$NON-NLS-1$
+		assertEquals("kid-1", jar.getHeader().getKeyID()); //$NON-NLS-1$
+		assertEquals("https://verifier.example.es", //$NON-NLS-1$
+				jar.getJWTClaimsSet().getStringClaim("client_id")); //$NON-NLS-1$
+		assertEquals("vp_token", jar.getJWTClaimsSet().getStringClaim("response_type")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("nonce", jar.getJWTClaimsSet().getStringClaim("nonce")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(jar.getJWTClaimsSet().getAudience().contains("openid4vp://wallet")); //$NON-NLS-1$
+		assertTrue(req.toUriWithRequestObject(jar).getRawQuery().contains("request=")); //$NON-NLS-1$
 	}
 
 	@Test
