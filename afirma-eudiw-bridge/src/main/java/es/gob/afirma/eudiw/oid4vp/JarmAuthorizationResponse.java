@@ -47,6 +47,9 @@ public record JarmAuthorizationResponse(
 		if (expectedIssuer != null && !expectedIssuer.equals(claims.getIssuer())) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
+		if (claims.getAudience().isEmpty()) {
+			throw new JOSEException("Audience JARM ausente"); //$NON-NLS-1$
+		}
 		if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
 		}
