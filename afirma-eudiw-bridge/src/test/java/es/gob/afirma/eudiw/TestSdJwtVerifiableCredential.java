@@ -254,6 +254,20 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(shortDisclosureVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String blankNameDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"salt\",\" \",\"García\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String blankNameIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash(blankNameDisclosure));
+		final String blankNamePresentation = blankNameIssuerJwt + "~" + blankNameDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String blankNameKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(blankNamePresentation));
+		final SdJwtVerifiableCredential blankNameVc = SdJwtVerifiableCredential.parse(
+				blankNamePresentation + blankNameKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(blankNameVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String longDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("[\"salt\",\"family_name\",\"García\",\"extra\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
 		final String longDisclosureIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
