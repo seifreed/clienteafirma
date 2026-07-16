@@ -63,6 +63,9 @@ public final class EudiwClient {
 		if (!formBody.equals(formBody.strip())) {
 			throw new IOException("OID4VP form body no normalizado"); //$NON-NLS-1$
 		}
+		if (formBody.chars().anyMatch(Character::isISOControl)) {
+			throw new IOException("OID4VP form body contiene caracteres de control"); //$NON-NLS-1$
+		}
 
 		final HttpRequest request = HttpRequest.newBuilder(endpoint)
 				.timeout(DEFAULT_TIMEOUT)
