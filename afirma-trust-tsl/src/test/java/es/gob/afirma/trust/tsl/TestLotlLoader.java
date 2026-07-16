@@ -12,6 +12,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.cert.CertificateFactory;
@@ -21,6 +22,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.XMLConstants;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
@@ -89,6 +91,26 @@ final class TestLotlLoader {
 		}, kp.getPublic(), cache);
 
 		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
+	}
+
+	@Test
+	@DisplayName("LotlLoader refresca cache LOTL antigua")
+	void refreshesStaleCache() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp);
+		final Path cache = this.temp.resolve("eu-lotl.xml"); //$NON-NLS-1$
+		Files.write(cache, signed);
+		Files.setLastModifiedTime(cache,
+				FileTime.from(Instant.now().minus(Duration.ofHours(25))));
+		final AtomicBoolean downloaded = new AtomicBoolean();
+
+		final LotlLoader loader = new LotlLoader(() -> {
+			downloaded.set(true);
+			return signed;
+		}, kp.getPublic(), cache);
+
+		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
+		assertTrue(downloaded.get());
 	}
 
 	@Test
