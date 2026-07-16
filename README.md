@@ -41,7 +41,7 @@ El plan completo vive en `~/.claude/plans/` y se referencia desde el código med
 | Hito | Tema | Estado |
 | --- | --- | --- |
 | **M1** | CRA Wave 1 — `SECURITY.md`, SBOM CycloneDX, dependency-check, builds reproducibles | ✅ Completado |
-| **M2** | Cadena de suministro CI — GitHub Actions, CodeQL, Renovate, Dependabot | 🟡 Parcial (PR-gate + SAST + Renovate listos; Sigstore/SLSA pendiente) |
+| **M2** | Cadena de suministro CI — GitHub Actions, CodeQL, Renovate, Dependabot | ✅ Completado — PR-gate, SAST, Renovate, Dependabot, Sigstore keyless y provenance SLSA en releases por tag |
 | **M3.1** | JDK 8 → JDK 21 LTS sin cambios funcionales | ✅ Completado |
 | **M3.2** | `javax.servlet` → `jakarta.servlet` (3 WARs triphase) | ✅ Completado (Tomcat 10.1+ / Jetty 12+; triphase service 3.0.0) |
 | **M3.3** | SpongyCastle 1.58 (2018) → BouncyCastle 1.84+ | ✅ Completado |
@@ -209,6 +209,7 @@ mvn -Denv=install package -DoutputTimestamp=2026-05-07T00:00:00Z
 | --- | --- | --- |
 | `.github/workflows/build.yml` | PR + push a `master` | Matrix Linux/Win/macOS · JDK&nbsp;21 · `mvn -Denv=install verify` · sube SBOMs y `dependency-check-report.{html,json,sarif}` como artifacts · empuja SARIF a la pestaña Security |
 | `.github/workflows/codeql.yml` | PR + push + lunes 06:00&nbsp;UTC | SAST con `security-extended` |
+| `.github/workflows/release.yml` | Push de tag `v*` | Construye deliverables · firma assets con Sigstore keyless (`cosign sign-blob`) · adjunta provenance SLSA3 para los hashes publicados |
 | `renovate.json` | Lunes 8:00 Madrid | PRs agrupados por familia (BC, jmulticard, plugins, Rhino con gating manual) |
 | `.github/dependabot.yml` | Semanal | Sólo `github-actions` con pin por SHA |
 

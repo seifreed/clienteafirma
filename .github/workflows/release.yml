@@ -1,0 +1,126 @@
+---
+name: Release
+
+# Tag-only supply-chain release path: build deliverables, publish them as
+# release assets, sign each asset with keyless Sigstore, and attach SLSA
+# provenance for the published artifact hashes.
+
+"on":
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build, sign and publish assets
+    runs-on: ubuntu-24.04
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: release-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            release-maven-
+
+      - name: Build deliverables
+        run: >
+          mvn -B -ntp -Denv=install -DskipTests
+          -Ddependency-check.skip=true
+          clean verify
+
+      - name: Collect release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          find . -path '*/target/*' -type f \
+            \( -name '*.jar' -o -name '*.war' \
+            -o -name 'bom.xml' -o -name 'bom.json' \) \
+            ! -name 'original-*' -print0 |
+          while IFS= read -r -d '' file; do
+            module="${file#./}"
+            module="${module%%/target/*}"
+            base="$(basename "$file")"
+            if [[ "$module" == "target" ]]; then
+              name="root-$base"
+            elif [[ "$base" == bom.* ]]; then
+              name="${module//\//-}-$base"
+            else
+              name="$base"
+            fi
+            cp "$file" "dist/$name"
+          done
+          test -n "$(find dist -type f -print -quit)"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.2
+
+      - name: Sign release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for asset in dist/*; do
+            cosign sign-blob --yes \
+              --bundle "$asset.bundle" \
+              --output-signature "$asset.sig" \
+              "$asset"
+          done
+
+      - name: Hash published artifacts for SLSA
+        id: hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          find dist -type f \
+            ! -name '*.sig' \
+            ! -name '*.bundle' \
+            -print0 |
+          sort -z | xargs -0 sha256sum | base64 -w0 > subjects.txt
+          echo "hashes=$(cat subjects.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --verify-tag --generate-notes
+          fi
+
+  provenance:
+    name: Generate SLSA provenance
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: >-
+      slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.hashes }}
+      upload-assets: true
