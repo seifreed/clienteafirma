@@ -199,10 +199,11 @@ public record AuthorizationRequest(
 		if (keyId != null) {
 			header.keyID(keyId);
 		}
-		if (audience != null && audience.isBlank()) {
+		Objects.requireNonNull(audience, "audience"); //$NON-NLS-1$
+		if (audience.isBlank()) {
 			throw new IllegalArgumentException("OID4VP JAR audience vacío"); //$NON-NLS-1$
 		}
-		if (audience != null && !audience.equals(audience.strip())) {
+		if (!audience.equals(audience.strip())) {
 			throw new IllegalArgumentException("OID4VP JAR audience no normalizado"); //$NON-NLS-1$
 		}
 		final Date now = new Date();
@@ -213,9 +214,7 @@ public record AuthorizationRequest(
 		for (final Map.Entry<String, String> entry : params().entrySet()) {
 			claims.claim(entry.getKey(), entry.getValue());
 		}
-		if (audience != null) {
-			claims.audience(audience);
-		}
+		claims.audience(audience);
 		final SignedJWT jwt = new SignedJWT(header.build(), claims.build());
 		jwt.sign(signer);
 		return jwt;

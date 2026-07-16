@@ -247,6 +247,8 @@ final class TestAuthorizationRequest {
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " ", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " wallet")); //$NON-NLS-1$
+		assertThrows(NullPointerException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, null));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " kid-1", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
