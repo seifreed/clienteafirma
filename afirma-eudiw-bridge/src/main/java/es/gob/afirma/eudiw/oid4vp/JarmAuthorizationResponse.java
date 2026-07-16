@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
@@ -50,6 +51,9 @@ public record JarmAuthorizationResponse(
 		rejectBlankExpected(expectedState, "state"); //$NON-NLS-1$
 		rejectBlankExpected(expectedIssuer, "issuer"); //$NON-NLS-1$
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
+		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
+			throw new JOSEException("Algoritmo JARM no soportado"); //$NON-NLS-1$
+		}
 		if (!jwt.verify(verifier)) {
 			throw new JOSEException("Firma JARM inválida"); //$NON-NLS-1$
 		}
@@ -124,6 +128,10 @@ public record JarmAuthorizationResponse(
 			return JSONObjectUtils.toJSONString(typed);
 		}
 		throw new JOSEException("presentation_submission JARM no es objeto JSON"); //$NON-NLS-1$
+	}
+
+	private static boolean isSupportedJarmAlgorithm(final JWSAlgorithm algorithm) {
+		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
 	}
 
 	private static String normalizeJsonOrTextClaim(final Object claim, final String name) throws JOSEException {
