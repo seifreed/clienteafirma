@@ -198,6 +198,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 					throw new AOException("Content-Type JAdES no normalizado", //$NON-NLS-1$
 							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 				}
+				if (contentType.chars().anyMatch(Character::isISOControl)) {
+					throw new AOException("Content-Type JAdES contiene caracteres de control", //$NON-NLS-1$
+							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+				}
 				headerBuilder.contentType(contentType);
 			}
 
