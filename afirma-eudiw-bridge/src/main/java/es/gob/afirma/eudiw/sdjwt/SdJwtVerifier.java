@@ -93,6 +93,13 @@ public final class SdJwtVerifier {
 
 	private static void verifyIssuerValidity(final JWTClaimsSet claims)
 			throws SdJwtVerificationException {
+		final String issuer = claims.getIssuer();
+		if (issuer == null || issuer.isBlank()) {
+			throw new SdJwtVerificationException("Issuer JWT sin issuer"); //$NON-NLS-1$
+		}
+		if (!issuer.equals(issuer.strip())) {
+			throw new SdJwtVerificationException("Issuer JWT no normalizado"); //$NON-NLS-1$
+		}
 		final Date now = new Date();
 		final Date issueTime = claims.getIssueTime();
 		if (issueTime != null && issueTime.after(now)) {
