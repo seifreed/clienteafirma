@@ -101,6 +101,20 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("LotlLoader usa cache verificada si la descarga no valida")
+	void fallsBackToVerifiedCacheOnBadDownload() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp);
+		final Path cache = this.temp.resolve("eu-lotl.xml"); //$NON-NLS-1$
+		Files.write(cache, signed);
+
+		final LotlLoader loader = new LotlLoader(
+				() -> LOTL.getBytes(StandardCharsets.UTF_8), kp.getPublic(), cache);
+
+		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
+	}
+
+	@Test
 	@DisplayName("TslVerifier usa el certificado embebido en KeyInfo si no se aporta clave")
 	void verifiesSelfContainedSignature() throws Exception {
 		final KeyPair kp = rsa();

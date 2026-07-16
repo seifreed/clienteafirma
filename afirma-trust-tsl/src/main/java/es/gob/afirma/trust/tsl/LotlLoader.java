@@ -49,6 +49,9 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			writeCache(xml);
 			return doc;
 		}
+		catch (final TslException e) {
+			return readCache(e);
+		}
 		catch (final IOException | InterruptedException e) {
 			if (e instanceof InterruptedException) {
 				Thread.currentThread().interrupt();
