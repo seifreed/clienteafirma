@@ -102,6 +102,7 @@ final class TestSdJwtVerifiableCredential {
 		final KeyPair holderKp = kpg.generateKeyPair();
 		final RSAKey holderJwk = new RSAKey.Builder(
 				(java.security.interfaces.RSAPublicKey) holderKp.getPublic())
+				.privateKey((java.security.interfaces.RSAPrivateKey) holderKp.getPrivate())
 				.algorithm(JWSAlgorithm.RS256)
 				.keyID("holder-1") //$NON-NLS-1$
 				.build();
@@ -246,6 +247,18 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(duplicatedSdVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String privateHolderIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash, Date.from(Instant.now().plus(Duration.ofDays(1))), false);
+		final String privateHolderPresentation = privateHolderIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String privateHolderKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(privateHolderPresentation));
+		final SdJwtVerifiableCredential privateHolderVc = SdJwtVerifiableCredential.parse(
+				privateHolderPresentation + privateHolderKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(privateHolderVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash(badDisclosure));
@@ -282,12 +295,28 @@ final class TestSdJwtVerifiableCredential {
 	private static String signedIssuerJwt(final KeyPair issuerKp,
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final String sdHash, final Date expirationTime) throws Exception {
-		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, List.of(sdHash), expirationTime);
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHash, expirationTime, true);
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final String sdHash, final Date expirationTime,
+			final boolean publicHolderJwk) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, List.of(sdHash),
+				expirationTime, publicHolderJwk);
 	}
 
 	private static String signedIssuerJwt(final KeyPair issuerKp,
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final List<String> sdHashes, final Date expirationTime) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHashes,
+				expirationTime, true);
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final List<String> sdHashes, final Date expirationTime,
+			final boolean publicHolderJwk) throws Exception {
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)
 						.x509CertChain(List.of(com.nimbusds.jose.util.Base64
@@ -299,7 +328,8 @@ final class TestSdJwtVerifiableCredential {
 						.expirationTime(expirationTime)
 						.claim("_sd_alg", "sha-256") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("_sd", sdHashes) //$NON-NLS-1$
-						.claim("cnf", Map.of("jwk", holderJwk.toPublicJWK().toJSONObject())) //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("cnf", Map.of("jwk", (publicHolderJwk //$NON-NLS-1$ //$NON-NLS-2$
+								? holderJwk.toPublicJWK() : holderJwk).toJSONObject()))
 						.build());
 		jwt.sign(new RSASSASigner(issuerKp.getPrivate()));
 		return jwt.serialize();

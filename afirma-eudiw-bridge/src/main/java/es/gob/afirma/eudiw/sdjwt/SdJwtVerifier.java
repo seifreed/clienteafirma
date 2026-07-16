@@ -227,7 +227,11 @@ public final class SdJwtVerifier {
 			}
 			cnfJson.put(key, entry.getValue());
 		}
-		return JWK.parse(JSONObjectUtils.getJSONObject(cnfJson, "jwk")); //$NON-NLS-1$
+		final JWK jwk = JWK.parse(JSONObjectUtils.getJSONObject(cnfJson, "jwk")); //$NON-NLS-1$
+		if (jwk.isPrivate()) {
+			throw new SdJwtVerificationException("cnf.jwk no debe contener clave privada"); //$NON-NLS-1$
+		}
+		return jwk;
 	}
 
 	private static JWSVerifier verifier(final JWK jwk) throws Exception {
