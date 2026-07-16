@@ -41,7 +41,6 @@ import es.gob.afirma.core.RuntimeConfigNeededException.RequestType;
 import es.gob.afirma.core.RuntimePasswordNeededException;
 import es.gob.afirma.core.SignaturePolicyIncompatibilityException;
 import es.gob.afirma.core.keystores.CertificateContext;
-import es.gob.afirma.core.keystores.KeyStoreManager;
 import es.gob.afirma.core.keystores.LockedKeyStoreException;
 import es.gob.afirma.core.keystores.PinException;
 import es.gob.afirma.core.misc.AOUtil;
@@ -151,7 +150,7 @@ final class ProtocolInvocationLauncherSignAndSave {
         }
 
 		//TODO: Deshacer cuando se permita la generacion de firmas baseline
-		options.getExtraParams().remove("profile");
+		options.removeExtraParam("profile");
 
 		// Establecemos los parametros de la operacion
 		final SignOperation operation = new SignOperation();
@@ -656,8 +655,7 @@ final class ProtocolInvocationLauncherSignAndSave {
 				// que se indico originalmente por haberlo cambiado desde el dialogo de
 				// seleccion)
 				final CertificateContext context = dialog.getSelectedCertificateContext();
-				final KeyStoreManager currentKsm = context.getKeyStoreManager();
-				pke = currentKsm.getKeyEntry(context.getAlias());
+				pke = context.getKeyEntry();
 			}
 			catch (final AOCancelledOperationException e) {
 				throw e;

@@ -103,22 +103,30 @@ public abstract class UrlParameters {
 
 	/**
 	 * Obtiene los par&aacute;metros adicionales de la firma.
-	 * Se pueden modificar estos parametros a partir del
-	 * objeto devuelto.
 	 * @return Par&aacute;metros adicionales de la firma
 	 */
 	public Properties getExtraParams() {
 		if (this.extraParams == null) {
 			this.extraParams = new Properties();
 		}
-		return this.extraParams;
+		return (Properties) this.extraParams.clone();
+	}
+
+	/**
+	 * Elimina un par&aacute;metro adicional de firma.
+	 * @param name Nombre del par&aacute;metro.
+	 */
+	public void removeExtraParam(final String name) {
+		if (this.extraParams != null) {
+			this.extraParams.remove(name);
+		}
 	}
 
 	/** Establece los par&aacute;metros adicionales para la configuraci&oacute;n
 	 * de la operaci&oacute;n de firma.
 	 * @param properties Propiedades adicionales. */
 	void setExtraParams(final Properties properties) {
-		this.extraParams = properties != null ? properties : new Properties();
+		this.extraParams = properties != null ? (Properties) properties.clone() : new Properties();
 	}
 
 	/** Obtiene el nombre de fichero propuesto para guardar los datos.

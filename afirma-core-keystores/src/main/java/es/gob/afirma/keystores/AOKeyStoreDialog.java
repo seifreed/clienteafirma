@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.security.auth.callback.PasswordCallback;
+
 import es.gob.afirma.core.AOCancelledOperationException;
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.keystores.CertificateContext;
@@ -829,7 +831,39 @@ public final class AOKeyStoreDialog implements KeyStoreDialogManager {
 
 	@Override
 	public CertificateContext getSelectedCertificateContext() {
-		return new CertificateContext(this.ksm, this.selectedAlias);
+		return new SelectedCertificateContext(this.ksm, this.selectedAlias);
+	}
+
+	private static final class SelectedCertificateContext implements CertificateContext {
+
+		private final KeyStoreManager ksm;
+		private final String alias;
+
+		SelectedCertificateContext(final KeyStoreManager ksm, final String alias) {
+			this.ksm = ksm;
+			this.alias = alias;
+		}
+
+		@Override
+		public PrivateKeyEntry getKeyEntry() throws java.security.KeyStoreException,
+				java.security.NoSuchAlgorithmException, java.security.UnrecoverableEntryException {
+			return this.ksm.getKeyEntry(this.alias);
+		}
+
+		@Override
+		public void setEntryPasswordCallBack(final PasswordCallback passwordCallback) {
+			this.ksm.setEntryPasswordCallBack(passwordCallback);
+		}
+
+		@Override
+		public void setParentComponent(final Object parent) {
+			this.ksm.setParentComponent(parent);
+		}
+
+		@Override
+		public String getAlias() {
+			return this.alias;
+		}
 	}
 
 	@Override

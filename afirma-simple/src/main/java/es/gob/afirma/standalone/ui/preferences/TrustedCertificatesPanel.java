@@ -199,8 +199,7 @@ final class TrustedCertificatesPanel extends JPanel  {
 
     	Object [] result;
     	try {
-    		final TrustStoreManager ts = TrustStoreManager.getInstance(parent);
-    		final X509Certificate[] certs = ts.getCertificates();
+			final X509Certificate[] certs = TrustStoreManager.getCertificates(parent);
 
     		result = new Object[certs.length];
 
@@ -245,7 +244,7 @@ final class TrustedCertificatesPanel extends JPanel  {
 
     			LOGGER.info("Se elimina del almacen de confianza el certificado con el numero de serie: " + AOUtil.hexify(cert.getSerialNumber().toByteArray(), false)); //$NON-NLS-1$
 
-    			TrustStoreManager.getInstance().deleteCert(cert);
+				TrustStoreManager.deleteCert(cert);
 
     			// Actualizamos los Trust Managers al eliminar un certificado
     			SslSecurityManager.configureAfirmaTrustManagers();

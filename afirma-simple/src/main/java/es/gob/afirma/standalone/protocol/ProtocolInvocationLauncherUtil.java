@@ -226,7 +226,7 @@ final class ProtocolInvocationLauncherUtil {
 	static UrlHttpManager getConfiguredHttpConnection(final ConnectionConfig connConfig) {
 
 		// Creamos el objeto de conexion y lo configuramos si es preciso
-		final UrlHttpManager urlManager = UrlHttpManagerFactory.getInstalledManager();
+		final UrlHttpManager urlManager = UrlHttpManagerFactory.getManager();
 		if (connConfig != null) {
 			connConfig.apply(urlManager);
 		}

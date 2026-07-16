@@ -42,15 +42,12 @@ import es.gob.afirma.core.RuntimeConfigNeededException.RequestType;
 import es.gob.afirma.core.RuntimePasswordNeededException;
 import es.gob.afirma.core.SignaturePolicyIncompatibilityException;
 import es.gob.afirma.core.keystores.CertificateContext;
-import es.gob.afirma.core.keystores.KeyStoreManager;
 import es.gob.afirma.core.keystores.LockedKeyStoreException;
 import es.gob.afirma.core.keystores.PinException;
 import es.gob.afirma.core.misc.AOUtil;
 import es.gob.afirma.core.misc.Base64;
 import es.gob.afirma.core.misc.LoggerUtil;
 import es.gob.afirma.core.misc.Platform;
-import es.gob.afirma.core.misc.http.ConnectionConfig;
-import es.gob.afirma.core.misc.http.UrlHttpManager;
 import es.gob.afirma.core.misc.protocol.ProtocolVersion;
 import es.gob.afirma.core.misc.protocol.UrlParametersToSign;
 import es.gob.afirma.core.prefs.KeyStorePreferencesManager;
@@ -155,7 +152,7 @@ final class ProtocolInvocationLauncherSign {
 		}
 
 		//TODO: Deshacer cuando se permita la generacion de firmas baseline
-		options.getExtraParams().remove("profile");
+		options.removeExtraParam("profile");
 
 		// Establecemos los parametros de la operacion
 		final SignOperation operation = new SignOperation();
@@ -285,16 +282,11 @@ final class ProtocolInvocationLauncherSign {
 
 		if (signer instanceof AOTriphaseSigner) {
 
-			ConnectionConfig connectionConfig = null;
 			final int serviceTimeout = options.getServiceTimeout();
 
 			if (serviceTimeout >= 0) {
-				connectionConfig = new ConnectionConfig();
-				connectionConfig.setReadTimeout(serviceTimeout);
+				((AOTriphaseSigner) signer).setHttpReadTimeout(serviceTimeout);
 			}
-
-			final UrlHttpManager httpConnection = ProtocolInvocationLauncherUtil.getConfiguredHttpConnection(connectionConfig);
-			((AOTriphaseSigner) signer).setHttpConnection(httpConnection);
 		}
 
 		// Comprobamos si es necesario pedir datos de entrada al usuario
@@ -654,8 +646,7 @@ final class ProtocolInvocationLauncherSign {
 				// que se indico originalmente por haberlo cambiado desde el dialogo de
 				// seleccion)
 				final CertificateContext context = dialog.getSelectedCertificateContext();
-				final KeyStoreManager currentKsm = context.getKeyStoreManager();
-				pke = currentKsm.getKeyEntry(context.getAlias());
+				pke = context.getKeyEntry();
 			}
 			catch (final AOCancelledOperationException e) {
 				LOGGER.info("Operacion cancelada por el usuario: " + e); //$NON-NLS-1$

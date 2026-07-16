@@ -15,11 +15,11 @@ public final class TestProxy {
 		String str;
 
 		// URL con excepcion
-		str = new String(UrlHttpManagerFactory.getInstalledManager().readUrl("https://demo.tgm", UrlHttpMethod.GET)); //$NON-NLS-1$
+		str = new String(UrlHttpManagerFactory.getManager().readUrl("https://demo.tgm", UrlHttpMethod.GET)); //$NON-NLS-1$
 		System.out.println(str);
 
 		// URL general
-		str = new String(UrlHttpManagerFactory.getInstalledManager().readUrl("https://google.com", UrlHttpMethod.GET)); //$NON-NLS-1$
+		str = new String(UrlHttpManagerFactory.getManager().readUrl("https://google.com", UrlHttpMethod.GET)); //$NON-NLS-1$
 		System.out.println(str);
 
 	}

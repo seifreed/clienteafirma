@@ -29,7 +29,6 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.security.auth.callback.PasswordCallback;
 
-import es.gob.afirma.core.misc.AOUtil;
 import es.gob.afirma.core.misc.LoggerUtil;
 
 /** Gestor de la seguridad SSL para las conexiones de red.
@@ -239,12 +238,7 @@ public final class SslSecurityManager {
 		}
 
 		// Cargamos el almacen en memoria para no requerir ya el fichero
-		byte[] trustStoreContent;
-		synchronized(TrustStoreManager.getInstance()) {
-			try (InputStream is = new FileInputStream(trustStoreFile)) {
-				trustStoreContent = AOUtil.getDataFromInputStream(is);
-			}
-		}
+		final byte[] trustStoreContent = TrustStoreManager.readTrustStoreContent();
 
 		// Cargamos el almacen y, si no tiene entradas, no modificamos la configuracion SSL
 		final KeyStore trustStore = KeyStore.getInstance("JKS"); //$NON-NLS-1$

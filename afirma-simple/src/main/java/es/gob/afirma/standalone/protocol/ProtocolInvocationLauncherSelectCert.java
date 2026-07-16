@@ -24,7 +24,6 @@ import es.gob.afirma.core.AOCancelledOperationException;
 import es.gob.afirma.core.AOControlledException;
 import es.gob.afirma.core.ErrorCode;
 import es.gob.afirma.core.keystores.CertificateContext;
-import es.gob.afirma.core.keystores.KeyStoreManager;
 import es.gob.afirma.core.misc.Base64;
 import es.gob.afirma.core.misc.Platform;
 import es.gob.afirma.core.misc.protocol.ProtocolVersion;
@@ -173,11 +172,10 @@ final class ProtocolInvocationLauncherSelectCert {
 				dialog.show();
 
 				// Obtenemos el almacen del certificado seleccionado (que puede no ser el mismo
-		    	// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
+				// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
 				// y de ahi sacamos la referencia a la clave
 				final CertificateContext context = dialog.getSelectedCertificateContext();
-		    	final KeyStoreManager currentKsm = context.getKeyStoreManager();
-				pke = currentKsm.getKeyEntry(context.getAlias());
+				pke = context.getKeyEntry();
 
 				if (options.getSticky()) {
 					ProtocolInvocationLauncher.setStickyKeyEntry(pke);

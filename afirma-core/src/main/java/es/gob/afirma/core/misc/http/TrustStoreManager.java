@@ -39,21 +39,7 @@ public class TrustStoreManager {
 
 	private static volatile TrustStoreManager instance = null;
 
-	/**
-	 * Obtiene la instancia &uacute;nica de la clase gestor del almac&eacute;n de confianza.
-	 * @return Gestor del almac&eacute;n de confianza.
-	 */
-	public static TrustStoreManager getInstance() {
-		return getInstance(null);
-	}
-
-	/**
-	 * Obtiene la instancia &uacute;nica de la clase gestor del almac&eacute;n de confianza.
-	 * @param parent Componente padre sobre el que mostrar cualquier di&aacute;logo que sea
-	 * necesario durante la operaci&oacute;n de carga del almac&eacute;n.
-	 * @return Gestor del almac&eacute;n de confianza.
-	 */
-	public static TrustStoreManager getInstance(final Object parent) {
+	private static TrustStoreManager getInstance(final Object parent) {
 		if (instance == null) {
 			synchronized (INSTANCE_LOCK) {
 				if (instance == null) {
@@ -62,6 +48,72 @@ public class TrustStoreManager {
 			}
 		}
 		return instance;
+	}
+
+	/**
+	 * Obtiene el listado de certificados del almac&eacute;n.
+	 * @param parent Componente padre sobre el que mostrar cualquier di&aacute;logo que sea
+	 * necesario durante la operaci&oacute;n de carga.
+	 * @return Listado de certificados o, si no hay almac&eacute;n, una lista vac&iacute;a.
+	 * @throws KeyStoreException Cuando no se puedan cargar los certificados del almac&eacute;n.
+	 */
+	public static X509Certificate[] getCertificates(final Object parent) throws KeyStoreException {
+		return getInstance(parent).getCertificatesInternal();
+	}
+
+	/**
+	 * Importa un listado de certificados en el almac&eacute;n de confianza.
+	 * @param parent Componente padre sobre el que mostrar cualquier di&aacute;logo que sea
+	 * necesario durante la operaci&oacute;n de carga.
+	 * @param certs Listado de certificados.
+	 * @throws IOException No se ha podido guardar el almac&eacute;n.
+	 * @throws KeyStoreException No se han podido importar los certificados en el almac&eacute;n.
+	 */
+	public static void importCerts(final Object parent, final X509Certificate ...certs) throws KeyStoreException, IOException {
+		getInstance(parent).importCertsInternal(certs);
+	}
+
+	/**
+	 * Importa un listado de certificados en el almac&eacute;n de confianza.
+	 * @param certs Listado de certificados.
+	 * @throws IOException No se ha podido guardar el almac&eacute;n.
+	 * @throws KeyStoreException No se han podido importar los certificados en el almac&eacute;n.
+	 */
+	public static void importCerts(final X509Certificate ...certs) throws KeyStoreException, IOException {
+		importCerts(null, certs);
+	}
+
+	/**
+	 * Elimina un certificado del almac&eacute;n.
+	 * @param cert Certificado que se quiere eliminar.
+	 * @throws KeyStoreException Cuando no se pueda acceder al almac&eacute;n.
+	 * @throws IOException Cuando no se pueda guardar el almac&eacute;n.
+	 */
+	public static void deleteCert(final X509Certificate cert) throws KeyStoreException, IOException {
+		getInstance(null).deleteCertInternal(cert);
+	}
+
+	/**
+	 * Comprueba si el certificado pasado por parametro existe ya en el almacen.
+	 * @param cert Certificado a comprobar.
+	 * @return true en caso de que exista, false n caso contrario.
+	 * @throws KeyStoreException Cuando nos se pueda cargar el almac&eacute;n.
+	 */
+	public static boolean containsCert(final X509Certificate cert) throws KeyStoreException {
+		return getInstance(null).containsCertInternal(cert);
+	}
+
+	/**
+	 * Lee el contenido del almac&eacute;n de confianza desde disco.
+	 * @return Contenido del almac&eacute;n.
+	 * @throws IOException Cuando no se pueda leer el almac&eacute;n.
+	 */
+	public static byte[] readTrustStoreContent() throws IOException {
+		synchronized(INSTANCE_LOCK) {
+			try (InputStream is = new FileInputStream(getJKSFile())) {
+				return AOUtil.getDataFromInputStream(is);
+			}
+		}
 	}
 
 	/**
@@ -102,7 +154,7 @@ public class TrustStoreManager {
 	 * @return Listado de certificados o, si no hay almac&eacute;n, una lista vac&iacute;a.
 	 * @throws KeyStoreException Cuando no se puedan cargar los certificados del almac&eacute;n.
 	 */
-	public X509Certificate[] getCertificates() throws KeyStoreException {
+	private X509Certificate[] getCertificatesInternal() throws KeyStoreException {
 
 		if (this.ks == null) {
 			return new X509Certificate[0];
@@ -123,7 +175,7 @@ public class TrustStoreManager {
 	 * @throws IOException No se ha podido guardar el almac&eacute;n.
 	 * @throws KeyStoreException No se han podido importar los certificados en el almac&eacute;n.
 	 */
-	public void importCerts(final X509Certificate ...certs) throws KeyStoreException, IOException  {
+	private void importCertsInternal(final X509Certificate ...certs) throws KeyStoreException, IOException  {
 
 		if (certs == null) {
 			return;
@@ -191,7 +243,7 @@ public class TrustStoreManager {
 	 * @throws KeyStoreException Cuando no se pueda acceder al almac&eacute;n.
 	 * @throws IOException Cuando no se pueda guardar el almac&eacute;n.
 	 */
-	public void deleteCert(final X509Certificate cert) throws KeyStoreException, IOException {
+	private void deleteCertInternal(final X509Certificate cert) throws KeyStoreException, IOException {
 
 		if (this.ks == null) {
 			return;
@@ -288,7 +340,7 @@ public class TrustStoreManager {
 	 * @return true en caso de que exista, false n caso contrario.
 	 * @throws KeyStoreException Cuando nos se pueda cargar el almac&eacute;n.
 	 */
-	public boolean containsCert(final X509Certificate cert) throws KeyStoreException {
+	private boolean containsCertInternal(final X509Certificate cert) throws KeyStoreException {
 	    if (this.ks == null) {
 	        return false;
 	    }

@@ -1,38 +1,42 @@
 package es.gob.afirma.core.keystores;
 
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+
+import javax.security.auth.callback.PasswordCallback;
+
 /**
- * Contexto de un certificado consistente en el almacen al que pertenece
+ * Contexto de un certificado consistente en el almac&eacute;n al que pertenece
  * y el alias con el cual obtenerlo.
  */
-public class CertificateContext {
-
-	private final KeyStoreManager ksm;
-
-	private final String alias;
+public interface CertificateContext {
 
 	/**
-	 * Construye el contexto del certificado.
-	 * @param ksm Almac&eacute;n al que pertenece el certificado.
-	 * @param alias Alias del certificados en el almac&eacute;n.
+	 * Obtiene la clave privada asociada al certificado seleccionado.
+	 * @return Entrada de clave privada del certificado.
+	 * @throws KeyStoreException Cuando ocurren errores en el tratamiento del almac&eacute;n de claves.
+	 * @throws NoSuchAlgorithmException Cuando no se puede identificar el algoritmo para recuperar la clave.
+	 * @throws UnrecoverableEntryException Si la contrase&ntilde;a proporcionada no es v&aacute;lida.
 	 */
-	public CertificateContext(final KeyStoreManager ksm, final String alias) {
-		this.ksm = ksm;
-		this.alias = alias;
-	}
+	KeyStore.PrivateKeyEntry getKeyEntry() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableEntryException;
 
 	/**
-	 * Recupera el almac&eacute;n al que pertenece el certificado.
-	 * @return Almac&eacute;n de certificados/claves.
+	 * Establece el callback de contrase&ntilde;a para recuperar la entrada seleccionada.
+	 * @param passwordCallback Callback de contrase&ntilde;a.
 	 */
-	public KeyStoreManager getKeyStoreManager() {
-		return this.ksm;
-	}
+	void setEntryPasswordCallBack(PasswordCallback passwordCallback);
 
 	/**
-	 * Alias del certificado demntro del almac&eacute;n.
+	 * Establece el componente padre para los di&aacute;logos asociados al almac&eacute;n.
+	 * @param parent Componente padre.
+	 */
+	void setParentComponent(Object parent);
+
+	/**
+	 * Alias del certificado dentro del almac&eacute;n.
 	 * @return Alias del certificado.
 	 */
-	public String getAlias() {
-		return this.alias;
-	}
+	String getAlias();
 }

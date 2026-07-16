@@ -220,13 +220,11 @@ final class ConfirmImportCertDialog extends JDialog  {
 	private void importCerts(final Container parent) {
 
 		try {
-			final TrustStoreManager ts = TrustStoreManager.getInstance(parent);
-
 			for (final X509Certificate cert : this.certsToImport) {
 				LOGGER.info("Se importa en el almacen de confianza el certificado con el numero de serie: " + AOUtil.hexify(cert.getSerialNumber().toByteArray(), false)); //$NON-NLS-1$
 			}
 
-			ts.importCerts(this.certsToImport.toArray(new X509Certificate[0]));
+			TrustStoreManager.importCerts(parent, this.certsToImport.toArray(new X509Certificate[0]));
 
 			SslSecurityManager.configureAfirmaTrustManagers();
 

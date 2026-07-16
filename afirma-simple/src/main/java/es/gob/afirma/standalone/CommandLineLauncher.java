@@ -36,7 +36,6 @@ import javax.swing.JOptionPane;
 
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.keystores.CertificateContext;
-import es.gob.afirma.core.keystores.KeyStoreManager;
 import es.gob.afirma.core.misc.AOUtil;
 import es.gob.afirma.core.misc.Base64;
 import es.gob.afirma.core.misc.MimeHelper;
@@ -624,9 +623,10 @@ final class CommandLineLauncher {
 
 		byte[] res;
 		try {
-			AOKeyStoreManager ksm = getKsm(params.getStore(), params.getPassword());
+			final AOKeyStoreManager ksm = getKsm(params.getStore(), params.getPassword());
 
 			String selectedAlias;
+			PrivateKeyEntry selectedKeyEntry = null;
 			if (params.isCertGui()) {
 				final Properties extraParams = buildProperties(params.getExtraParams());
 				if (params.getFilter() != null && !params.getFilter().isEmpty()) {
@@ -646,12 +646,19 @@ final class CommandLineLauncher {
 				dialog.show();
 
 				// Obtenemos el almacen del certificado seleccionado (que puede no ser el mismo
-		    	// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
+				// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
 				// y de ahi sacamos la referencia a la clave
 				final CertificateContext context = dialog.getSelectedCertificateContext();
-				final KeyStoreManager selectedKsm = context.getKeyStoreManager();
-				if (selectedKsm instanceof AOKeyStoreManager) {
-					ksm = (AOKeyStoreManager) selectedKsm;
+				context.setEntryPasswordCallBack(
+					new CachePasswordCallback(
+						params.getPassword() != null ? params.getPassword().toCharArray() : "dummy".toCharArray() //$NON-NLS-1$
+					)
+				);
+				try {
+					selectedKeyEntry = context.getKeyEntry();
+				}
+				catch (final Exception e) {
+					throw new CommandLineException(CommandLineMessages.getString("CommandLineLauncher.147"), e); //$NON-NLS-1$
 				}
 				selectedAlias = context.getAlias();
 			}
@@ -660,6 +667,7 @@ final class CommandLineLauncher {
 				if (params.getFilter() != null) {
 					selectedAlias = filterCertificates(ksm, params.getFilter());
 				}
+				selectedKeyEntry = getKeyEntry(ksm, selectedAlias, params.getPassword());
 			}
 
 			res = sign(
@@ -669,8 +677,7 @@ final class CommandLineLauncher {
 				params.getExtraParams(),
 				params.getInputFile(),
 				selectedAlias,
-				ksm,
-				params.getPassword()
+				selectedKeyEntry
 			);
 		}
 		catch (IOException | AOException e) {
@@ -738,27 +745,30 @@ final class CommandLineLauncher {
 		return filteredAliases[0];
 	}
 
+	private static PrivateKeyEntry getKeyEntry(final AOKeyStoreManager ksm,
+			                                   final String alias,
+			                                   final String storePassword) throws CommandLineException {
+		ksm.setEntryPasswordCallBack(
+			new CachePasswordCallback(
+				storePassword != null ? storePassword.toCharArray() : "dummy".toCharArray() //$NON-NLS-1$
+			)
+		);
+		try {
+			return ksm.getKeyEntry(alias);
+		}
+		catch (final Exception e) {
+			throw new CommandLineException(CommandLineMessages.getString("CommandLineLauncher.147"), e); //$NON-NLS-1$
+		}
+	}
+
 	private static byte[] sign(final CommandLineCommand command,
 			                   final String fmt,
 			                   final String algorithm,
 			                   final String extraParams,
 			                   final File inputFile,
 			                   final String alias,
-			                   final AOKeyStoreManager ksm,
-			                   final String storePassword) throws CommandLineException, IOException {
+			                   final PrivateKeyEntry ke) throws CommandLineException, IOException {
 
-		ksm.setEntryPasswordCallBack(
-			new CachePasswordCallback(
-				storePassword != null ? storePassword.toCharArray() : "dummy".toCharArray() //$NON-NLS-1$
-			)
-		);
-		final PrivateKeyEntry ke;
-		try {
-			ke = ksm.getKeyEntry(alias);
-		}
-		catch (final Exception e) {
-			throw new CommandLineException(CommandLineMessages.getString("CommandLineLauncher.147"), e); //$NON-NLS-1$
-		}
 		if (ke == null) {
 			throw new CommandLineException(CommandLineMessages.getString("CommandLineLauncher.148", alias)); //$NON-NLS-1$
 		}
@@ -855,7 +865,7 @@ final class CommandLineLauncher {
 		catch(InvalidSignaturePositionException | IncorrectPageException e) {
 			// Si hay algun error de pagina no valida, se vuelve a firmar de manera invisible
 			final String xParams = removeSignaturePageProperties(extraParams);
-			resBytes = sign(command, fmt, signatureAlgorithm, xParams, inputFile, alias, ksm, storePassword);
+				resBytes = sign(command, fmt, signatureAlgorithm, xParams, inputFile, alias, ke);
 		}
 		catch(final Exception e) {
 			throw new CommandLineException(CommandLineMessages.getString("CommandLineLauncher.149"), e); //$NON-NLS-1$

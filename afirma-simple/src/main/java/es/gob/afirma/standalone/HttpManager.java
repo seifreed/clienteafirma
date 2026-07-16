@@ -26,7 +26,7 @@ public class HttpManager {
 	 * Construye el objeto para el acceso a los recursos y servicios.
 	 */
 	public HttpManager() {
-		this.urlManager = UrlHttpManagerFactory.getInstalledManager();
+		this.urlManager = UrlHttpManagerFactory.getManager();
 		setSecureConnections(PreferencesManager.getBoolean(
 				GeneralPreferenceKeys.SECURE_CONNECTIONS));
 		setSecureDomains(PreferencesManager.get(GeneralPreferenceKeys.SECURE_DOMAINS_LIST));

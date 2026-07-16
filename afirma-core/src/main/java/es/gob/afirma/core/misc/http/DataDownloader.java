@@ -89,7 +89,7 @@ public final class DataDownloader {
 
 			final SSLErrorProcessor processor = new SSLErrorProcessor();
 			try {
-				return UrlHttpManagerFactory.getInstalledManager().readUrl(dataSource, UrlHttpMethod.GET, processor, sslConfig);
+				return UrlHttpManagerFactory.getManager().readUrl(dataSource, UrlHttpMethod.GET, processor, sslConfig);
 			} catch (final SSLHandshakeException e) {
 				if (processor.isCancelled()) {
 					LOGGER.info("El usuario no permite la importacion del certificado SSL de confianza para el acceso a " //$NON-NLS-1$

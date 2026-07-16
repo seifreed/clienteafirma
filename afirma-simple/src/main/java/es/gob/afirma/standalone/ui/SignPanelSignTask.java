@@ -43,7 +43,6 @@ import es.gob.afirma.core.RuntimePasswordNeededException;
 import es.gob.afirma.core.keystores.AOCancelledSMOperationException;
 import es.gob.afirma.core.keystores.AuthenticationException;
 import es.gob.afirma.core.keystores.CertificateContext;
-import es.gob.afirma.core.keystores.KeyStoreManager;
 import es.gob.afirma.core.keystores.LockedKeyStoreException;
 import es.gob.afirma.core.keystores.PinException;
 import es.gob.afirma.core.misc.Base64;
@@ -752,16 +751,15 @@ final class SignPanelSignTask extends SwingWorker<Void, Void> {
 			filters,
 			mandatoryCertificate
 			);
-    	dialog.show();
+		dialog.show();
 
-    	final CertificateContext context = dialog.getSelectedCertificateContext();
+		final CertificateContext context = dialog.getSelectedCertificateContext();
 
-    	// Obtenemos el almacen del certificado seleccionado (que puede no ser el mismo
-    	// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
-    	final KeyStoreManager currentKsm = context.getKeyStoreManager();
-    	currentKsm.setParentComponent(this.parent);
+		// Obtenemos el almacen del certificado seleccionado (que puede no ser el mismo
+		// que se indico originalmente por haberlo cambiado desde el dialogo de seleccion)
+		context.setParentComponent(this.parent);
 
-    	return currentKsm.getKeyEntry(context.getAlias());
+		return context.getKeyEntry();
 	}
 
 	/**

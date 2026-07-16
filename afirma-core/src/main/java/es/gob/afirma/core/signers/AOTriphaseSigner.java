@@ -4,14 +4,14 @@ import es.gob.afirma.core.misc.http.UrlHttpManager;
 
 public abstract class AOTriphaseSigner implements AOSigner {
 
-	protected UrlHttpManager httpConnection = null;
+	protected int httpReadTimeout = UrlHttpManager.DEFAULT_TIMEOUT;
 
 	/**
-	 * Establece la conexi&oacute;n que debe usar para conectar
+	 * Establece el tiempo de espera de lectura que debe usar para conectar
 	 * con el servicio de firma trif&aacute;sica.
-	 * @param httpConnection Conexi&oacute;n.
+	 * @param readTimeout Tiempo de espera de lectura.
 	 */
-	public void setHttpConnection(final UrlHttpManager httpConnection) {
-		this.httpConnection = httpConnection;
+	public void setHttpReadTimeout(final int readTimeout) {
+		this.httpReadTimeout = readTimeout;
 	}
 }
