@@ -89,7 +89,8 @@ final class TestProtocolOperationRegistry {
 		final String url = "afirma://eudiw-present"
 				+ "?verifier=https%3A%2F%2Fverifier.example.es"
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
-				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1";
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1"
+				+ "&state=state-externo";
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
 		final String result = handler.process(url, ctx);
@@ -99,6 +100,7 @@ final class TestProtocolOperationRegistry {
 		assertTrue(result.contains("response_uri=https"));
 		assertTrue(result.contains("presentation_definition_uri=https"));
 		assertTrue(result.contains("nonce="));
+		assertTrue(result.contains("state=state-externo"));
 	}
 
 	@Test

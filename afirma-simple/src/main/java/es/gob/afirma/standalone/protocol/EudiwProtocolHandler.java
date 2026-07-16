@@ -88,12 +88,18 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String pdUri = params.get("presentationDefinitionUri"); //$NON-NLS-1$
 		final String walletUri = params.get("walletUri"); //$NON-NLS-1$
 		final String walletEndpoint = params.get("walletEndpoint"); //$NON-NLS-1$
+		final String state = params.get("state"); //$NON-NLS-1$
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)
 				.responseUri(responseUri)
-				.withFreshNonce()
-				.withFreshState();
+				.withFreshNonce();
+		if (state != null && !state.isBlank()) {
+			builder.state(state);
+		}
+		else {
+			builder.withFreshState();
+		}
 		if (responseMode != null && !responseMode.isBlank()) {
 			if ("direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$
 				builder.directPostJwtResponse();
