@@ -100,6 +100,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		rejectBlankIfPresent(pdUri, "presentationDefinitionUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletUri, "walletUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
+		if (walletUri != null && walletEndpoint != null) {
+			throw new IllegalArgumentException("walletUri y walletEndpoint no pueden combinarse"); //$NON-NLS-1$
+		}
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)

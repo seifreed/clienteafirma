@@ -257,6 +257,13 @@ final class TestProtocolOperationRegistry {
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
 						+ "&walletEndpoint=", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
+						+ "&walletUri=eudiw%3A%2F%2Fpresent" //$NON-NLS-1$
+						+ "&walletEndpoint=https%3A%2F%2Fwallet.example%2Frequest", ctx)); //$NON-NLS-1$
 	}
 
 	@Test
