@@ -5,6 +5,7 @@ package es.gob.afirma.signers.jades;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
@@ -108,6 +109,37 @@ final class TestAOJadesSigner {
 		assertTrue(json.contains("\"protected\""));
 		assertTrue(json.contains("\"signature\""));
 		assertTrue(!json.contains("\"payload\""), "Detached JSON serialization no debe incluir payload");
+	}
+
+	@Test
+	@DisplayName("timestampTokenBase64 emite contenedor etsiU JAdES-T en JSON Serialization")
+	void signRsa256JsonSerializationWithTimestampToken() throws Exception {
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAMCAQE="); //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		final byte[] jws = signer.sign("payload".getBytes(), //$NON-NLS-1$
+				"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params); //$NON-NLS-1$
+		final String json = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
+
+		assertTrue(json.contains("\"header\""), "JAdES-T debe incluir cabecera no protegida");
+		assertTrue(json.contains("\"etsiU\""), "JAdES-T debe incluir el contenedor ETSI unsigned");
+		assertTrue(json.contains("\"tstTokens\""), "El contenedor etsiU debe listar tstTokens");
+		assertTrue(json.contains("\"val\":\"MAMCAQE=\""), "El token RFC3161 debe viajar en Base64 DER");
+		assertTrue(!json.contains("\"payload\""), "JAdES-T detached no debe incluir payload");
+	}
+
+	@Test
+	@DisplayName("timestampTokenBase64 requiere JWS JSON Serialization")
+	void timestampTokenRequiresJsonSerialization() {
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAMCAQE="); //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test

@@ -31,6 +31,7 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSObjectJSON;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.UnprotectedHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
@@ -43,7 +44,7 @@ import es.gob.afirma.core.signers.AOSignInfo;
 import es.gob.afirma.core.signers.AOSimpleSigner;
 
 /**
- * Firmador JAdES-B-B (ETSI TS 119 182-1) sobre formato compact JWS.
+ * Firmador JAdES-B-B/JAdES-T (ETSI TS 119 182-1) sobre JWS.
  *
  * <p>JAdES es la transposición a JSON de XAdES y CAdES; usa JWS (RFC 7515)
  * como contenedor base y añade cabeceras protegidas obligatorias para
@@ -55,15 +56,15 @@ import es.gob.afirma.core.signers.AOSimpleSigner;
  *   <li>{@code crit} — declara qué cabeceras nuevas son críticas.</li>
  * </ul>
  *
- * <p>Este harness implementa <strong>solo el nivel B-B (baseline básica)</strong>.
- * Niveles superiores (T = timestamp, LT = long-term, LTA = archive) están
- * marcados con TODO M4.x y se añadirán cuando exista TSA y TSL operativas
- * (ver módulo {@code afirma-trust-tsl}).</p>
+ * <p>El nivel B-B se emite tanto en compact JWS como en JWS JSON Serialization
+ * flattened. El nivel T se activa en JSON Serialization cuando el llamador
+ * aporta un token RFC 3161 ya obtenido de una TSA, que se serializa como
+ * cabecera no protegida {@code etsiU}. Los niveles LT/LTA siguen pendientes
+ * de integración con {@code afirma-trust-tsl}.</p>
  *
- * <p>Solo se implementa el sub-perfil <em>compact</em>; el <em>JSON serialization</em>
- * (con múltiples firmantes en un mismo objeto) no se necesita para los flujos
- * actuales de Autofirma — la firma triphase ya sirve para multi-signer en otros
- * formatos.</p>
+ * <p>La obtención del sello contra una TSA queda fuera de esta clase hasta que
+ * exista una política CTT cerrada; este firmador solo encaja el token ya emitido
+ * dentro de la estructura JAdES.</p>
  */
 public final class AOJadesSigner implements AOSimpleSigner {
 
@@ -76,6 +77,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	public static final String EXTRA_PARAM_DETACHED = "detached";
 	/** Si {@code true}, emite JWS JSON Serialization flattened en lugar de compact. */
 	public static final String EXTRA_PARAM_JSON_SERIALIZATION = "jsonSerialization";
+	/** Token RFC 3161 DER codificado en Base64 para emitir la cabecera JAdES-T {@code etsiU}.
+	 *  Requiere {@link #EXTRA_PARAM_JSON_SERIALIZATION} en {@code true}. */
+	public static final String EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64 = "timestampTokenBase64";
 
 	@Override
 	public byte[] sign(final byte[] data,
@@ -99,6 +103,11 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				params.getProperty(EXTRA_PARAM_DETACHED, "true")); //$NON-NLS-1$
 		final boolean jsonSerialization = Boolean.parseBoolean(
 				params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false")); //$NON-NLS-1$
+		final String timestampTokenBase64 = params.getProperty(EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64);
+		if (timestampTokenBase64 != null && !timestampTokenBase64.isBlank() && !jsonSerialization) {
+			throw new AOException("JAdES-T requiere JWS JSON Serialization para la cabecera no protegida etsiU", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 
 		try {
 			final JWSAlgorithm jwsAlg = mapAlgorithm(algorithm, key);
@@ -131,12 +140,19 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 			if (jsonSerialization) {
 				final JWSObjectJSON jws = new JWSObjectJSON(payload);
-				jws.sign(header, buildSigner(key));
+				final UnprotectedHeader unprotectedHeader = buildUnprotectedHeader(timestampTokenBase64);
+				if (unprotectedHeader != null) {
+					jws.sign(header, unprotectedHeader, buildSigner(key));
+				}
+				else {
+					jws.sign(header, buildSigner(key));
+				}
 				final Map<String, Object> json = jws.toFlattenedJSONObject();
 				if (detached) {
 					json.remove("payload"); //$NON-NLS-1$
 				}
-				LOGGER.fine(() -> "JAdES-B-B JSON firmado: alg=" + jwsAlg + ", detached=" + detached); //$NON-NLS-1$ //$NON-NLS-2$
+				final String level = unprotectedHeader != null ? "JAdES-T" : "JAdES-B-B"; //$NON-NLS-1$ //$NON-NLS-2$
+				LOGGER.fine(() -> level + " JSON firmado: alg=" + jwsAlg + ", detached=" + detached); //$NON-NLS-1$ //$NON-NLS-2$
 				return JSONObjectUtils.toJSONString(json)
 						.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 			}
@@ -154,6 +170,26 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		catch (final JOSEException e) {
 			throw new AOException("Error firmando JAdES: " + e.getMessage(), e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
 		}
+	}
+
+	private static UnprotectedHeader buildUnprotectedHeader(final String timestampTokenBase64) throws AOException {
+		if (timestampTokenBase64 == null || timestampTokenBase64.isBlank()) {
+			return null;
+		}
+		final String token = timestampTokenBase64.trim();
+		try {
+			Base64.getDecoder().decode(token);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new AOException("El token RFC 3161 de JAdES-T no esta codificado en Base64 valido", e, //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+
+		final Map<String, Object> tstToken = Map.of("val", token); //$NON-NLS-1$
+		final Map<String, Object> tstContainer = Map.of("tstTokens", List.of(tstToken)); //$NON-NLS-1$
+		return new UnprotectedHeader.Builder()
+				.param("etsiU", List.of(tstContainer)) //$NON-NLS-1$
+				.build();
 	}
 
 	private static JWSAlgorithm mapAlgorithm(final String algorithm, final PrivateKey key) throws AOException {
