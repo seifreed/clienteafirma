@@ -256,6 +256,18 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(futureIatVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String untypedIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert), false);
+		final String untypedIssuerPresentation = untypedIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String untypedIssuerKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(untypedIssuerPresentation));
+		final SdJwtVerifiableCredential untypedIssuerVc = SdJwtVerifiableCredential.parse(
+				untypedIssuerPresentation + untypedIssuerKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(untypedIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
 		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,
 				"CN=EUDI Issuer Expired, O=AEAD", expiredCertTime, //$NON-NLS-1$
@@ -540,6 +552,15 @@ final class TestSdJwtVerifiableCredential {
 			final List<String> sdHashes, final Date expirationTime,
 			final boolean publicHolderJwk, final Date issueTime,
 			final List<X509Certificate> x5cChain) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHashes,
+				expirationTime, publicHolderJwk, issueTime, x5cChain, true);
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final List<String> sdHashes, final Date expirationTime,
+			final boolean publicHolderJwk, final Date issueTime,
+			final List<X509Certificate> x5cChain, final boolean typed) throws Exception {
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.issuer("https://issuer.example.es") //$NON-NLS-1$
 				.subject("pid-1") //$NON-NLS-1$
@@ -557,10 +578,13 @@ final class TestSdJwtVerifiableCredential {
 		for (final X509Certificate cert : x5cChain) {
 			x5c.add(com.nimbusds.jose.util.Base64.encode(cert.getEncoded()));
 		}
+		final JWSHeader.Builder header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+				.x509CertChain(x5c);
+		if (typed) {
+			header.type(new JOSEObjectType("dc+sd-jwt")); //$NON-NLS-1$
+		}
 		final SignedJWT jwt = new SignedJWT(
-				new JWSHeader.Builder(JWSAlgorithm.RS256)
-						.x509CertChain(x5c)
-						.build(),
+				header.build(),
 				claims.build());
 		jwt.sign(new RSASSASigner(issuerKp.getPrivate()));
 		return jwt.serialize();

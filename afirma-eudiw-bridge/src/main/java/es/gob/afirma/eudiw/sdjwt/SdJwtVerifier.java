@@ -36,6 +36,7 @@ import es.gob.afirma.trust.tsl.TrustServiceProvider;
 /** Verificador local de SD-JWT VC contra TSL y Key Binding JWT. */
 public final class SdJwtVerifier {
 
+	private static final JOSEObjectType ISSUER_TYPE = new JOSEObjectType("dc+sd-jwt"); //$NON-NLS-1$
 	private static final JOSEObjectType KEY_BINDING_TYPE = new JOSEObjectType("kb+jwt"); //$NON-NLS-1$
 
 	private SdJwtVerifier() {
@@ -64,6 +65,9 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("Nonce SD-JWT no normalizado"); //$NON-NLS-1$
 		}
 		try {
+			if (!ISSUER_TYPE.equals(vc.issuerSignedJwt().getHeader().getType())) {
+				throw new SdJwtVerificationException("Tipo Issuer JWT inválido"); //$NON-NLS-1$
+			}
 			final X509Certificate issuerCert = issuerCertificate(vc.issuerSignedJwt());
 			issuerCert.checkValidity();
 			if (!vc.issuerSignedJwt().verify(verifier(issuerCert))) {
