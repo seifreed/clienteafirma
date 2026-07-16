@@ -117,10 +117,19 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		}
 
 		final Properties params = extraParams != null ? extraParams : new Properties();
+		final String detachedParam = params.getProperty(EXTRA_PARAM_DETACHED, "true"); //$NON-NLS-1$
+		if (!detachedParam.equals(detachedParam.strip())) {
+			throw new AOException("Parametro detached JAdES no normalizado", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		final String jsonSerializationParam = params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false"); //$NON-NLS-1$
+		if (!jsonSerializationParam.equals(jsonSerializationParam.strip())) {
+			throw new AOException("Parametro jsonSerialization JAdES no normalizado", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
 		final boolean detached = !"false".equalsIgnoreCase( //$NON-NLS-1$
-				params.getProperty(EXTRA_PARAM_DETACHED, "true")); //$NON-NLS-1$
-		final boolean jsonSerialization = Boolean.parseBoolean(
-				params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false")); //$NON-NLS-1$
+				detachedParam);
+		final boolean jsonSerialization = Boolean.parseBoolean(jsonSerializationParam);
 		final String timestampTokenBase64 = params.getProperty(EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64);
 		final String tsaUrl = params.getProperty(EXTRA_PARAM_TSA_URL);
 		if (hasText(timestampTokenBase64) && hasText(tsaUrl)) {

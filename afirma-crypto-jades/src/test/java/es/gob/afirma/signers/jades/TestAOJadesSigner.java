@@ -117,6 +117,11 @@ final class TestAOJadesSigner {
 		final int firstDot = s.indexOf('.');
 		final int secondDot = s.indexOf('.', firstDot + 1);
 		assertEquals(firstDot + 1, secondDot, "Sección de payload debe estar vacía en detached");
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_DETACHED, " false"); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test
@@ -150,6 +155,10 @@ final class TestAOJadesSigner {
 		assertTrue(json.contains("\"protected\""));
 		assertTrue(json.contains("\"signature\""));
 		assertTrue(!json.contains("\"payload\""), "Detached JSON serialization no debe incluir payload");
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, " true"); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test
