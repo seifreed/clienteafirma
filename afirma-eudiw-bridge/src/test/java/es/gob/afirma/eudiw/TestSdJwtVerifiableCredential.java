@@ -211,6 +211,18 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(noExpirationVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String futureIatIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				disclosureHash, Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, Date.from(Instant.now().plus(Duration.ofMinutes(1))));
+		final String futureIatPresentation = futureIatIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String futureIatKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(futureIatPresentation));
+		final SdJwtVerifiableCredential futureIatVc = SdJwtVerifiableCredential.parse(
+				futureIatPresentation + futureIatKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(futureIatVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
 		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,
 				"CN=EUDI Issuer Expired, O=AEAD", expiredCertTime, //$NON-NLS-1$
@@ -373,6 +385,22 @@ final class TestSdJwtVerifiableCredential {
 			final X509Certificate issuerCert, final RSAKey holderJwk,
 			final List<String> sdHashes, final Date expirationTime,
 			final boolean publicHolderJwk) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHashes,
+				expirationTime, publicHolderJwk, null);
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final String sdHash, final Date expirationTime,
+			final boolean publicHolderJwk, final Date issueTime) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, List.of(sdHash),
+				expirationTime, publicHolderJwk, issueTime);
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final List<String> sdHashes, final Date expirationTime,
+			final boolean publicHolderJwk, final Date issueTime) throws Exception {
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.issuer("https://issuer.example.es") //$NON-NLS-1$
 				.subject("pid-1") //$NON-NLS-1$
@@ -382,6 +410,9 @@ final class TestSdJwtVerifiableCredential {
 						? holderJwk.toPublicJWK() : holderJwk).toJSONObject()));
 		if (expirationTime != null) {
 			claims.expirationTime(expirationTime);
+		}
+		if (issueTime != null) {
+			claims.issueTime(issueTime);
 		}
 		final SignedJWT jwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)

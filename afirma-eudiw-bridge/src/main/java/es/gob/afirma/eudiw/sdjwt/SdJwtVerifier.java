@@ -84,6 +84,10 @@ public final class SdJwtVerifier {
 	private static void verifyIssuerValidity(final JWTClaimsSet claims)
 			throws SdJwtVerificationException {
 		final Date now = new Date();
+		final Date issueTime = claims.getIssueTime();
+		if (issueTime != null && issueTime.after(now)) {
+			throw new SdJwtVerificationException("Issuer JWT emitido en el futuro"); //$NON-NLS-1$
+		}
 		final Date expirationTime = claims.getExpirationTime();
 		if (expirationTime == null) {
 			throw new SdJwtVerificationException("Issuer JWT sin caducidad"); //$NON-NLS-1$
