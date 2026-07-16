@@ -8,7 +8,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Cliente HTTP minimalista para diálogo con la Wallet (response endpoint
@@ -83,10 +85,14 @@ public final class EudiwClient {
 	}
 
 	private static void validateFormBody(final String formBody) throws IOException {
+		final Set<String> keys = new HashSet<>();
 		for (final String pair : formBody.split("&", -1)) { //$NON-NLS-1$
 			final int equals = pair.indexOf('=');
 			if (equals <= 0 || equals == pair.length() - 1) {
 				throw new IOException("OID4VP form body no es application/x-www-form-urlencoded"); //$NON-NLS-1$
+			}
+			if (!keys.add(pair.substring(0, equals))) {
+				throw new IOException("OID4VP form body contiene parámetros duplicados"); //$NON-NLS-1$
 			}
 		}
 	}
