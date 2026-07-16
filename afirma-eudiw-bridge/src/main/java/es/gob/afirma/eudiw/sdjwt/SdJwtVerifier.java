@@ -156,6 +156,17 @@ public final class SdJwtVerifier {
 		if (new HashSet<>(expected).size() != expected.size()) {
 			throw new SdJwtVerificationException("Issuer JWT con _sd duplicado"); //$NON-NLS-1$
 		}
+		for (final String digest : expected) {
+			if (digest == null || digest.isBlank() || digest.indexOf('=') >= 0) {
+				throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
+			}
+			try {
+				Base64.getUrlDecoder().decode(digest);
+			}
+			catch (final IllegalArgumentException e) {
+				throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido", e); //$NON-NLS-1$
+			}
+		}
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		final Set<String> seenDisclosures = new HashSet<>();
 		final Set<String> seenClaimNames = new HashSet<>();
