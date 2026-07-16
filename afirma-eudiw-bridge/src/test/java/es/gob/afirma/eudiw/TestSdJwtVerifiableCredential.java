@@ -385,6 +385,18 @@ final class TestSdJwtVerifiableCredential {
 				() -> SdJwtVerifier.verify(blankSdVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final String shortSdIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of("YWJj")); //$NON-NLS-1$
+		final String shortSdPresentation = shortSdIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String shortSdKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(shortSdPresentation));
+		final SdJwtVerifiableCredential shortSdVc = SdJwtVerifiableCredential.parse(
+				shortSdPresentation + shortSdKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(shortSdVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final String privateHolderIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
 				holderJwk, disclosureHash, Date.from(Instant.now().plus(Duration.ofDays(1))), false);
 		final String privateHolderPresentation = privateHolderIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$

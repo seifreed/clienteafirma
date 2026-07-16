@@ -161,7 +161,9 @@ public final class SdJwtVerifier {
 				throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
 			}
 			try {
-				Base64.getUrlDecoder().decode(digest);
+				if (Base64.getUrlDecoder().decode(digest).length != 32) {
+					throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido"); //$NON-NLS-1$
+				}
 			}
 			catch (final IllegalArgumentException e) {
 				throw new SdJwtVerificationException("Issuer JWT contiene _sd inválido", e); //$NON-NLS-1$
