@@ -91,7 +91,11 @@ public final class LotlLoader implements TrustListService.TslLoader {
 		if (!this.verifier.verify(xml, this.trustedKey)) {
 			throw new TslException("Firma LOTL no válida"); //$NON-NLS-1$
 		}
-		return this.parser.parse(xml);
+		final TslDocument doc = this.parser.parse(xml);
+		if (doc.nextUpdate() != null && !Instant.now().isBefore(doc.nextUpdate())) {
+			throw new TslException("LOTL caducada"); //$NON-NLS-1$
+		}
+		return doc;
 	}
 
 	private void writeCache(final byte[] xml) throws TslException {

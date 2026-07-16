@@ -150,6 +150,18 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("LotlLoader rechaza LOTL firmada caducada")
+	void rejectsExpiredSignedLotl() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL.replace("</SchemeInformation>", //$NON-NLS-1$
+				"<NextUpdate><dateTime>2026-01-01T00:00:00Z</dateTime></NextUpdate></SchemeInformation>"), kp); //$NON-NLS-1$
+		final LotlLoader loader = new LotlLoader(
+				() -> signed, kp.getPublic(), null);
+
+		assertThrows(TslException.class, loader::load);
+	}
+
+	@Test
 	@DisplayName("LotlLoader usa cache verificada si falla la fuente")
 	void fallsBackToVerifiedCache() throws Exception {
 		final KeyPair kp = rsa();
