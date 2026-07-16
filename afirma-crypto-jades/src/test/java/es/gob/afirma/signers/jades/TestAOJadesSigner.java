@@ -498,6 +498,9 @@ final class TestAOJadesSigner {
 		header.put("sigT", " " + header.get("sigT")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
 				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		header.put("sigT", "not-date"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
+				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 		final Properties attachedJson = new Properties();
 		attachedJson.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
 		attachedJson.setProperty(AOJadesSigner.EXTRA_PARAM_DETACHED, "false"); //$NON-NLS-1$

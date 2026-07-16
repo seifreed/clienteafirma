@@ -17,6 +17,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -535,7 +536,18 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				&& header.getX509CertChain() != null && !header.getX509CertChain().isEmpty()
 				&& header.getCustomParam("sigT") instanceof String sigT && !sigT.isBlank() //$NON-NLS-1$
 				&& sigT.equals(sigT.strip())
+				&& isJadesSigningTime(sigT)
 				&& header.getCriticalParams() != null && header.getCriticalParams().contains("sigT"); //$NON-NLS-1$
+	}
+
+	private static boolean isJadesSigningTime(final String sigT) {
+		try {
+			Instant.parse(sigT);
+			return true;
+		}
+		catch (final RuntimeException e) {
+			return false;
+		}
 	}
 
 	private static boolean isBase64Url(final String value) {
