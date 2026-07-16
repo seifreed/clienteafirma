@@ -240,9 +240,14 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 
 	private static URI appendQueryParam(final URI uri, final String key, final String value) {
 		final String separator = uri.getRawQuery() == null ? "?" : "&"; //$NON-NLS-1$ //$NON-NLS-2$
-		return URI.create(uri.toString() + separator
+		final String text = uri.toString();
+		final int fragment = text.indexOf('#');
+		final String head = fragment < 0 ? text : text.substring(0, fragment);
+		final String tail = fragment < 0 ? "" : text.substring(fragment); //$NON-NLS-1$
+		return URI.create(head + separator
 				+ URLEncoder.encode(key, StandardCharsets.UTF_8)
 				+ "=" //$NON-NLS-1$
-				+ URLEncoder.encode(value, StandardCharsets.UTF_8));
+				+ URLEncoder.encode(value, StandardCharsets.UTF_8)
+				+ tail);
 	}
 }

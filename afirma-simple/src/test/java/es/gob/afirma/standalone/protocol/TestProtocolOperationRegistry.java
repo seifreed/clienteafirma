@@ -162,6 +162,9 @@ final class TestProtocolOperationRegistry {
 		final String result = handler.process(url, ctx);
 		assertTrue(result.startsWith("eudiw://present?client=autofirma&request=")); //$NON-NLS-1$
 		assertTrue(result.contains("openid4vp%3A%2F%2Fauthorize")); //$NON-NLS-1$
+		final String withFragment = handler.process(url + "%23frag", ctx); //$NON-NLS-1$
+		assertTrue(withFragment.contains("&request=")); //$NON-NLS-1$
+		assertTrue(withFragment.endsWith("#frag")); //$NON-NLS-1$
 	}
 
 	@Test
