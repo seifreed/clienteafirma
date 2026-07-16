@@ -583,7 +583,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			if (!(component instanceof Map<?, ?> componentJson)) {
 				return false;
 			}
-			if (componentJson.containsKey("tstTokens") && !isValidTimestampTokens(componentJson.get("tstTokens"))) { //$NON-NLS-1$ //$NON-NLS-2$
+			if (!isValidTimestampTokens(componentJson.get("tstTokens"))) { //$NON-NLS-1$
 				return false;
 			}
 		}
