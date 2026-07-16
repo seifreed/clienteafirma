@@ -3,31 +3,62 @@
 package es.gob.afirma.signers.jades;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
 import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.tsp.TSPAlgorithms;
+import org.bouncycastle.tsp.TimeStampRequest;
+import org.bouncycastle.tsp.TimeStampResponse;
+import org.bouncycastle.tsp.TimeStampResponseGenerator;
+import org.bouncycastle.tsp.TimeStampToken;
+import org.bouncycastle.tsp.TimeStampTokenGenerator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONObjectUtils;
+import com.sun.net.httpserver.HttpServer;
 
 /**
  * Verifica que {@link AOJadesSigner} produce un compact JWS bien formado con
@@ -41,6 +72,9 @@ final class TestAOJadesSigner {
 
 	@BeforeAll
 	static void setUp() throws Exception {
+		if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+			Security.addProvider(new BouncyCastleProvider());
+		}
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
 		kpg.initialize(2048);
 		RSA_KEY = kpg.generateKeyPair();
@@ -143,6 +177,64 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("tsaURL genera token RFC3161 sobre la firma JWS y lo inserta en etsiU")
+	void signRsa256JsonSerializationWithLocalTsa() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+		kpg.initialize(2048);
+		final KeyPair tsaKey = kpg.generateKeyPair();
+		final X509Certificate tsaCert = selfSigned(tsaKey, "CN=JAdES TSA, O=AEAD", true); //$NON-NLS-1$
+		final TimeStampTokenGenerator tokenGenerator = timestampTokenGenerator(tsaKey, tsaCert);
+		final AtomicInteger requests = new AtomicInteger();
+		final HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0); //$NON-NLS-1$
+		server.createContext("/tsa", exchange -> { //$NON-NLS-1$
+			try {
+				final TimeStampRequest request = new TimeStampRequest(exchange.getRequestBody().readAllBytes());
+				final TimeStampResponse response = new TimeStampResponseGenerator(
+						tokenGenerator,
+						TSPAlgorithms.ALLOWED)
+								.generate(request, BigInteger.valueOf(requests.incrementAndGet()), new Date());
+				final byte[] responseBytes = response.getEncoded();
+				exchange.getResponseHeaders().set("Content-Type", "application/timestamp-reply"); //$NON-NLS-1$ //$NON-NLS-2$
+				exchange.sendResponseHeaders(200, responseBytes.length);
+				exchange.getResponseBody().write(responseBytes);
+			}
+			catch (final Exception e) {
+				throw new IOException("No se pudo generar la respuesta RFC3161 de prueba", e); //$NON-NLS-1$
+			}
+			finally {
+				exchange.close();
+			}
+		});
+		server.start();
+		try {
+			final Properties params = new Properties();
+			params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+			params.setProperty(AOJadesSigner.EXTRA_PARAM_TSA_URL,
+					"http://127.0.0.1:" + server.getAddress().getPort() + "/tsa"); //$NON-NLS-1$ //$NON-NLS-2$
+			params.setProperty("tsaHashAlgorithm", "SHA-256"); //$NON-NLS-1$ //$NON-NLS-2$
+			final AOJadesSigner signer = new AOJadesSigner();
+
+			final byte[] jws = signer.sign("payload".getBytes(), //$NON-NLS-1$
+					"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params); //$NON-NLS-1$
+			final Map<String, Object> json = JSONObjectUtils.parse(
+					new String(jws, java.nio.charset.StandardCharsets.UTF_8));
+			final String signature = (String) json.get("signature"); //$NON-NLS-1$
+			final String tokenBase64 = timestampTokenFromHeader(json);
+			final TimeStampToken tst = new TimeStampToken(
+					new CMSSignedData(java.util.Base64.getDecoder().decode(tokenBase64)));
+			final byte[] expectedImprint = MessageDigest.getInstance("SHA-256") //$NON-NLS-1$
+					.digest(Base64URL.from(signature).decode());
+
+			assertEquals(1, requests.get(), "Debe solicitar un sello a la TSA local");
+			assertArrayEquals(expectedImprint, tst.getTimeStampInfo().getMessageImprintDigest(),
+					"El token RFC3161 debe sellar la firma JWS");
+		}
+		finally {
+			server.stop(0);
+		}
+	}
+
+	@Test
 	@DisplayName("isSign rechaza entradas que no son JWS compact")
 	void isSignRejectsNonJws() {
 		final AOJadesSigner signer = new AOJadesSigner();
@@ -154,16 +246,63 @@ final class TestAOJadesSigner {
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
+		return selfSigned(kp, subject, false);
+	}
+
+	private static X509Certificate selfSigned(final KeyPair kp, final String subject, final boolean timestamping) throws Exception {
 		final Instant now = Instant.now();
 		final X500Name dn = new X500Name(subject);
 		final BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 		final X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
 				dn, serial, Date.from(now), Date.from(now.plus(Duration.ofDays(365))),
 				dn, kp.getPublic());
+		if (timestamping) {
+			builder.addExtension(Extension.extendedKeyUsage, true,
+					new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+		}
 		final ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate());
 		final X509CertificateHolder holder = builder.build(signer);
 		final byte[] der = holder.getEncoded();
 		return (X509Certificate) CertificateFactory.getInstance("X.509")
 				.generateCertificate(new java.io.ByteArrayInputStream(der));
+	}
+
+	private static TimeStampTokenGenerator timestampTokenGenerator(final KeyPair tsaKey,
+			final X509Certificate tsaCert) throws Exception {
+		final DigestCalculatorProvider digestProvider = new JcaDigestCalculatorProviderBuilder()
+				.setProvider(BouncyCastleProvider.PROVIDER_NAME)
+				.build();
+		final ContentSigner tsaSigner = new JcaContentSignerBuilder("SHA256withRSA") //$NON-NLS-1$
+				.setProvider(BouncyCastleProvider.PROVIDER_NAME)
+				.build(tsaKey.getPrivate());
+		final TimeStampTokenGenerator generator = new TimeStampTokenGenerator(
+				new JcaSignerInfoGeneratorBuilder(digestProvider).build(tsaSigner, tsaCert),
+				digestProvider.get(new AlgorithmIdentifier(NISTObjectIdentifiers.id_sha256)),
+				new ASN1ObjectIdentifier("1.3.6.1.4.1.5734.1.1")); //$NON-NLS-1$
+		generator.addCertificates(new JcaCertStore(List.of(tsaCert)));
+		return generator;
+	}
+
+	private static String timestampTokenFromHeader(final Map<String, Object> json) throws Exception {
+		final Map<String, Object> header = JSONObjectUtils.getJSONObject(json, "header"); //$NON-NLS-1$
+		final List<Object> etsiU = JSONObjectUtils.getJSONArray(header, "etsiU"); //$NON-NLS-1$
+		final Object container = etsiU.get(0);
+		final List<Object> tokens = JSONObjectUtils.getJSONArray(asJsonObject(container), "tstTokens"); //$NON-NLS-1$
+		final Object token = tokens.get(0);
+		return JSONObjectUtils.getString(asJsonObject(token), "val"); //$NON-NLS-1$
+	}
+
+	private static Map<String, Object> asJsonObject(final Object object) {
+		if (!(object instanceof Map<?, ?> map)) {
+			throw new IllegalArgumentException("El valor no es un objeto JSON"); //$NON-NLS-1$
+		}
+		final Map<String, Object> typed = new HashMap<>();
+		for (final Map.Entry<?, ?> entry : map.entrySet()) {
+			if (!(entry.getKey() instanceof String key)) {
+				throw new IllegalArgumentException("La clave JSON no es una cadena"); //$NON-NLS-1$
+			}
+			typed.put(key, entry.getValue());
+		}
+		return typed;
 	}
 }

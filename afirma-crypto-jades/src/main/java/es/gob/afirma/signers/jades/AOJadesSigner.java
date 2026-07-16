@@ -9,6 +9,8 @@
 package es.gob.afirma.signers.jades;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -16,6 +18,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +34,6 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSObjectJSON;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.UnprotectedHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
@@ -42,6 +44,8 @@ import es.gob.afirma.core.ErrorCode;
 import es.gob.afirma.core.signers.AOSignConstants;
 import es.gob.afirma.core.signers.AOSignInfo;
 import es.gob.afirma.core.signers.AOSimpleSigner;
+import es.gob.afirma.signers.tsp.pkcs7.CMSTimestamper;
+import es.gob.afirma.signers.tsp.pkcs7.TsaParams;
 
 /**
  * Firmador JAdES-B-B/JAdES-T (ETSI TS 119 182-1) sobre JWS.
@@ -58,13 +62,13 @@ import es.gob.afirma.core.signers.AOSimpleSigner;
  *
  * <p>El nivel B-B se emite tanto en compact JWS como en JWS JSON Serialization
  * flattened. El nivel T se activa en JSON Serialization cuando el llamador
- * aporta un token RFC 3161 ya obtenido de una TSA, que se serializa como
- * cabecera no protegida {@code etsiU}. Los niveles LT/LTA siguen pendientes
- * de integración con {@code afirma-trust-tsl}.</p>
+ * configura una TSA RFC 3161 mediante {@code tsaURL} o aporta un token ya
+ * emitido, que se serializa como cabecera no protegida {@code etsiU}. Los
+ * niveles LT/LTA siguen pendientes de integración con {@code afirma-trust-tsl}.</p>
  *
- * <p>La obtención del sello contra una TSA queda fuera de esta clase hasta que
- * exista una política CTT cerrada; este firmador solo encaja el token ya emitido
- * dentro de la estructura JAdES.</p>
+ * <p>La política de TSA por defecto queda fuera de esta clase hasta que exista
+ * una decisión CTT cerrada; si se declara {@code tsaURL}, se usa esa TSA
+ * explícitamente configurada por el llamador.</p>
  */
 public final class AOJadesSigner implements AOSimpleSigner {
 
@@ -77,6 +81,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	public static final String EXTRA_PARAM_DETACHED = "detached";
 	/** Si {@code true}, emite JWS JSON Serialization flattened en lugar de compact. */
 	public static final String EXTRA_PARAM_JSON_SERIALIZATION = "jsonSerialization";
+	/** URL de la TSA RFC 3161. Si se declara, el firmador genera el sello JAdES-T
+	 *  sobre la firma JWS reci&eacute;n creada. */
+	public static final String EXTRA_PARAM_TSA_URL = "tsaURL";
 	/** Token RFC 3161 DER codificado en Base64 para emitir la cabecera JAdES-T {@code etsiU}.
 	 *  Requiere {@link #EXTRA_PARAM_JSON_SERIALIZATION} en {@code true}. */
 	public static final String EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64 = "timestampTokenBase64";
@@ -104,7 +111,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		final boolean jsonSerialization = Boolean.parseBoolean(
 				params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false")); //$NON-NLS-1$
 		final String timestampTokenBase64 = params.getProperty(EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64);
-		if (timestampTokenBase64 != null && !timestampTokenBase64.isBlank() && !jsonSerialization) {
+		final boolean timestampRequested = hasText(timestampTokenBase64) || hasText(params.getProperty(EXTRA_PARAM_TSA_URL));
+		if (timestampRequested && !jsonSerialization) {
 			throw new AOException("JAdES-T requiere JWS JSON Serialization para la cabecera no protegida etsiU", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
@@ -140,18 +148,16 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 			if (jsonSerialization) {
 				final JWSObjectJSON jws = new JWSObjectJSON(payload);
-				final UnprotectedHeader unprotectedHeader = buildUnprotectedHeader(timestampTokenBase64);
-				if (unprotectedHeader != null) {
-					jws.sign(header, unprotectedHeader, buildSigner(key));
-				}
-				else {
-					jws.sign(header, buildSigner(key));
-				}
+				jws.sign(header, buildSigner(key));
 				final Map<String, Object> json = jws.toFlattenedJSONObject();
+				final String timestampToken = resolveTimestampToken(params, timestampTokenBase64, json);
+				if (timestampToken != null) {
+					json.put("header", buildUnprotectedHeader(timestampToken)); //$NON-NLS-1$
+				}
 				if (detached) {
 					json.remove("payload"); //$NON-NLS-1$
 				}
-				final String level = unprotectedHeader != null ? "JAdES-T" : "JAdES-B-B"; //$NON-NLS-1$ //$NON-NLS-2$
+				final String level = timestampToken != null ? "JAdES-T" : "JAdES-B-B"; //$NON-NLS-1$ //$NON-NLS-2$
 				LOGGER.fine(() -> level + " JSON firmado: alg=" + jwsAlg + ", detached=" + detached); //$NON-NLS-1$ //$NON-NLS-2$
 				return JSONObjectUtils.toJSONString(json)
 						.getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -172,10 +178,39 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		}
 	}
 
-	private static UnprotectedHeader buildUnprotectedHeader(final String timestampTokenBase64) throws AOException {
-		if (timestampTokenBase64 == null || timestampTokenBase64.isBlank()) {
+	private static String resolveTimestampToken(final Properties params,
+			final String timestampTokenBase64,
+			final Map<String, Object> json) throws AOException, IOException {
+		if (hasText(timestampTokenBase64)) {
+			return normalizeTimestampToken(timestampTokenBase64);
+		}
+		if (!hasText(params.getProperty(EXTRA_PARAM_TSA_URL))) {
 			return null;
 		}
+
+		final TsaParams tsaParams;
+		try {
+			tsaParams = new TsaParams(params);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new AOException("Configuracion TSA no valida para JAdES-T: " + e.getMessage(), e, //$NON-NLS-1$
+					ErrorCode.Request.INVALID_TIMESTAMP_HASH_ALGORITHM);
+		}
+		final Object signature = json.get("signature"); //$NON-NLS-1$
+		if (!(signature instanceof String signatureBase64Url) || signatureBase64Url.isBlank()) {
+			throw new AOException("No se pudo extraer la firma JWS para sellarla en JAdES-T", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		final byte[] signatureBytes = Base64URL.from(signatureBase64Url).decode();
+		final byte[] imprint = digest(signatureBytes, tsaParams.getTsaHashAlgorithm());
+		final byte[] token = new CMSTimestamper(tsaParams).getTimeStampToken(
+				imprint,
+				tsaParams.getTsaHashAlgorithm(),
+				Calendar.getInstance());
+		return Base64.getEncoder().encodeToString(token);
+	}
+
+	private static String normalizeTimestampToken(final String timestampTokenBase64) throws AOException {
 		final String token = timestampTokenBase64.trim();
 		try {
 			Base64.getDecoder().decode(token);
@@ -184,12 +219,27 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			throw new AOException("El token RFC 3161 de JAdES-T no esta codificado en Base64 valido", e, //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
+		return token;
+	}
 
-		final Map<String, Object> tstToken = Map.of("val", token); //$NON-NLS-1$
+	private static Map<String, Object> buildUnprotectedHeader(final String timestampTokenBase64) {
+		final Map<String, Object> tstToken = Map.of("val", timestampTokenBase64); //$NON-NLS-1$
 		final Map<String, Object> tstContainer = Map.of("tstTokens", List.of(tstToken)); //$NON-NLS-1$
-		return new UnprotectedHeader.Builder()
-				.param("etsiU", List.of(tstContainer)) //$NON-NLS-1$
-				.build();
+		return Map.of("etsiU", List.of(tstContainer)); //$NON-NLS-1$
+	}
+
+	private static byte[] digest(final byte[] data, final String algorithm) throws AOException {
+		try {
+			return MessageDigest.getInstance(algorithm).digest(data);
+		}
+		catch (final NoSuchAlgorithmException e) {
+			throw new AOException("Algoritmo de huella TSA no soportado para JAdES-T: " + algorithm, e, //$NON-NLS-1$
+					ErrorCode.Request.INVALID_TIMESTAMP_HASH_ALGORITHM);
+		}
+	}
+
+	private static boolean hasText(final String value) {
+		return value != null && !value.isBlank();
 	}
 
 	private static JWSAlgorithm mapAlgorithm(final String algorithm, final PrivateKey key) throws AOException {
