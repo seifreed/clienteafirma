@@ -169,6 +169,13 @@ final class TestAuthorizationRequest {
 						.build());
 		mismatchedIssuerJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedIssuerJar));
+		final SignedJWT unnormalizedAudienceJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.audience(" openid4vp://wallet") //$NON-NLS-1$
+						.build());
+		unnormalizedAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unnormalizedAudienceJar));
 		final SignedJWT noExpirationJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())

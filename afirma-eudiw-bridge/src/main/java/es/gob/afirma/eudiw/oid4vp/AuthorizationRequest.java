@@ -122,6 +122,7 @@ public record AuthorizationRequest(
 			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
 			validateRequestObjectTime(claims);
+			validateRequestObjectAudience(claims);
 			if (!this.clientId.equals(claims.getIssuer())) {
 				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
 			}
@@ -157,6 +158,14 @@ public record AuthorizationRequest(
 		final Date notBeforeTime = claims.getNotBeforeTime();
 		if (notBeforeTime != null && notBeforeTime.after(now)) {
 			throw new IllegalArgumentException("Request Object JAR no válido aún"); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateRequestObjectAudience(final JWTClaimsSet claims) {
+		for (final String audience : claims.getAudience()) {
+			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
+				throw new IllegalArgumentException("Request Object JAR con audience no normalizada"); //$NON-NLS-1$
+			}
 		}
 	}
 
