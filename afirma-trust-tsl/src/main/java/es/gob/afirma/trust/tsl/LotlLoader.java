@@ -76,8 +76,7 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			return null;
 		}
 		try {
-			if (!Instant.now().isBefore(Files.getLastModifiedTime(this.cachePath)
-					.toInstant().plus(CACHE_REFRESH_INTERVAL))) {
+			if (!isFresh(this.cachePath)) {
 				return null;
 			}
 			return parseVerified(Files.readAllBytes(this.cachePath));
@@ -134,11 +133,19 @@ public final class LotlLoader implements TrustListService.TslLoader {
 			throw new TslException("No se pudo descargar LOTL y no hay cache", cause); //$NON-NLS-1$
 		}
 		try {
+			if (!isFresh(this.cachePath)) {
+				throw new TslException("No se pudo descargar LOTL y la cache esta caducada", cause); //$NON-NLS-1$
+			}
 			return parseVerified(Files.readAllBytes(this.cachePath));
 		}
 		catch (final IOException e) {
 			throw new TslException("No se pudo leer la cache LOTL", e); //$NON-NLS-1$
 		}
+	}
+
+	private static boolean isFresh(final Path cache) throws IOException {
+		return Instant.now().isBefore(Files.getLastModifiedTime(cache)
+				.toInstant().plus(CACHE_REFRESH_INTERVAL));
 	}
 
 	static final class HttpTslXmlSource implements TslXmlSource {

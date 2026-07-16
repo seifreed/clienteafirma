@@ -177,6 +177,23 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("LotlLoader no usa cache antigua si falla la fuente")
+	void rejectsStaleFallbackCache() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp);
+		final Path cache = this.temp.resolve("eu-lotl.xml"); //$NON-NLS-1$
+		Files.write(cache, signed);
+		Files.setLastModifiedTime(cache,
+				FileTime.from(Instant.now().minus(Duration.ofHours(25))));
+
+		final LotlLoader loader = new LotlLoader(() -> {
+			throw new IOException("sin red"); //$NON-NLS-1$
+		}, kp.getPublic(), cache);
+
+		assertThrows(TslException.class, loader::load);
+	}
+
+	@Test
 	@DisplayName("LotlLoader usa cache verificada si la descarga no valida")
 	void fallsBackToVerifiedCacheOnBadDownload() throws Exception {
 		final KeyPair kp = rsa();
