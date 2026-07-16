@@ -122,7 +122,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 		try {
 			final JWSAlgorithm jwsAlg = mapAlgorithm(algorithm, key);
-			final X509Certificate signerCert = (X509Certificate) certChain[0];
+			if (!(certChain[0] instanceof X509Certificate signerCert)) {
+				throw new AOException("El certificado firmante JAdES debe ser X.509", //$NON-NLS-1$
+						ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+			}
 
 			final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(jwsAlg)
 					.type(JOSEObjectType.JOSE)

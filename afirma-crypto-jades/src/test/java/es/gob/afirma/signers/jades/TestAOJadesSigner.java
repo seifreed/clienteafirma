@@ -16,6 +16,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.Security;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -168,6 +169,28 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
 						RSA_KEY.getPrivate(), RSA_CHAIN, params));
+	}
+
+	@Test
+	@DisplayName("sign rechaza certificado firmante que no es X.509")
+	void rejectsNonX509SignerCertificate() {
+		final AOJadesSigner signer = new AOJadesSigner();
+		final Certificate nonX509 = new Certificate("RAW") { //$NON-NLS-1$
+			@Override
+			public byte[] getEncoded() { return new byte[] { 1 }; }
+			@Override
+			public void verify(final PublicKey key) { /* No usado. */ }
+			@Override
+			public void verify(final PublicKey key, final String sigProvider) { /* No usado. */ }
+			@Override
+			public String toString() { return "RAW"; } //$NON-NLS-1$
+			@Override
+			public PublicKey getPublicKey() { return RSA_KEY.getPublic(); }
+		};
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), new Certificate[] { nonX509 }, new Properties()));
 	}
 
 	@Test
