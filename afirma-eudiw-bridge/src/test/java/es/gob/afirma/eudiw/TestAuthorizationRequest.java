@@ -180,9 +180,22 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", " ")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
+		final SignedJWT noExpirationJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		noExpirationJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				noExpirationJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final SignedJWT expiredJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().minus(Duration.ofMinutes(1))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
@@ -270,6 +283,7 @@ final class TestAuthorizationRequest {
 				new JWTClaimsSet.Builder()
 						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.build());
 		jwt.sign(new RSASSASigner(kp.getPrivate()));
