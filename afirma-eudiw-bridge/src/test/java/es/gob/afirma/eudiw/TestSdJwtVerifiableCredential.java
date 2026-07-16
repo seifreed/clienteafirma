@@ -165,6 +165,15 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(noExpirationKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String futureIatKb = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
+				true, Date.from(Instant.now().plus(Duration.ofMinutes(5))), null,
+				Date.from(Instant.now().plus(Duration.ofMinutes(1))));
+		final SdJwtVerifiableCredential futureIatKbVc = SdJwtVerifiableCredential.parse(
+				presentation + futureIatKb);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(futureIatKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String expiredKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, Date.from(Instant.now().minus(Duration.ofMinutes(1))), null);
@@ -372,13 +381,22 @@ final class TestSdJwtVerifiableCredential {
 			final String audience, final String nonce, final String sdHash,
 			final boolean typed, final Date expirationTime, final Date notBeforeTime)
 			throws Exception {
+		return signedKeyBindingJwt(holderKp, audience, nonce, sdHash, typed,
+				expirationTime, notBeforeTime, new Date());
+	}
+
+	private static String signedKeyBindingJwt(final KeyPair holderKp,
+			final String audience, final String nonce, final String sdHash,
+			final boolean typed, final Date expirationTime, final Date notBeforeTime,
+			final Date issueTime)
+			throws Exception {
 		final JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.RS256);
 		if (typed) {
 			headerBuilder.type(new JOSEObjectType("kb+jwt")); //$NON-NLS-1$
 		}
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.audience(audience)
-				.issueTime(new Date())
+				.issueTime(issueTime)
 				.claim("nonce", nonce) //$NON-NLS-1$
 				.claim("sd_hash", sdHash); //$NON-NLS-1$
 		if (expirationTime != null) {

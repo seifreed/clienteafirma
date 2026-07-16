@@ -177,11 +177,14 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("Tipo Key Binding JWT inválido"); //$NON-NLS-1$
 		}
 		final JWTClaimsSet claims = kbJwt.getJWTClaimsSet();
+		final Date now = new Date();
 		final Date issueTime = claims.getIssueTime();
 		if (issueTime == null) {
 			throw new SdJwtVerificationException("Key Binding JWT sin iat"); //$NON-NLS-1$
 		}
-		final Date now = new Date();
+		if (issueTime.after(now)) {
+			throw new SdJwtVerificationException("Key Binding JWT emitido en el futuro"); //$NON-NLS-1$
+		}
 		final Date expirationTime = claims.getExpirationTime();
 		if (expirationTime == null) {
 			throw new SdJwtVerificationException("Key Binding JWT sin caducidad"); //$NON-NLS-1$
