@@ -227,6 +227,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (containsControlChars(key)) {
 				throw new IllegalArgumentException("Parámetro con caracteres de control en URI eudiw-present: " + key); //$NON-NLS-1$
 			}
+			if (containsControlChars(value)) {
+				throw new IllegalArgumentException("Valor con caracteres de control en URI eudiw-present: " + key); //$NON-NLS-1$
+			}
 			if (params.containsKey(key)) {
 				throw new IllegalArgumentException(
 						"Parámetro duplicado en URI eudiw-present: " + key); //$NON-NLS-1$

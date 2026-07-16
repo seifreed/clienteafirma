@@ -80,6 +80,8 @@ final class TestEudiwProtocolHandler {
 		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?state")));
 		assertThrows(IllegalArgumentException.class,
+				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?state=a%0Ab")));
+		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?state=x#frag")));
 	}
 
