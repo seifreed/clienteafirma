@@ -70,6 +70,19 @@ final class TestProtocolOperationRegistry {
 	}
 
 	@Test
+	@DisplayName("ProtocolInvocationLauncher enruta eudiw-present por el registry")
+	void launcherDispatchesEudiwThroughRegistry() {
+		final String url = "afirma://eudiw-present"
+				+ "?verifier=https%3A%2F%2Fverifier.example.es"
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse";
+		final String result = ProtocolInvocationLauncher.launch(url);
+		assertTrue(result.startsWith("openid4vp://authorize?"),
+				"El dispatcher debe devolver la URI OID4VP del handler EUDIW");
+		assertTrue(result.contains("client_id=https"));
+		assertTrue(result.contains("response_uri=https"));
+	}
+
+	@Test
 	@DisplayName("EudiwProtocolHandler.process produce una openid4vp:// URI canónica")
 	void eudiwProducesCanonicalOpenid4vpUri() throws Exception {
 		final EudiwProtocolHandler handler = new EudiwProtocolHandler();
