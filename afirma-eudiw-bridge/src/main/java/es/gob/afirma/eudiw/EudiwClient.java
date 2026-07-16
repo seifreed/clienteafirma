@@ -94,9 +94,14 @@ public final class EudiwClient {
 				throw new IOException("OID4VP form body no es application/x-www-form-urlencoded"); //$NON-NLS-1$
 			}
 			final String key = decodeFormComponent(pair.substring(0, equals));
+			final String value = decodeFormComponent(pair.substring(equals + 1));
 			if (key.isBlank() || !key.equals(key.strip())
 					|| key.chars().anyMatch(Character::isISOControl)) {
 				throw new IOException("OID4VP form body contiene clave no normalizada"); //$NON-NLS-1$
+			}
+			if (value.isBlank() || !value.equals(value.strip())
+					|| value.chars().anyMatch(Character::isISOControl)) {
+				throw new IOException("OID4VP form body contiene valor no normalizado"); //$NON-NLS-1$
 			}
 			if (!keys.add(key)) {
 				throw new IOException("OID4VP form body contiene parámetros duplicados"); //$NON-NLS-1$
