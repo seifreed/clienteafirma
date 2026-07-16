@@ -93,6 +93,24 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("jsonSerialization=true emite JWS JSON flattened detached")
+	void signRsa256JsonSerialization() throws Exception {
+		final Properties params = new Properties();
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_JSON_SERIALIZATION, "true"); //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		final byte[] jws = signer.sign("payload".getBytes(), //$NON-NLS-1$
+				"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params); //$NON-NLS-1$
+		final String json = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
+
+		assertTrue(signer.isSign(jws), "El JSON serialization debe reconocerse como firma JAdES");
+		assertTrue(json.startsWith("{"), "Debe emitirse objeto JSON");
+		assertTrue(json.contains("\"protected\""));
+		assertTrue(json.contains("\"signature\""));
+		assertTrue(!json.contains("\"payload\""), "Detached JSON serialization no debe incluir payload");
+	}
+
+	@Test
 	@DisplayName("isSign rechaza entradas que no son JWS compact")
 	void isSignRejectsNonJws() {
 		final AOJadesSigner signer = new AOJadesSigner();

@@ -28,11 +28,13 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSObjectJSON;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONObjectUtils;
 
 import es.gob.afirma.core.AOException;
 import es.gob.afirma.core.ErrorCode;
@@ -72,6 +74,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	/** Si {@code true} (por defecto) la firma resultante es <em>detached</em>: el payload
 	 *  no viaja dentro del JWS, solo su digest implícito. */
 	public static final String EXTRA_PARAM_DETACHED = "detached";
+	/** Si {@code true}, emite JWS JSON Serialization flattened en lugar de compact. */
+	public static final String EXTRA_PARAM_JSON_SERIALIZATION = "jsonSerialization";
 
 	@Override
 	public byte[] sign(final byte[] data,
@@ -93,6 +97,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		final Properties params = extraParams != null ? extraParams : new Properties();
 		final boolean detached = !"false".equalsIgnoreCase( //$NON-NLS-1$
 				params.getProperty(EXTRA_PARAM_DETACHED, "true")); //$NON-NLS-1$
+		final boolean jsonSerialization = Boolean.parseBoolean(
+				params.getProperty(EXTRA_PARAM_JSON_SERIALIZATION, "false")); //$NON-NLS-1$
 
 		try {
 			final JWSAlgorithm jwsAlg = mapAlgorithm(algorithm, key);
@@ -122,6 +128,18 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			final Payload payload = detached
 					? new Payload(Base64URL.encode(data).toString())
 					: new Payload(data);
+
+			if (jsonSerialization) {
+				final JWSObjectJSON jws = new JWSObjectJSON(payload);
+				jws.sign(header, buildSigner(key));
+				final Map<String, Object> json = jws.toFlattenedJSONObject();
+				if (detached) {
+					json.remove("payload"); //$NON-NLS-1$
+				}
+				LOGGER.fine(() -> "JAdES-B-B JSON firmado: alg=" + jwsAlg + ", detached=" + detached); //$NON-NLS-1$ //$NON-NLS-2$
+				return JSONObjectUtils.toJSONString(json)
+						.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+			}
 
 			final JWSObject jws = new JWSObject(header, payload);
 			jws.sign(buildSigner(key));
@@ -211,6 +229,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	public boolean isSign(final byte[] data) {
 		if (data == null || data.length < 5) {
 			return false;
+		}
+		final String s = new String(data, java.nio.charset.StandardCharsets.UTF_8);
+		if (s.startsWith("{")) { //$NON-NLS-1$
+			return s.contains("\"protected\"") && s.contains("\"signature\""); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		int dots = 0;
 		for (final byte b : data) {
