@@ -66,6 +66,7 @@ public final class EudiwClient {
 		if (formBody.chars().anyMatch(Character::isISOControl)) {
 			throw new IOException("OID4VP form body contiene caracteres de control"); //$NON-NLS-1$
 		}
+		validateFormBody(formBody);
 
 		final HttpRequest request = HttpRequest.newBuilder(endpoint)
 				.timeout(DEFAULT_TIMEOUT)
@@ -79,6 +80,15 @@ public final class EudiwClient {
 					+ ": " + truncate(response.body())); //$NON-NLS-1$
 		}
 		return response.body();
+	}
+
+	private static void validateFormBody(final String formBody) throws IOException {
+		for (final String pair : formBody.split("&", -1)) { //$NON-NLS-1$
+			final int equals = pair.indexOf('=');
+			if (equals <= 0) {
+				throw new IOException("OID4VP form body no es application/x-www-form-urlencoded"); //$NON-NLS-1$
+			}
+		}
 	}
 
 	private static String truncate(final String s) {
