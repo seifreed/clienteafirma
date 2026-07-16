@@ -123,8 +123,13 @@ public final class TslParser {
 				final List<X509Certificate> certs = new ArrayList<>();
 				final NodeList x509b64 = svc.getElementsByTagNameNS(DSIG_NS, "X509Certificate"); //$NON-NLS-1$
 				for (int k = 0; k < x509b64.getLength(); k++) {
-					final byte[] der = Base64.getMimeDecoder().decode(x509b64.item(k).getTextContent());
-					certs.add((X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der)));
+					try {
+						final byte[] der = Base64.getMimeDecoder().decode(x509b64.item(k).getTextContent());
+						certs.add((X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der)));
+					}
+					catch (final IllegalArgumentException | java.security.cert.CertificateException e) {
+						throw new TslException("Identidad X.509 TSL inválida", e); //$NON-NLS-1$
+					}
 				}
 				services.add(new TrustServiceProvider.TrustService(type, status, certs));
 			}

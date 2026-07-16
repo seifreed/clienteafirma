@@ -230,6 +230,11 @@ final class TestTslParser {
 		assertThrows(TslException.class, () -> parser.parse(
 				MINI_TSL.replaceAll("(?s)<TSPService>.*?</TSPService>", "") //$NON-NLS-1$ //$NON-NLS-2$
 						.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<TrustServiceStatusList xmlns=\"http://uri.etsi.org/02231/v2#\">", //$NON-NLS-1$
+						"<TrustServiceStatusList xmlns=\"http://uri.etsi.org/02231/v2#\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">") //$NON-NLS-1$
+				.replace("</ServiceInformation>", "</ServiceInformation><ds:X509Certificate>AAAA</ds:X509Certificate>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
 	}
 
 	@Test
