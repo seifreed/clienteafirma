@@ -348,8 +348,14 @@ public final class AOJadesSigner implements AOSimpleSigner {
 					throw new AOException("La cadena JAdES x5c debe contener solo certificados X.509", //$NON-NLS-1$
 							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 				}
+				((X509Certificate) c).checkValidity();
 				x5c.add(com.nimbusds.jose.util.Base64.encode(c.getEncoded()));
 			}
+		}
+		catch (final java.security.cert.CertificateExpiredException
+				| java.security.cert.CertificateNotYetValidException e) {
+			throw new AOException("La cadena JAdES x5c contiene certificados no vigentes", e, //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
 		catch (final java.security.cert.CertificateEncodingException e) {
 			throw new AOException("Error codificando cadena de certificados", e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$

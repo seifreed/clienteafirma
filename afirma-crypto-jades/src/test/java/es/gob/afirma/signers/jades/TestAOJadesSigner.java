@@ -217,6 +217,21 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("sign rechaza x5c JAdES con certificados no vigentes")
+	void rejectsExpiredCertificateInChain() throws Exception {
+		final Instant expired = Instant.now().minus(Duration.ofDays(2));
+		final Certificate[] expiredChain = new Certificate[] {
+				RSA_CHAIN[0],
+				selfSigned(RSA_KEY, "CN=JAdES Intermediate Expired, O=AEAD", false, //$NON-NLS-1$
+						expired, expired.plus(Duration.ofDays(1))) };
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), expiredChain, new Properties()));
+	}
+
+	@Test
 	@DisplayName("sign rechaza cadena JAdES con certificados no X.509")
 	void rejectsNonX509CertificateInChain() {
 		final AOJadesSigner signer = new AOJadesSigner();
