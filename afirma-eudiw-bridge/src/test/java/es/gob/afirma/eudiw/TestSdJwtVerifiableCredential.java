@@ -142,8 +142,13 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust, " ", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust, " https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", " ")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust,
+						"https://verifier.example.es", " nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", "wrong")); //$NON-NLS-1$ //$NON-NLS-2$

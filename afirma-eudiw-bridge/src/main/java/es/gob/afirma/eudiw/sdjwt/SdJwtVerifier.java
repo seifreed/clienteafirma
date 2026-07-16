@@ -54,8 +54,14 @@ public final class SdJwtVerifier {
 		if (audience == null || audience.isBlank()) {
 			throw new SdJwtVerificationException("Audience SD-JWT vacía"); //$NON-NLS-1$
 		}
+		if (!audience.equals(audience.strip())) {
+			throw new SdJwtVerificationException("Audience SD-JWT no normalizada"); //$NON-NLS-1$
+		}
 		if (nonce == null || nonce.isBlank()) {
 			throw new SdJwtVerificationException("Nonce SD-JWT vacío"); //$NON-NLS-1$
+		}
+		if (!nonce.equals(nonce.strip())) {
+			throw new SdJwtVerificationException("Nonce SD-JWT no normalizado"); //$NON-NLS-1$
 		}
 		try {
 			final X509Certificate issuerCert = issuerCertificate(vc.issuerSignedJwt());
