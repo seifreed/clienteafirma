@@ -223,7 +223,7 @@ final class TestAuthorizationRequest {
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
-						.claim("presentation_submission", "{}") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("presentation_submission", "{\"id\":\"ps-1\"}") //$NON-NLS-1$ //$NON-NLS-2$
 						.build());
 		jwt.sign(new RSASSASigner(kp.getPrivate()));
 
@@ -234,6 +234,7 @@ final class TestAuthorizationRequest {
 				"https://wallet.example.es"); //$NON-NLS-1$
 		assertEquals("vp", response.vpToken()); //$NON-NLS-1$
 		assertEquals("state-1", response.state()); //$NON-NLS-1$
+		assertEquals("{\"id\":\"ps-1\"}", response.presentationSubmission()); //$NON-NLS-1$
 		final SignedJWT objectVpTokenJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
@@ -281,6 +282,24 @@ final class TestAuthorizationRequest {
 				"https://verifier.example.es", "state-1").presentationSubmission()); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "other")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT emptySubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		emptySubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				emptySubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT emptyObjectSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", Map.of()) //$NON-NLS-1$
+						.build());
+		emptyObjectSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				emptyObjectSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, " ", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(

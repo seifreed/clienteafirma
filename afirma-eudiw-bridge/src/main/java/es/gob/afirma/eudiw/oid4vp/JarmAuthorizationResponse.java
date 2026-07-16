@@ -140,7 +140,9 @@ public record JarmAuthorizationResponse(
 				throw new JOSEException(name + " JARM no normalizado"); //$NON-NLS-1$
 			}
 			try {
-				JSONObjectUtils.parse(text);
+				if (JSONObjectUtils.parse(text).isEmpty()) {
+					throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
+				}
 			}
 			catch (final ParseException e) {
 				throw new JOSEException(name + " JARM no es JSON válido", e); //$NON-NLS-1$
@@ -148,6 +150,9 @@ public record JarmAuthorizationResponse(
 			return text;
 		}
 		if (claim instanceof Map<?, ?> map) {
+			if (map.isEmpty()) {
+				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
+			}
 			return JSONObjectUtils.toJSONString(stringKeyMap(map));
 		}
 		throw new JOSEException(name + " JARM no es objeto JSON"); //$NON-NLS-1$
