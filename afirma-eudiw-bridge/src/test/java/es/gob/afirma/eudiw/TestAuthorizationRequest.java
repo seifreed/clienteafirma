@@ -68,7 +68,6 @@ final class TestAuthorizationRequest {
 		final AuthorizationRequest req = new AuthorizationRequestBuilder()
 				.clientId("https://verifier.example.es")
 				.responseUri(URI.create("https://verifier.example.es/oid4vp/response"))
-				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/legacy"))
 				.dcqlQuery(dcql)
 				.nonce("nonce")
 				.build();
@@ -78,7 +77,14 @@ final class TestAuthorizationRequest {
 		assertTrue(q.contains("dcql_query="), "DCQL presente");
 		assertTrue(q.contains("credentials"), "JSON DCQL codificado");
 		assertFalse(q.contains("presentation_definition_uri="),
-				"DCQL sustituye al presentation_definition_uri legacy");
+				"DCQL no se mezcla con presentation_definition_uri legacy");
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es") //$NON-NLS-1$
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response")) //$NON-NLS-1$
+				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/legacy")) //$NON-NLS-1$
+				.dcqlQuery(dcql)
+				.nonce("nonce") //$NON-NLS-1$
+				.build());
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery("not-json"));
 		assertThrows(IllegalArgumentException.class,

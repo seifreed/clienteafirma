@@ -92,6 +92,9 @@ public record AuthorizationRequest(
 		if (presentationDefinitionUri == null && dcqlQuery == null) {
 			throw new IllegalArgumentException("OID4VP sin consulta de credenciales"); //$NON-NLS-1$
 		}
+		if (presentationDefinitionUri != null && dcqlQuery != null) {
+			throw new IllegalArgumentException("OID4VP no admite DCQL y presentation_definition_uri a la vez"); //$NON-NLS-1$
+		}
 		responseMode = responseMode == null ? "direct_post" : responseMode; //$NON-NLS-1$
 		if (!responseMode.equals(responseMode.strip())) {
 			throw new IllegalArgumentException("response_mode OID4VP no normalizado"); //$NON-NLS-1$
