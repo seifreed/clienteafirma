@@ -195,6 +195,7 @@ final class TestAuthorizationRequest {
 		final SignedJWT noAudienceJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
@@ -206,6 +207,7 @@ final class TestAuthorizationRequest {
 		final SignedJWT noStateJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
@@ -214,9 +216,22 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				noStateJwt.serialize(), verifier, "https://verifier.example.es", null)); //$NON-NLS-1$
 
+		final SignedJWT noIssuerJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				new JWTClaimsSet.Builder()
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		noIssuerJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				noIssuerJwt.serialize(), verifier, "https://verifier.example.es", "state-1", null)); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final SignedJWT malformedSubmissionJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
@@ -231,6 +246,7 @@ final class TestAuthorizationRequest {
 		final SignedJWT blankSubmissionJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
@@ -252,6 +268,7 @@ final class TestAuthorizationRequest {
 		final SignedJWT jwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
 						.audience("https://verifier.example.es") //$NON-NLS-1$
 						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
 						.build());

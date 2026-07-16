@@ -44,7 +44,11 @@ public record JarmAuthorizationResponse(
 		}
 		final JWTClaimsSet claims = jwt.getJWTClaimsSet();
 		verifyValidity(claims);
-		if (expectedIssuer != null && !expectedIssuer.equals(claims.getIssuer())) {
+		final String issuer = claims.getIssuer();
+		if (issuer == null || issuer.isBlank()) {
+			throw new JOSEException("Issuer JARM ausente"); //$NON-NLS-1$
+		}
+		if (expectedIssuer != null && !expectedIssuer.equals(issuer)) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
 		if (claims.getAudience().isEmpty()) {
