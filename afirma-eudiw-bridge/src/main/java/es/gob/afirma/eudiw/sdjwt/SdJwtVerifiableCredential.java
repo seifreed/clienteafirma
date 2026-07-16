@@ -80,6 +80,9 @@ public final class SdJwtVerifiableCredential {
 		if (!compact.equals(compact.strip())) {
 			throw new ParseException("Formato SD-JWT inválido: compact no normalizado", 0); //$NON-NLS-1$
 		}
+		if (compact.chars().anyMatch(Character::isISOControl)) {
+			throw new ParseException("Formato SD-JWT inválido: compact contiene caracteres de control", 0); //$NON-NLS-1$
+		}
 		final String[] parts = compact.split(SEPARATOR, -1);
 		if (parts.length < 1 || parts[0].isBlank()) {
 			throw new ParseException("Formato SD-JWT inválido: vacío o sin issuer JWT", 0); //$NON-NLS-1$

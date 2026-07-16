@@ -92,6 +92,8 @@ final class TestSdJwtVerifiableCredential {
 				.encodeToString(DISCLOSURE_JSON.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~" + disclosure)); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~ " + disclosure + "~")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~" //$NON-NLS-1$
+				+ disclosure.substring(0, 4) + "\n" + disclosure.substring(4) + "~")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc.def~")); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc=~")); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~not-base64url!!~")); //$NON-NLS-1$
