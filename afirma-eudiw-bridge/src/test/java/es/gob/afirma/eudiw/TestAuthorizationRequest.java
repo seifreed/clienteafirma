@@ -216,6 +216,13 @@ final class TestAuthorizationRequest {
 						.build());
 		unnormalizedAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unnormalizedAudienceJar, jarVerifier));
+		final SignedJWT controlAudienceJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.audience("openid4vp://wal\nlet") //$NON-NLS-1$
+						.build());
+		controlAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(controlAudienceJar, jarVerifier));
 		final SignedJWT noAudienceJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
@@ -257,10 +264,14 @@ final class TestAuthorizationRequest {
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " ", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " wallet")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "wal\nlet")); //$NON-NLS-1$
 		assertThrows(NullPointerException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, null));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " kid-1", null)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, "kid\n1", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new MACSigner("01234567890123456789012345678901"), JWSAlgorithm.HS256, null, null)); //$NON-NLS-1$
 	}
@@ -773,6 +784,9 @@ final class TestAuthorizationRequest {
 				() -> new AuthorizationRequest(" https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c\n", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, " ", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
@@ -780,10 +794,19 @@ final class TestAuthorizationRequest {
 						"direct_post", null, null, " n", null)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, "n\no", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", " ")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, "n", " state")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post\n", null, null, "n", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, "n", "sta\nte")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
 				.clientId("https://c").responseUri(URI.create("https://x/r")).nonce("n").build()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}

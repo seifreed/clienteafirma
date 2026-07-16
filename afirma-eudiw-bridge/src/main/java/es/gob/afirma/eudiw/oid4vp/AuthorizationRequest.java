@@ -63,6 +63,9 @@ public record AuthorizationRequest(
 		if (!clientId.equals(clientId.strip())) {
 			throw new IllegalArgumentException("OID4VP client_id no normalizado"); //$NON-NLS-1$
 		}
+		if (containsControlChars(clientId)) {
+			throw new IllegalArgumentException("OID4VP client_id contiene caracteres de control"); //$NON-NLS-1$
+		}
 		requireHttpsWithHost(URI.create(clientId), "client_id"); //$NON-NLS-1$
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
@@ -70,11 +73,17 @@ public record AuthorizationRequest(
 		if (!nonce.equals(nonce.strip())) {
 			throw new IllegalArgumentException("OID4VP nonce no normalizado"); //$NON-NLS-1$
 		}
+		if (containsControlChars(nonce)) {
+			throw new IllegalArgumentException("OID4VP nonce contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (state != null && state.isBlank()) {
 			throw new IllegalArgumentException("OID4VP state vacío"); //$NON-NLS-1$
 		}
 		if (state != null && !state.equals(state.strip())) {
 			throw new IllegalArgumentException("OID4VP state no normalizado"); //$NON-NLS-1$
+		}
+		if (state != null && containsControlChars(state)) {
+			throw new IllegalArgumentException("OID4VP state contiene caracteres de control"); //$NON-NLS-1$
 		}
 		requireHttpsWithHost(responseUri, "response_uri"); //$NON-NLS-1$
 		if (presentationDefinitionUri != null) {
@@ -87,9 +96,16 @@ public record AuthorizationRequest(
 		if (!responseMode.equals(responseMode.strip())) {
 			throw new IllegalArgumentException("response_mode OID4VP no normalizado"); //$NON-NLS-1$
 		}
+		if (containsControlChars(responseMode)) {
+			throw new IllegalArgumentException("response_mode OID4VP contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (!"direct_post".equals(responseMode) && !"direct_post.jwt".equals(responseMode)) { //$NON-NLS-1$ //$NON-NLS-2$
 			throw new IllegalArgumentException("response_mode OID4VP no soportado: " + responseMode); //$NON-NLS-1$
 		}
+	}
+
+	private static boolean containsControlChars(final String text) {
+		return text.chars().anyMatch(Character::isISOControl);
 	}
 
 	private static void requireHttpsWithHost(final URI uri, final String field) {
@@ -132,7 +148,8 @@ public record AuthorizationRequest(
 			validateRequestObjectTime(claims);
 			validateRequestObjectAudience(claims);
 			final String issuer = claims.getIssuer();
-			if (issuer == null || issuer.isBlank() || !issuer.equals(issuer.strip())) {
+			if (issuer == null || issuer.isBlank() || !issuer.equals(issuer.strip())
+					|| containsControlChars(issuer)) {
 				throw new IllegalArgumentException("Request Object JAR con issuer no normalizado"); //$NON-NLS-1$
 			}
 			if (!this.clientId.equals(issuer)) {
@@ -181,7 +198,8 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException("Request Object JAR sin audience"); //$NON-NLS-1$
 		}
 		for (final String audience : claims.getAudience()) {
-			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
+			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())
+					|| containsControlChars(audience)) {
 				throw new IllegalArgumentException("Request Object JAR con audience no normalizada"); //$NON-NLS-1$
 			}
 		}
@@ -204,6 +222,9 @@ public record AuthorizationRequest(
 		if (keyId != null && !keyId.equals(keyId.strip())) {
 			throw new IllegalArgumentException("OID4VP JAR keyId no normalizado"); //$NON-NLS-1$
 		}
+		if (keyId != null && containsControlChars(keyId)) {
+			throw new IllegalArgumentException("OID4VP JAR keyId contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (keyId != null) {
 			header.keyID(keyId);
 		}
@@ -213,6 +234,9 @@ public record AuthorizationRequest(
 		}
 		if (!audience.equals(audience.strip())) {
 			throw new IllegalArgumentException("OID4VP JAR audience no normalizado"); //$NON-NLS-1$
+		}
+		if (containsControlChars(audience)) {
+			throw new IllegalArgumentException("OID4VP JAR audience contiene caracteres de control"); //$NON-NLS-1$
 		}
 		final Date now = new Date();
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
