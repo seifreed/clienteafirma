@@ -89,6 +89,8 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final String walletUri = params.get("walletUri"); //$NON-NLS-1$
 		final String walletEndpoint = params.get("walletEndpoint"); //$NON-NLS-1$
 		final String state = params.get("state"); //$NON-NLS-1$
+		rejectBlankIfPresent(walletUri, "walletUri"); //$NON-NLS-1$
+		rejectBlankIfPresent(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
 
 		final AuthorizationRequestBuilder builder = new AuthorizationRequestBuilder()
 				.clientId(verifier)
@@ -207,6 +209,12 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		final URI uri = URI.create(value);
 		if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
 			throw new IllegalArgumentException("Parámetro " + key + " debe ser HTTPS"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+
+	private static void rejectBlankIfPresent(final String value, final String key) {
+		if (value != null && value.isBlank()) {
+			throw new IllegalArgumentException("Parámetro vacío en eudiw-present: " + key); //$NON-NLS-1$
 		}
 	}
 
