@@ -148,6 +148,12 @@ final class TestTslParser {
 			return es;
 		});
 		assertEquals(1, nextUpdateLoads.get(), "NextUpdate caducado debe forzar recarga"); //$NON-NLS-1$
+		final TrustListService rejectsExpiredLoad = new TrustListService(
+				Clock.fixed(Instant.parse("2026-01-02T00:00:00Z"), ZoneOffset.UTC),
+				Duration.ZERO);
+		assertThrows(TslException.class, () -> rejectsExpiredLoad.getOrRefresh("ES", //$NON-NLS-1$
+				() -> new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
+						Instant.parse("2026-01-01T23:59:59Z"), List.of(), false)));
 	}
 
 	@Test

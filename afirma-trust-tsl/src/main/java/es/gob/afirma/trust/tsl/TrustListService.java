@@ -74,6 +74,9 @@ public final class TrustListService {
 		if (!key.equals(territoryKey(loaded.territory()))) {
 			throw new TslException("La TSL cargada no corresponde al territorio " + territory); //$NON-NLS-1$
 		}
+		if (loaded.nextUpdate() != null && !Instant.now(this.clock).isBefore(loaded.nextUpdate())) {
+			throw new TslException("La TSL cargada ha caducado"); //$NON-NLS-1$
+		}
 		ingest(loaded);
 		return loaded;
 	}
