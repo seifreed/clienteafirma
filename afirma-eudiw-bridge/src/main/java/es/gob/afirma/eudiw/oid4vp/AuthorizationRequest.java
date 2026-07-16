@@ -59,6 +59,9 @@ public record AuthorizationRequest(
 		if (clientId.isBlank()) {
 			throw new IllegalArgumentException("OID4VP client_id vacío"); //$NON-NLS-1$
 		}
+		if (!clientId.equals(clientId.strip())) {
+			throw new IllegalArgumentException("OID4VP client_id no normalizado"); //$NON-NLS-1$
+		}
 		requireHttpsWithHost(URI.create(clientId), "client_id"); //$NON-NLS-1$
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
