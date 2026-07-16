@@ -110,6 +110,21 @@ final class TestLotlLoader {
 		assertTrue(new TslVerifier().verify(signed));
 	}
 
+	@Test
+	@DisplayName("TslVerifier rechaza XML con DOCTYPE")
+	void rejectsDoctype() throws Exception {
+		final String xml = """
+			<?xml version="1.0" encoding="UTF-8"?>
+			<!DOCTYPE TrustServiceStatusList [
+			  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+			]>
+			<TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#">&xxe;</TrustServiceStatusList>
+			""";
+
+		assertThrows(TslException.class,
+				() -> new TslVerifier().verify(xml.getBytes(StandardCharsets.UTF_8), rsa().getPublic()));
+	}
+
 	private static KeyPair rsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
 		kpg.initialize(2048);

@@ -88,6 +88,11 @@ public final class TslVerifier {
 		dbf.setNamespaceAware(true);
 		dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); //$NON-NLS-1$
+		dbf.setFeature("http://xml.org/sax/features/external-general-entities", false); //$NON-NLS-1$
+		dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false); //$NON-NLS-1$
+		dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false); //$NON-NLS-1$
+		dbf.setXIncludeAware(false);
+		dbf.setExpandEntityReferences(false);
 		final DocumentBuilder db = dbf.newDocumentBuilder();
 		try (ByteArrayInputStream bais = new ByteArrayInputStream(xml)) {
 			return db.parse(bais);
