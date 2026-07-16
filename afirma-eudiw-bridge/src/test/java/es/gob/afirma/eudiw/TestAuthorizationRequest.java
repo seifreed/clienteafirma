@@ -340,6 +340,15 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				emptyDescriptorSubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT unsupportedDescriptorSubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"format\":\"mso_mdoc\",\"path\":\"$\"}]}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		unsupportedDescriptorSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				unsupportedDescriptorSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, " ", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(

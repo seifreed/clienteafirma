@@ -25,6 +25,7 @@ public record JarmAuthorizationResponse(
 
 	private static final JOSEObjectType RESPONSE_TYPE =
 			new JOSEObjectType("oauth-authz-resp+jwt"); //$NON-NLS-1$
+	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
 
 	/**
 	 * Verifica firma, audience y state de una respuesta JARM.
@@ -177,7 +178,10 @@ public record JarmAuthorizationResponse(
 			requireNormalizedString(typedDescriptor, "id"); //$NON-NLS-1$
 			requireNormalizedString(typedDescriptor, "path"); //$NON-NLS-1$
 			if (typedDescriptor.containsKey("format")) { //$NON-NLS-1$
-				requireNormalizedString(typedDescriptor, "format"); //$NON-NLS-1$
+				final String format = requireNormalizedString(typedDescriptor, "format"); //$NON-NLS-1$
+				if (!SUPPORTED_FORMAT.equals(format)) {
+					throw new JOSEException("presentation_submission JARM con format no soportado: " + format); //$NON-NLS-1$
+				}
 			}
 		}
 	}
