@@ -211,6 +211,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (key.isBlank()) {
 				throw new IllegalArgumentException("Parámetro sin nombre en URI eudiw-present"); //$NON-NLS-1$
 			}
+			if (!key.equals(key.strip())) {
+				throw new IllegalArgumentException("Parámetro no normalizado en URI eudiw-present: " + key); //$NON-NLS-1$
+			}
 			if (params.containsKey(key)) {
 				throw new IllegalArgumentException(
 						"Parámetro duplicado en URI eudiw-present: " + key); //$NON-NLS-1$
