@@ -109,6 +109,9 @@ public record JarmAuthorizationResponse(
 			return JSONArrayUtils.toJSONString(list);
 		}
 		if (claim instanceof Map<?, ?> map) {
+			if (map.isEmpty()) {
+				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
+			}
 			return JSONObjectUtils.toJSONString(stringKeyMap(map));
 		}
 		throw new JOSEException(name + " JARM no es JSON ni texto"); //$NON-NLS-1$
