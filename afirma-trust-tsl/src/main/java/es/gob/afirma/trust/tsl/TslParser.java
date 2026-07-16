@@ -107,6 +107,9 @@ public final class TslParser {
 			final Element tsp = (Element) tspNodes.item(i);
 			final String name = textOrEmpty(tsp, TSL_NS, "Name"); //$NON-NLS-1$
 			final String tradeName = textOrEmpty(tsp, TSL_NS, "TradeName"); //$NON-NLS-1$
+			if (name.isEmpty()) {
+				throw new TslException("TSP sin nombre"); //$NON-NLS-1$
+			}
 
 			final List<TrustServiceProvider.TrustService> services = new ArrayList<>();
 			final NodeList serviceNodes = tsp.getElementsByTagNameNS(TSL_NS, "TSPService"); //$NON-NLS-1$
@@ -124,7 +127,7 @@ public final class TslParser {
 			}
 
 			result.add(new TrustServiceProvider(
-					name.isEmpty() ? "?" : name, //$NON-NLS-1$
+					name,
 					tradeName,
 					territory,
 					services));

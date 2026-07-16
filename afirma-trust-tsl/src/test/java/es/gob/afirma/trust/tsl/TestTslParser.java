@@ -190,6 +190,8 @@ final class TestTslParser {
 			  </TrustServiceProviderList>
 			</TrustServiceStatusList>
 			""".getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(
+				MINI_TSL.replace("<Name>FNMT-RCM</Name>", "").getBytes(StandardCharsets.UTF_8))); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test
