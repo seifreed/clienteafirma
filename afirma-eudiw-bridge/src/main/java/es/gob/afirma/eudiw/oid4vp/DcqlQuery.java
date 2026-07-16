@@ -42,6 +42,9 @@ public record DcqlQuery(String json) {
 		if (!(value instanceof String text) || text.isBlank()) {
 			throw new IllegalArgumentException("credential DCQL sin " + key); //$NON-NLS-1$
 		}
+		if (!text.equals(text.strip())) {
+			throw new IllegalArgumentException("credential DCQL con " + key + " no normalizado"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		return text;
 	}
 }
