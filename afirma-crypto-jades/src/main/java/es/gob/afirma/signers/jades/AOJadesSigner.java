@@ -316,6 +316,10 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		final List<com.nimbusds.jose.util.Base64> x5c = new ArrayList<>(certChain.length);
 		try {
 			for (final Certificate c : certChain) {
+				if (!(c instanceof X509Certificate)) {
+					throw new AOException("La cadena JAdES x5c debe contener solo certificados X.509", //$NON-NLS-1$
+							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+				}
 				x5c.add(com.nimbusds.jose.util.Base64.encode(c.getEncoded()));
 			}
 		}

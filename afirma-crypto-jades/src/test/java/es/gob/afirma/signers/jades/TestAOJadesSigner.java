@@ -175,22 +175,10 @@ final class TestAOJadesSigner {
 	@DisplayName("sign rechaza certificado firmante que no es X.509")
 	void rejectsNonX509SignerCertificate() {
 		final AOJadesSigner signer = new AOJadesSigner();
-		final Certificate nonX509 = new Certificate("RAW") { //$NON-NLS-1$
-			@Override
-			public byte[] getEncoded() { return new byte[] { 1 }; }
-			@Override
-			public void verify(final PublicKey key) { /* No usado. */ }
-			@Override
-			public void verify(final PublicKey key, final String sigProvider) { /* No usado. */ }
-			@Override
-			public String toString() { return "RAW"; } //$NON-NLS-1$
-			@Override
-			public PublicKey getPublicKey() { return RSA_KEY.getPublic(); }
-		};
 
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
-						RSA_KEY.getPrivate(), new Certificate[] { nonX509 }, new Properties()));
+						RSA_KEY.getPrivate(), new Certificate[] { rawCertificate() }, new Properties()));
 	}
 
 	@Test
@@ -205,6 +193,17 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
 						RSA_KEY.getPrivate(), expiredChain, new Properties()));
+	}
+
+	@Test
+	@DisplayName("sign rechaza cadena JAdES con certificados no X.509")
+	void rejectsNonX509CertificateInChain() {
+		final AOJadesSigner signer = new AOJadesSigner();
+		final Certificate nonX509 = rawCertificate();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), new Certificate[] { RSA_CHAIN[0], nonX509 }, new Properties()));
 	}
 
 	@Test
@@ -278,6 +277,21 @@ final class TestAOJadesSigner {
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {
 		return selfSigned(kp, subject, false);
+	}
+
+	private static Certificate rawCertificate() {
+		return new Certificate("RAW") { //$NON-NLS-1$
+			@Override
+			public byte[] getEncoded() { return new byte[] { 1 }; }
+			@Override
+			public void verify(final PublicKey key) { /* No usado. */ }
+			@Override
+			public void verify(final PublicKey key, final String sigProvider) { /* No usado. */ }
+			@Override
+			public String toString() { return "RAW"; } //$NON-NLS-1$
+			@Override
+			public PublicKey getPublicKey() { return RSA_KEY.getPublic(); }
+		};
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject, final boolean timestamping) throws Exception {
