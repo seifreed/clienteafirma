@@ -62,6 +62,9 @@ public record AuthorizationRequest(
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
+		if (state != null && state.isBlank()) {
+			throw new IllegalArgumentException("OID4VP state vacío"); //$NON-NLS-1$
+		}
 		if (!"https".equalsIgnoreCase(responseUri.getScheme())) { //$NON-NLS-1$
 			throw new IllegalArgumentException("OID4VP response_uri exige HTTPS"); //$NON-NLS-1$
 		}

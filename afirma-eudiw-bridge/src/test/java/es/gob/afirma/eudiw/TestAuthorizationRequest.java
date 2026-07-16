@@ -223,6 +223,9 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
 						"direct_post", null, null, " ", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequest("https://c", URI.create("https://x/r"), //$NON-NLS-1$ //$NON-NLS-2$
+						"direct_post", null, null, "n", " ")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	@Test
