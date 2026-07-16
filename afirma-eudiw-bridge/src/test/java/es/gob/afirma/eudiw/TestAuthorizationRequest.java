@@ -543,6 +543,29 @@ final class TestAuthorizationRequest {
 				jwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
+	@Test
+	@DisplayName("JARM response exige presentation_submission")
+	void rejectsJarmWithoutPresentationSubmission() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair kp = kpg.generateKeyPair();
+		final SignedJWT jwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder()
+						.issuer("https://wallet.example.es") //$NON-NLS-1$
+						.audience("https://verifier.example.es") //$NON-NLS-1$
+						.expirationTime(Date.from(Instant.now().plus(Duration.ofMinutes(5))))
+						.claim("state", "state-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.claim("vp_token", "vp") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		jwt.sign(new RSASSASigner(kp.getPrivate()));
+
+		final RSASSAVerifier verifier = new RSASSAVerifier(
+				(java.security.interfaces.RSAPublicKey) kp.getPublic());
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
 	private static com.nimbusds.jose.JWSHeader jarHeader() {
 		return new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
 				.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$

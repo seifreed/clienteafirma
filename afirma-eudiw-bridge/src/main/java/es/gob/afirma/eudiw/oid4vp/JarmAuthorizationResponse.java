@@ -98,7 +98,7 @@ public record JarmAuthorizationResponse(
 
 	private static String normalizePresentationSubmission(final Object claim) throws JOSEException {
 		if (claim == null) {
-			return null;
+			throw new JOSEException("Respuesta JARM sin presentation_submission"); //$NON-NLS-1$
 		}
 		if (claim instanceof String text) {
 			if (text.isBlank()) {
