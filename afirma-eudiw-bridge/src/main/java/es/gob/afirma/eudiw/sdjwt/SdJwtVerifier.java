@@ -45,6 +45,12 @@ public final class SdJwtVerifier {
 	public static TrustServiceProvider verify(final SdJwtVerifiableCredential vc,
 			final TrustListService trust, final String audience, final String nonce)
 			throws SdJwtVerificationException {
+		if (audience == null || audience.isBlank()) {
+			throw new SdJwtVerificationException("Audience SD-JWT vacía"); //$NON-NLS-1$
+		}
+		if (nonce == null || nonce.isBlank()) {
+			throw new SdJwtVerificationException("Nonce SD-JWT vacío"); //$NON-NLS-1$
+		}
 		try {
 			final X509Certificate issuerCert = issuerCertificate(vc.issuerSignedJwt());
 			issuerCert.checkValidity();
