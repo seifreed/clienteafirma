@@ -34,11 +34,17 @@ public record TrustServiceProvider(
 		if (!name.equals(name.strip())) {
 			throw new IllegalArgumentException("Nombre TSP no normalizado"); //$NON-NLS-1$
 		}
+		if (containsControlChars(name)) {
+			throw new IllegalArgumentException("Nombre TSP contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (tradeName != null && tradeName.isBlank()) {
 			throw new IllegalArgumentException("Nombre comercial TSP vacío"); //$NON-NLS-1$
 		}
 		if (tradeName != null && !tradeName.equals(tradeName.strip())) {
 			throw new IllegalArgumentException("Nombre comercial TSP no normalizado"); //$NON-NLS-1$
+		}
+		if (tradeName != null && containsControlChars(tradeName)) {
+			throw new IllegalArgumentException("Nombre comercial TSP contiene caracteres de control"); //$NON-NLS-1$
 		}
 		if (countryCode.isBlank()) {
 			throw new IllegalArgumentException("País TSP vacío"); //$NON-NLS-1$
@@ -84,6 +90,12 @@ public record TrustServiceProvider(
 			if (!status.equals(status.strip())) {
 				throw new IllegalArgumentException("Estado de servicio TSL no normalizado"); //$NON-NLS-1$
 			}
+			if (containsControlChars(typeIdentifier)) {
+				throw new IllegalArgumentException("Tipo de servicio TSL contiene caracteres de control"); //$NON-NLS-1$
+			}
+			if (containsControlChars(status)) {
+				throw new IllegalArgumentException("Estado de servicio TSL contiene caracteres de control"); //$NON-NLS-1$
+			}
 			if (serviceDigitalIdentities != null) {
 				for (final X509Certificate identity : serviceDigitalIdentities) {
 					if (identity == null) {
@@ -100,5 +112,9 @@ public record TrustServiceProvider(
 		public boolean isGranted() {
 			return SERVICE_STATUS_GRANTED.equals(status);
 		}
+	}
+
+	private static boolean containsControlChars(final String text) {
+		return text.chars().anyMatch(Character::isISOControl);
 	}
 }

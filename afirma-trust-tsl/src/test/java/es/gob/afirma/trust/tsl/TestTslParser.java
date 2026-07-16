@@ -103,6 +103,8 @@ final class TestTslParser {
 		assertThrows(IllegalArgumentException.class,
 				() -> new TslDocument(" Operator", "ES", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
+				() -> new TslDocument("Oper\nator", "ES", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
 				() -> new TslDocument("Operator", " ES", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TslDocument("Operator", "ESP", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -116,9 +118,13 @@ final class TestTslParser {
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider(" TSP", null, "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
+				() -> new TrustServiceProvider("TS\nP", null, "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider("TSP", " ", "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider("TSP", " TSP", "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertThrows(IllegalArgumentException.class,
+				() -> new TrustServiceProvider("TSP", "Tr\nade", "ES", List.of())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider("TSP", null, " ", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
@@ -138,6 +144,10 @@ final class TestTslParser {
 				() -> new TrustServiceProvider.TrustService(" type", "granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider.TrustService("type", " granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new TrustServiceProvider.TrustService("ty\npe", "granted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> new TrustServiceProvider.TrustService("type", "gra\nnted", List.of())); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TrustServiceProvider.TrustService("type", "granted", //$NON-NLS-1$ //$NON-NLS-2$
 						java.util.Arrays.asList((X509Certificate) null)));

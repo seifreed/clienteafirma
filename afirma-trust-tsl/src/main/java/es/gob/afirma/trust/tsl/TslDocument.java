@@ -33,6 +33,9 @@ public record TslDocument(
 		if (!schemeOperatorName.equals(schemeOperatorName.strip())) {
 			throw new IllegalArgumentException("Operador TSL no normalizado"); //$NON-NLS-1$
 		}
+		if (schemeOperatorName.chars().anyMatch(Character::isISOControl)) {
+			throw new IllegalArgumentException("Operador TSL contiene caracteres de control"); //$NON-NLS-1$
+		}
 		if (!territory.equals(territory.strip())) {
 			throw new IllegalArgumentException("Territorio TSL no normalizado"); //$NON-NLS-1$
 		}
