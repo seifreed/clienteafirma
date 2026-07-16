@@ -117,10 +117,9 @@ public final class ProtocolInvocationLauncher {
      * <p>Estado de la migración:</p>
      * <ul>
      *   <li>Fase A: {@link EudiwProtocolHandler} (M4 verbo nuevo).</li>
-     *   <li>Fase A.3: websocket, service, load (esta sesión).</li>
-     *   <li>Fase A.4 (pendiente): batch, selectcert, save, signandsave,
-     *       sign|cosign|countersign — los 5 verbos con file_id download
-     *       desde servidor intermedio.</li>
+     *   <li>Fase A.3: websocket, service, load.</li>
+     *   <li>Fase A.4: batch, selectcert, save, signandsave,
+     *       sign|cosign|countersign.</li>
      * </ul>
      */
     private static final ProtocolOperationRegistry OPERATION_REGISTRY = new ProtocolOperationRegistry()
