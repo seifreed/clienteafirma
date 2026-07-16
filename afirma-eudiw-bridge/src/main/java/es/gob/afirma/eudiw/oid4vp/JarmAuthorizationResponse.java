@@ -111,6 +111,9 @@ public record JarmAuthorizationResponse(
 			if (text.isBlank()) {
 				throw new JOSEException(name + " JARM vacío"); //$NON-NLS-1$
 			}
+			if (!text.equals(text.strip())) {
+				throw new JOSEException(name + " JARM no normalizado"); //$NON-NLS-1$
+			}
 			return text;
 		}
 		if (claim instanceof List<?> list) {
