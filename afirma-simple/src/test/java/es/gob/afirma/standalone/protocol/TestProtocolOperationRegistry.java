@@ -74,7 +74,8 @@ final class TestProtocolOperationRegistry {
 	void launcherDispatchesEudiwThroughRegistry() {
 		final String url = "afirma://eudiw-present"
 				+ "?verifier=https%3A%2F%2Fverifier.example.es"
-				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse";
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1";
 		final String result = ProtocolInvocationLauncher.launch(url);
 		assertTrue(result.startsWith("openid4vp://authorize?"),
 				"El dispatcher debe devolver la URI OID4VP del handler EUDIW");
@@ -128,6 +129,7 @@ final class TestProtocolOperationRegistry {
 		final String url = "afirma://eudiw-present" //$NON-NLS-1$
 				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
 				+ "&responseMode=direct_post.jwt"; //$NON-NLS-1$
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
@@ -156,6 +158,7 @@ final class TestProtocolOperationRegistry {
 		final String url = "afirma://eudiw-present" //$NON-NLS-1$
 				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
 				+ "&walletUri=eudiw%3A%2F%2Fpresent%3Fclient%3Dautofirma"; //$NON-NLS-1$
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
@@ -174,6 +177,7 @@ final class TestProtocolOperationRegistry {
 		final String url = "afirma://eudiw-present" //$NON-NLS-1$
 				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
 				+ "&walletEndpoint=http%3A%2F%2Fwallet.example%2Frequest"; //$NON-NLS-1$
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
@@ -191,6 +195,10 @@ final class TestProtocolOperationRegistry {
 				Collections.emptyMap(), 1);
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present?state=abc", ctx));
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(
 						java.net.URI.create("afirma://eudiw-present?verifier=x&"))); //$NON-NLS-1$
@@ -242,6 +250,7 @@ final class TestProtocolOperationRegistry {
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
 						+ "&walletUri=present", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
