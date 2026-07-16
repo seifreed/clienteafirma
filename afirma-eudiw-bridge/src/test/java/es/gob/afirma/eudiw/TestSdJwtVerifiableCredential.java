@@ -93,6 +93,8 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~" + disclosure)); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~ " + disclosure + "~")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc.def~")); //$NON-NLS-1$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc=~")); //$NON-NLS-1$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~not-base64url!!~")); //$NON-NLS-1$
 		assertThrows(NullPointerException.class, () -> SdJwtVerifiableCredential.parse(null));
 	}
 
@@ -594,20 +596,14 @@ final class TestSdJwtVerifiableCredential {
 		final String paddedKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
 				presentationHash(paddedPresentation));
-		final SdJwtVerifiableCredential paddedVc = SdJwtVerifiableCredential.parse(
-				paddedPresentation + paddedKbJwt);
-		assertThrows(SdJwtVerificationException.class,
-				() -> SdJwtVerifier.verify(paddedVc, trust,
-						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(
+				paddedPresentation + paddedKbJwt));
 
 		final String badDisclosure = "not-base64url!!"; //$NON-NLS-1$
 		final String badIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
 				disclosureHash(badDisclosure));
-		final SdJwtVerifiableCredential badVc = SdJwtVerifiableCredential.parse(
-				badIssuerJwt + "~" + badDisclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
-		assertThrows(SdJwtVerificationException.class,
-				() -> SdJwtVerifier.verify(badVc, trust,
-						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(
+				badIssuerJwt + "~" + badDisclosure + "~" + kbJwt)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private static String makeUnsignedJwt() throws Exception {

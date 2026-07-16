@@ -124,7 +124,14 @@ public final class SdJwtVerifiableCredential {
 
 	private static void validateDisclosureSegment(final String segment, final int index)
 			throws ParseException {
-		if (segment.indexOf('.') >= 0) {
+		if (segment.indexOf('.') >= 0 || segment.indexOf('=') >= 0) {
+			throw new ParseException(
+					"Formato SD-JWT inválido: disclosure no es base64url", index); //$NON-NLS-1$
+		}
+		try {
+			Base64.getUrlDecoder().decode(segment);
+		}
+		catch (final IllegalArgumentException e) {
 			throw new ParseException(
 					"Formato SD-JWT inválido: disclosure no es base64url", index); //$NON-NLS-1$
 		}
