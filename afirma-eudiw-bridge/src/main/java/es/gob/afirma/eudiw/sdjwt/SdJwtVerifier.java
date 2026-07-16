@@ -198,6 +198,7 @@ public final class SdJwtVerifier {
 		final MessageDigest sha256 = MessageDigest.getInstance("SHA-256"); //$NON-NLS-1$
 		final Set<String> seenDisclosures = new HashSet<>();
 		final Set<String> seenClaimNames = new HashSet<>();
+		final Set<String> presentedDigests = new HashSet<>();
 		for (final String disclosure : vc.disclosures()) {
 			if (!seenDisclosures.add(disclosure)) {
 				throw new SdJwtVerificationException("Disclosure SD-JWT duplicada"); //$NON-NLS-1$
@@ -234,6 +235,10 @@ public final class SdJwtVerifier {
 				throw new SdJwtVerificationException(
 						"Disclosure no referenciada por _sd: " + digest); //$NON-NLS-1$
 			}
+			presentedDigests.add(digest);
+		}
+		if (!presentedDigests.containsAll(expected)) {
+			throw new SdJwtVerificationException("Faltan disclosures SD-JWT esperadas"); //$NON-NLS-1$
 		}
 	}
 
