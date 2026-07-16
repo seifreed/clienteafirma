@@ -169,6 +169,9 @@ public record AuthorizationRequest(
 	}
 
 	private static void validateRequestObjectAudience(final JWTClaimsSet claims) {
+		if (claims.getAudience().isEmpty()) {
+			throw new IllegalArgumentException("Request Object JAR sin audience"); //$NON-NLS-1$
+		}
 		for (final String audience : claims.getAudience()) {
 			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
 				throw new IllegalArgumentException("Request Object JAR con audience no normalizada"); //$NON-NLS-1$

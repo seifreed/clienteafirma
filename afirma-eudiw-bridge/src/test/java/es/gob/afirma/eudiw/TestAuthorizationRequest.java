@@ -206,6 +206,13 @@ final class TestAuthorizationRequest {
 						.build());
 		unnormalizedAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unnormalizedAudienceJar));
+		final SignedJWT noAudienceJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.audience(List.of())
+						.build());
+		noAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(noAudienceJar));
 		final SignedJWT noExpirationJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
