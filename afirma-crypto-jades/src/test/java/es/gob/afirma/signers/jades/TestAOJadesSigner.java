@@ -604,6 +604,13 @@ final class TestAOJadesSigner {
 		json.put("header", Map.of("alg", "RS256")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("header", Map.of("etsiU", "bad")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("header", Map.of("etsiU", List.of(Map.of("tstTokens", //$NON-NLS-1$ //$NON-NLS-2$
+				List.of(Map.of("val", "not-base64!!")))))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 	}
 
 	private static X509Certificate selfSigned(final KeyPair kp, final String subject) throws Exception {

@@ -559,15 +559,54 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			if (!isJadesHeader(header)) {
 				return false;
 			}
-			if (json.get("header") instanceof Map<?, ?> unprotectedHeader //$NON-NLS-1$
-					&& !java.util.Collections.disjoint(unprotectedHeader.keySet(), header.toJSONObject().keySet())) {
-				return false;
+			if (json.get("header") instanceof Map<?, ?> unprotectedHeader) { //$NON-NLS-1$
+				if (!java.util.Collections.disjoint(unprotectedHeader.keySet(), header.toJSONObject().keySet())
+						|| !isValidUnprotectedHeader(unprotectedHeader)) {
+					return false;
+				}
 			}
 			return Base64URL.from(signature).decode().length > 0;
 		}
 		catch (final Exception e) {
 			return false;
 		}
+	}
+
+	private static boolean isValidUnprotectedHeader(final Map<?, ?> header) {
+		if (!header.containsKey("etsiU")) { //$NON-NLS-1$
+			return true;
+		}
+		if (!(header.get("etsiU") instanceof List<?> etsiU) || etsiU.isEmpty()) { //$NON-NLS-1$
+			return false;
+		}
+		for (final Object component : etsiU) {
+			if (!(component instanceof Map<?, ?> componentJson)) {
+				return false;
+			}
+			if (componentJson.containsKey("tstTokens") && !isValidTimestampTokens(componentJson.get("tstTokens"))) { //$NON-NLS-1$ //$NON-NLS-2$
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isValidTimestampTokens(final Object value) {
+		if (!(value instanceof List<?> tokens) || tokens.isEmpty()) {
+			return false;
+		}
+		for (final Object token : tokens) {
+			if (!(token instanceof Map<?, ?> tokenJson)
+					|| !(tokenJson.get("val") instanceof String tokenBase64) || tokenBase64.isBlank()) { //$NON-NLS-1$
+				return false;
+			}
+			try {
+				java.util.Base64.getDecoder().decode(tokenBase64);
+			}
+			catch (final IllegalArgumentException e) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static boolean isJadesHeader(final JWSHeader header) {
