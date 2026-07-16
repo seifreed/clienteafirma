@@ -225,6 +225,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (!key.equals(key.strip())) {
 				throw new IllegalArgumentException("Parámetro no normalizado en URI eudiw-present: " + key); //$NON-NLS-1$
 			}
+			if (containsControlChars(key)) {
+				throw new IllegalArgumentException("Parámetro con caracteres de control en URI eudiw-present: " + key); //$NON-NLS-1$
+			}
 			if (params.containsKey(key)) {
 				throw new IllegalArgumentException(
 						"Parámetro duplicado en URI eudiw-present: " + key); //$NON-NLS-1$
@@ -270,6 +273,13 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (value != null && !value.equals(value.strip())) {
 			throw new IllegalArgumentException("Parámetro no normalizado en eudiw-present: " + key); //$NON-NLS-1$
 		}
+		if (value != null && containsControlChars(value)) {
+			throw new IllegalArgumentException("Parámetro con caracteres de control en eudiw-present: " + key); //$NON-NLS-1$
+		}
+	}
+
+	private static boolean containsControlChars(final String text) {
+		return text.chars().anyMatch(Character::isISOControl);
 	}
 
 	private static String firstNonBlank(final String first, final String second) {

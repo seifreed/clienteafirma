@@ -76,6 +76,20 @@ final class TestEudiwProtocolHandler {
 		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?%20state=x")));
 		assertThrows(IllegalArgumentException.class,
+				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?sta%0Ate=x")));
+		assertThrows(IllegalArgumentException.class,
 				() -> EudiwProtocolHandler.parseParameters(URI.create("afirma://eudiw-present?state=x#frag")));
+	}
+
+	@Test
+	@DisplayName("process rechaza valores con controles en parámetros opcionales")
+	void rejectsControlValues() {
+		final String url = "afirma://eudiw-present" //$NON-NLS-1$
+				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&dcqlQuery=%7B%22credentials%22%3A%5B%7B%22id%22%3A%22pid%22%2C%22format%22%3A%22dc%2Bsd-jwt%22%7D%5D%7D" //$NON-NLS-1$
+				+ "&walletUri=eudiw%3A%2F%2Fpresent%0A"; //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new EudiwProtocolHandler().process(url, new LaunchContext(null, false, Map.of(), 0)));
 	}
 }
