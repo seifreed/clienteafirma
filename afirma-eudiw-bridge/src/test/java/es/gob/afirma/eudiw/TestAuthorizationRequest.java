@@ -127,6 +127,11 @@ final class TestAuthorizationRequest {
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				jar.getJWTClaimsSet());
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(unsignedJar));
+		final SignedJWT untypedJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
+				jar.getJWTClaimsSet());
+		untypedJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(untypedJar));
 		final SignedJWT mismatchedJar = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())

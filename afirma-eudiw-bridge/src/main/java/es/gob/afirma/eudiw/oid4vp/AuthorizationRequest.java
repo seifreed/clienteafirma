@@ -49,6 +49,8 @@ public record AuthorizationRequest(
 		String state) {
 
 	private static final Duration REQUEST_OBJECT_VALIDITY = Duration.ofMinutes(5);
+	private static final JOSEObjectType REQUEST_OBJECT_TYPE =
+			new JOSEObjectType("oauth-authz-req+jwt"); //$NON-NLS-1$
 
 	public AuthorizationRequest {
 		Objects.requireNonNull(clientId, "clientId");
@@ -100,6 +102,9 @@ public record AuthorizationRequest(
 		final Map<String, String> params = new LinkedHashMap<>();
 		params.put("client_id", this.clientId); //$NON-NLS-1$
 		try {
+			if (!REQUEST_OBJECT_TYPE.equals(requestObject.getHeader().getType())) {
+				throw new IllegalArgumentException("Request Object JAR con typ inválido"); //$NON-NLS-1$
+			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
 			if (!this.clientId.equals(claims.getIssuer())) {
 				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
@@ -127,7 +132,7 @@ public record AuthorizationRequest(
 		Objects.requireNonNull(signer, "signer"); //$NON-NLS-1$
 		Objects.requireNonNull(algorithm, "algorithm"); //$NON-NLS-1$
 		final JWSHeader.Builder header = new JWSHeader.Builder(algorithm)
-				.type(new JOSEObjectType("oauth-authz-req+jwt")); //$NON-NLS-1$
+				.type(REQUEST_OBJECT_TYPE);
 		if (keyId != null && keyId.isBlank()) {
 			throw new IllegalArgumentException("OID4VP JAR keyId vacío"); //$NON-NLS-1$
 		}
