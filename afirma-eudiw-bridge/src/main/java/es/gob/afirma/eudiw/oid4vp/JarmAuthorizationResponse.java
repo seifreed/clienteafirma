@@ -186,9 +186,25 @@ public record JarmAuthorizationResponse(
 			if (key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
 				throw new JOSEException("presentation_submission JARM contiene claves no normalizadas"); //$NON-NLS-1$
 			}
+			validateJsonValue(entry.getValue());
 			typed.put(key, entry.getValue());
 		}
 		return typed;
+	}
+
+	private static void validateJsonValue(final Object value) throws JOSEException {
+		if (value instanceof String text
+				&& (!text.equals(text.strip()) || containsControlChars(text))) {
+			throw new JOSEException("JARM contiene valores JSON textuales no normalizados"); //$NON-NLS-1$
+		}
+		if (value instanceof Map<?, ?> map) {
+			stringKeyMap(map);
+		}
+		if (value instanceof List<?> list) {
+			for (final Object item : list) {
+				validateJsonValue(item);
+			}
+		}
 	}
 
 	private static void validatePresentationSubmission(final Map<String, Object> submission) throws JOSEException {
