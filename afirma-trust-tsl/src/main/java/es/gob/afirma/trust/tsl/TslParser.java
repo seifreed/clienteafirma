@@ -96,6 +96,9 @@ public final class TslParser {
 		catch (final TslException e) {
 			throw e;
 		}
+		catch (final IllegalArgumentException e) {
+			throw new TslException("TSL no válida: " + e.getMessage(), e); //$NON-NLS-1$
+		}
 		catch (final Exception e) {
 			throw new TslException("Error parseando TSL: " + e.getMessage(), e); //$NON-NLS-1$
 		}

@@ -87,6 +87,18 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("Parser envuelve TSL estructuralmente inválida como TslException")
+	void wrapsInvalidTslModelErrors() {
+		final TslParser parser = new TslParser();
+		final String invalidTerritory = MINI_TSL.replace(
+				"<SchemeTerritory>ES</SchemeTerritory>", //$NON-NLS-1$
+				"<SchemeTerritory>es</SchemeTerritory>"); //$NON-NLS-1$
+
+		assertThrows(TslException.class,
+				() -> parser.parse(invalidTerritory.getBytes(StandardCharsets.UTF_8)));
+	}
+
+	@Test
 	@DisplayName("TrustListService.findIssuer devuelve empty si la TSL no se ha cargado")
 	void emptyServiceReturnsNothing() {
 		final TrustListService svc = new TrustListService();
