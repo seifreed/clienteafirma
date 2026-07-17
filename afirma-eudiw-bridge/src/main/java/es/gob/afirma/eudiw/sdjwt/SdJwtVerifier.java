@@ -411,6 +411,9 @@ public final class SdJwtVerifier {
 			}
 			cnfJson.put(key, entry.getValue());
 		}
+		if (cnfJson.size() != 1) {
+			throw new SdJwtVerificationException("cnf contiene claves no soportadas"); //$NON-NLS-1$
+		}
 		final Object jwkJson = cnfJson.get("jwk"); //$NON-NLS-1$
 		if (!(jwkJson instanceof Map<?, ?> jwkMap)) {
 			throw new SdJwtVerificationException("Issuer JWT sin cnf.jwk"); //$NON-NLS-1$
