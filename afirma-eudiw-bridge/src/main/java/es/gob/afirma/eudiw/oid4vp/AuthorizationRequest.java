@@ -129,6 +129,9 @@ public record AuthorizationRequest(
 		if (uri.getRawUserInfo() != null) {
 			throw new IllegalArgumentException("OID4VP " + field + " no admite userinfo"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (uri.getRawQuery() != null) {
+			throw new IllegalArgumentException("OID4VP " + field + " no admite query"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		if (uri.getRawFragment() != null) {
 			throw new IllegalArgumentException("OID4VP " + field + " no admite fragmento"); //$NON-NLS-1$ //$NON-NLS-2$
 		}

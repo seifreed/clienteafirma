@@ -59,6 +59,18 @@ final class TestAuthorizationRequest {
 		assertTrue(q.contains("presentation_definition_uri="), "PD URI presente");
 		assertTrue(q.contains("nonce="), "nonce presente");
 		assertTrue(q.contains("state="), "state presente");
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es") //$NON-NLS-1$
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response?x=1")) //$NON-NLS-1$
+				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/1")) //$NON-NLS-1$
+				.nonce("nonce") //$NON-NLS-1$
+				.build());
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es") //$NON-NLS-1$
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response")) //$NON-NLS-1$
+				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/1?x=1")) //$NON-NLS-1$
+				.nonce("nonce") //$NON-NLS-1$
+				.build());
 	}
 
 	@Test
