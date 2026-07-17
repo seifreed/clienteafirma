@@ -96,6 +96,7 @@ final class TestTslParser {
 		assertThrows(IllegalArgumentException.class, () -> svc.get(" ")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> svc.get(" ES")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> svc.get("ESP")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> svc.get("es")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new TslDocument(" ", "ES", null, List.of(), false)); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IllegalArgumentException.class,
