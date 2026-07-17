@@ -9,6 +9,7 @@
 package es.gob.afirma.signers.jades;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -156,6 +157,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				|| tsaUrl.chars().anyMatch(Character::isISOControl))) {
 			throw new AOException("Parametro tsaURL JAdES no normalizado", //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		if (hasText(tsaUrl)) {
+			validateTsaUrl(tsaUrl);
 		}
 		if (hasText(timestampTokenBase64) && hasText(tsaUrl)) {
 			throw new AOException("JAdES-T no admite timestampTokenBase64 y tsaURL a la vez", //$NON-NLS-1$
@@ -368,6 +372,41 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static boolean hasText(final String value) {
 		return value != null && !value.isBlank();
+	}
+
+	private static void validateTsaUrl(final String tsaUrl) throws AOException {
+		final URI uri;
+		try {
+			uri = URI.create(tsaUrl);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new AOException("Parametro tsaURL JAdES no es una URI valida", e, //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		final String scheme = uri.getScheme();
+		final String host = uri.getHost();
+		if (host == null || host.isBlank()
+				|| uri.getRawUserInfo() != null
+				|| uri.getRawQuery() != null
+				|| uri.getRawFragment() != null) {
+			throw new AOException("Parametro tsaURL JAdES no es un endpoint TSA valido", //$NON-NLS-1$
+					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+		}
+		if ("https".equalsIgnoreCase(scheme)) { //$NON-NLS-1$
+			return;
+		}
+		if ("http".equalsIgnoreCase(scheme) && isLoopbackHost(host)) { //$NON-NLS-1$
+			return;
+		}
+		throw new AOException("Parametro tsaURL JAdES exige HTTPS fuera de loopback", //$NON-NLS-1$
+				ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+	}
+
+	private static boolean isLoopbackHost(final String host) {
+		return "localhost".equalsIgnoreCase(host) //$NON-NLS-1$
+				|| "127.0.0.1".equals(host) //$NON-NLS-1$
+				|| "::1".equals(host) //$NON-NLS-1$
+				|| "[::1]".equals(host); //$NON-NLS-1$
 	}
 
 	private static boolean isBoolean(final String value) {
