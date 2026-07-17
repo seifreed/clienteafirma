@@ -258,6 +258,9 @@ public record AuthorizationRequest(
 		if (keyId != null && !keyId.equals(keyId.strip())) {
 			throw new IllegalArgumentException("OID4VP JAR keyId no normalizado"); //$NON-NLS-1$
 		}
+		if (keyId != null && keyId.chars().anyMatch(Character::isWhitespace)) {
+			throw new IllegalArgumentException("OID4VP JAR keyId contiene espacios"); //$NON-NLS-1$
+		}
 		if (keyId != null && containsControlChars(keyId)) {
 			throw new IllegalArgumentException("OID4VP JAR keyId contiene caracteres de control"); //$NON-NLS-1$
 		}

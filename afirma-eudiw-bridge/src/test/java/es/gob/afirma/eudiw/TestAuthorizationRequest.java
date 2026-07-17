@@ -451,6 +451,8 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, " kid-1", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, "kid 1", null)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, "kid\n1", null)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new MACSigner("01234567890123456789012345678901"), JWSAlgorithm.HS256, null, null)); //$NON-NLS-1$
