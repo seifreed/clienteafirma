@@ -658,6 +658,15 @@ final class TestAOJadesSigner {
 				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 		header.put("x5c", originalChain); //$NON-NLS-1$
 		header.put("x5t#S256", originalThumbprint); //$NON-NLS-1$
+		final KeyPairGenerator unlinkedKpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		unlinkedKpg.initialize(2048);
+		final List<Object> unlinkedChain = new java.util.ArrayList<>((List<?>) originalChain);
+		unlinkedChain.add(java.util.Base64.getEncoder().encodeToString(
+				selfSigned(unlinkedKpg.generateKeyPair(), "CN=JAdES Unlinked, O=AEAD").getEncoded())); //$NON-NLS-1$
+		header.put("x5c", unlinkedChain); //$NON-NLS-1$
+		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
+				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		header.put("x5c", originalChain); //$NON-NLS-1$
 		header.put("alg", "HS256"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign((Base64URL.encode(JSONObjectUtils.toJSONString(header))
 				+ jades.substring(firstDot)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));

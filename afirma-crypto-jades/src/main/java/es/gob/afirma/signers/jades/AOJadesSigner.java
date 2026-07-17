@@ -693,10 +693,27 @@ public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static boolean thumbprintMatchesChain(final JWSHeader header) {
 		try {
-			final byte[] encoded = header.getX509CertChain().get(0).decode();
-			final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509") //$NON-NLS-1$
-					.generateCertificate(new java.io.ByteArrayInputStream(encoded));
-			cert.checkValidity();
+			X509Certificate cert = null;
+			X509Certificate previousCert = null;
+			final CertificateFactory cf = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
+			for (final com.nimbusds.jose.util.Base64 encoded : header.getX509CertChain()) {
+				final X509Certificate current = (X509Certificate) cf.generateCertificate(
+						new java.io.ByteArrayInputStream(encoded.decode()));
+				current.checkValidity();
+				if (previousCert != null) {
+					if (!previousCert.getIssuerX500Principal().equals(current.getSubjectX500Principal())) {
+						return false;
+					}
+					previousCert.verify(current.getPublicKey());
+				}
+				if (cert == null) {
+					cert = current;
+				}
+				previousCert = current;
+			}
+			if (cert == null) {
+				return false;
+			}
 			return header.getX509CertSHA256Thumbprint().equals(Base64URL.encode(
 					MessageDigest.getInstance("SHA-256").digest(cert.getEncoded()))); //$NON-NLS-1$
 		}
