@@ -92,6 +92,7 @@ The repository runs the following GitHub Actions workflows automatically:
 
 - **`build.yml`** (PR + push to `master`): compiles the `env-install` profile across `ubuntu-24.04`, `windows-2022`, and `macos-14`; runs JUnit on Linux; uploads CycloneDX SBOMs and the OWASP dep-check report (HTML / JSON / SARIF) as artifacts; submits the SARIF to the repository Security tab.
 - **`codeql.yml`** (PR + push to `master` + Mondays 06:00 UTC): SAST analysis with the `security-extended` query suite. Findings appear in the Security tab.
+- **`release.yml`** (tag `v*`): builds release assets, signs each asset with keyless Sigstore (`cosign sign-blob`), and attaches SLSA3 provenance for the published hashes.
 - **Renovate** (`renovate.json`): opens dependency-update PRs grouped by family (BouncyCastle, jmulticard, Maven plugins, Mozilla Rhino — manual gating, see the file). Schedule: Monday mornings, Europe/Madrid.
 - **Dependabot** (`.github/dependabot.yml`): pins GitHub Actions by SHA and updates them weekly.
 
