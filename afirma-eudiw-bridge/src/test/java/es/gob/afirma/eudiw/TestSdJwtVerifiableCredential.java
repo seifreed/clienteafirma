@@ -302,6 +302,24 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlJwkKeyVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final Map<String, Object> remoteJwk = new LinkedHashMap<>(holderJwk.toPublicJWK().toJSONObject());
+		remoteJwk.put("x5u", "https://issuer.example.es/holder.cer"); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT remoteJwkIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of("jwk", remoteJwk)) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		remoteJwkIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String remoteJwkPresentation = remoteJwkIssuerJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String remoteJwkKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(remoteJwkPresentation));
+		final SdJwtVerifiableCredential remoteJwkVc = SdJwtVerifiableCredential.parse(
+				remoteJwkPresentation + remoteJwkKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(remoteJwkVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final RSAKey controlKidHolderJwk = new RSAKey.Builder(
 				(java.security.interfaces.RSAPublicKey) holderKp.getPublic())
 				.algorithm(JWSAlgorithm.RS256)

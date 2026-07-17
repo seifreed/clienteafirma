@@ -441,6 +441,9 @@ public final class SdJwtVerifier {
 						|| key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
 					throw new SdJwtVerificationException("cnf.jwk contiene claves no normalizadas"); //$NON-NLS-1$
 				}
+				if ("jku".equals(key) || "x5u".equals(key)) { //$NON-NLS-1$ //$NON-NLS-2$
+					throw new SdJwtVerificationException("cnf.jwk contiene referencias remotas no soportadas"); //$NON-NLS-1$
+				}
 				validateCnfJson(entry.getValue());
 			}
 		}
