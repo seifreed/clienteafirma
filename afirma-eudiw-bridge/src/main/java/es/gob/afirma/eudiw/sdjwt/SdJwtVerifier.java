@@ -300,6 +300,7 @@ public final class SdJwtVerifier {
 		if (claims.getAudience().isEmpty()) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT ausente"); //$NON-NLS-1$
 		}
+		final Set<String> audiences = new HashSet<>();
 		for (final String claimAudience : claims.getAudience()) {
 			if (claimAudience == null || claimAudience.isBlank()
 					|| !claimAudience.equals(claimAudience.strip())) {
@@ -309,6 +310,9 @@ public final class SdJwtVerifier {
 				throw new SdJwtVerificationException("Audience Key Binding JWT contiene caracteres de control"); //$NON-NLS-1$
 			}
 			requireHttpsClaim(claimAudience, "Audience Key Binding JWT inválida"); //$NON-NLS-1$
+			if (!audiences.add(claimAudience)) {
+				throw new SdJwtVerificationException("Audience Key Binding JWT duplicada"); //$NON-NLS-1$
+			}
 		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$

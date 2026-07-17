@@ -370,6 +370,14 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(queryAudienceKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String duplicateAudienceKbJwt = signedKeyBindingJwt(holderKp,
+				List.of("https://verifier.example.es", "https://verifier.example.es"), "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				presentationHash(presentation));
+		final SdJwtVerifiableCredential duplicateAudienceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + duplicateAudienceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(duplicateAudienceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noExpirationKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, null, null);
