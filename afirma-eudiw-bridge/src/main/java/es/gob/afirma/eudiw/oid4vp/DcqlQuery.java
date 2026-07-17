@@ -130,8 +130,27 @@ public record DcqlQuery(String json) {
 	}
 
 	private static void validateMeta(final Object value) {
-		if (value != null && !(value instanceof Map<?, ?>)) {
+		if (value == null) {
+			return;
+		}
+		if (!(value instanceof Map<?, ?> meta) || meta.isEmpty()) {
 			throw new IllegalArgumentException("credential DCQL con meta inválido"); //$NON-NLS-1$
+		}
+		for (final Object key : meta.keySet()) {
+			if (!"vct_values".equals(key)) { //$NON-NLS-1$
+				throw new IllegalArgumentException("credential DCQL con meta no soportado"); //$NON-NLS-1$
+			}
+		}
+		final Object vctValues = meta.get("vct_values"); //$NON-NLS-1$
+		if (!(vctValues instanceof List<?> values) || values.isEmpty()) {
+			throw new IllegalArgumentException("credential DCQL con vct_values inválido"); //$NON-NLS-1$
+		}
+		final Set<String> seen = new HashSet<>();
+		for (final Object valueEntry : values) {
+			if (!(valueEntry instanceof String text) || !isNormalizedText(text)
+					|| !seen.add(text)) {
+				throw new IllegalArgumentException("credential DCQL con vct_values inválido"); //$NON-NLS-1$
+			}
 		}
 	}
 

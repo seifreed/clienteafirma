@@ -183,6 +183,18 @@ final class TestAuthorizationRequest {
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":\"pid\"}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{}}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{\"doctype_value\":\"pid\"}}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{\"vct_values\":[]}}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"meta\":{\"vct_values\":[\"urn:eudi:pid:1\",\"urn:eudi:pid:1\"]}}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\"}],\"credential_sets\":[{\"required\":\"false\",\"options\":[[\"pid\"]]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
