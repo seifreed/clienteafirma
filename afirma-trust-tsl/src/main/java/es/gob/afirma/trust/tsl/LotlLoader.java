@@ -144,8 +144,9 @@ public final class LotlLoader implements TrustListService.TslLoader {
 	}
 
 	private static boolean isFresh(final Path cache) throws IOException {
-		return Instant.now().isBefore(Files.getLastModifiedTime(cache)
-				.toInstant().plus(CACHE_REFRESH_INTERVAL));
+		final Instant now = Instant.now();
+		final Instant modified = Files.getLastModifiedTime(cache).toInstant();
+		return !modified.isAfter(now) && now.isBefore(modified.plus(CACHE_REFRESH_INTERVAL));
 	}
 
 	static final class HttpTslXmlSource implements TslXmlSource {

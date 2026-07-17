@@ -118,6 +118,26 @@ final class TestLotlLoader {
 	}
 
 	@Test
+	@DisplayName("LotlLoader refresca cache LOTL con fecha futura")
+	void refreshesFutureDatedCache() throws Exception {
+		final KeyPair kp = rsa();
+		final byte[] signed = sign(LOTL, kp);
+		final Path cache = this.temp.resolve("eu-lotl.xml"); //$NON-NLS-1$
+		Files.write(cache, signed);
+		Files.setLastModifiedTime(cache,
+				FileTime.from(Instant.now().plus(Duration.ofHours(1))));
+		final AtomicBoolean downloaded = new AtomicBoolean();
+
+		final LotlLoader loader = new LotlLoader(() -> {
+			downloaded.set(true);
+			return signed;
+		}, kp.getPublic(), cache);
+
+		assertEquals("EU", loader.load().territory()); //$NON-NLS-1$
+		assertTrue(downloaded.get());
+	}
+
+	@Test
 	@DisplayName("LotlLoader rechaza LOTL sin firma válida")
 	void rejectsUnsignedLotl() throws Exception {
 		final KeyPair kp = rsa();
