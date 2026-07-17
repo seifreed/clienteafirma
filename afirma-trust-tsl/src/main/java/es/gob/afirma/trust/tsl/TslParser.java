@@ -72,6 +72,9 @@ public final class TslParser {
 			Instant nextUpdate = null;
 			final NodeList nextUpdateNodes = schemeInformation.getElementsByTagNameNS(TSL_NS, "NextUpdate"); //$NON-NLS-1$
 			if (nextUpdateNodes.getLength() > 0) {
+				if (nextUpdateNodes.getLength() != 1) {
+					throw new TslException("TSL con varios NextUpdate"); //$NON-NLS-1$
+				}
 				final NodeList ts = ((Element) nextUpdateNodes.item(0))
 						.getElementsByTagNameNS(TSL_NS, "dateTime"); //$NON-NLS-1$
 				if (ts.getLength() != 1) {
