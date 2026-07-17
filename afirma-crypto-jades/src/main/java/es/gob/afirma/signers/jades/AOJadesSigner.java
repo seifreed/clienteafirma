@@ -576,8 +576,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	}
 
 	private static boolean isValidUnprotectedHeader(final Map<?, ?> header) {
-		if (!header.containsKey("etsiU")) { //$NON-NLS-1$
-			return true;
+		if (header.size() != 1 || !header.containsKey("etsiU")) { //$NON-NLS-1$
+			return false;
 		}
 		if (!(header.get("etsiU") instanceof List<?> etsiU) || etsiU.isEmpty()) { //$NON-NLS-1$
 			return false;

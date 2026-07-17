@@ -613,6 +613,12 @@ final class TestAOJadesSigner {
 		json.put("header", "etsiU"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("header", Map.of()); //$NON-NLS-1$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("header", Map.of("foo", "bar")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 		json.put("header", Map.of("alg", "RS256")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
