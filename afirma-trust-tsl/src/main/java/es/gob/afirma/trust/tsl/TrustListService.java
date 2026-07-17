@@ -52,6 +52,9 @@ public final class TrustListService {
 	TrustListService(final Clock clock, final Duration refreshInterval) {
 		this.clock = Objects.requireNonNull(clock, "clock"); //$NON-NLS-1$
 		this.refreshInterval = Objects.requireNonNull(refreshInterval, "refreshInterval"); //$NON-NLS-1$
+		if (this.refreshInterval.isNegative()) {
+			throw new IllegalArgumentException("Intervalo de refresco TSL negativo"); //$NON-NLS-1$
+		}
 	}
 
 	/** Añade o reemplaza la TSL de un territorio. */
