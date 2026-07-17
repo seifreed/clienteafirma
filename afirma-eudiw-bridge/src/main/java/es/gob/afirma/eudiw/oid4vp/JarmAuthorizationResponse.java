@@ -201,7 +201,9 @@ public record JarmAuthorizationResponse(
 			if (!(entry.getKey() instanceof String key)) {
 				throw new JOSEException("presentation_submission JARM contiene claves no textuales"); //$NON-NLS-1$
 			}
-			if (key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+			if (key.isBlank() || !key.equals(key.strip())
+					|| key.chars().anyMatch(Character::isWhitespace)
+					|| containsControlChars(key)) {
 				throw new JOSEException("presentation_submission JARM contiene claves no normalizadas"); //$NON-NLS-1$
 			}
 			validateJsonValue(entry.getValue());
