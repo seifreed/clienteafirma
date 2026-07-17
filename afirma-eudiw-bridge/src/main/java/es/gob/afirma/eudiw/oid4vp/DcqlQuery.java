@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.nimbusds.jose.util.JSONObjectUtils;
 
@@ -15,6 +16,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 public record DcqlQuery(String json) {
 
 	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
+	private static final Pattern ID_PATTERN = Pattern.compile("[A-Za-z0-9_-]+"); //$NON-NLS-1$
 
 	public DcqlQuery {
 		Objects.requireNonNull(json, "json"); //$NON-NLS-1$
@@ -37,7 +39,7 @@ public record DcqlQuery(String json) {
 					throw new IllegalArgumentException("credentials DCQL debe contener objetos"); //$NON-NLS-1$
 				}
 				validateObjectKeys(credentialMap);
-				if (!ids.add(requireText(credentialMap, "id"))) { //$NON-NLS-1$
+				if (!ids.add(requireId(credentialMap, "id"))) { //$NON-NLS-1$
 					throw new IllegalArgumentException("credential DCQL con id duplicado"); //$NON-NLS-1$
 				}
 				final String format = requireText(credentialMap, "format"); //$NON-NLS-1$
@@ -57,7 +59,7 @@ public record DcqlQuery(String json) {
 						validateObjectKeys(claimMap);
 						final Object claimId = claimMap.get("id"); //$NON-NLS-1$
 						if (claimId != null) {
-							if (!(claimId instanceof String text) || !isNormalizedText(text)) {
+							if (!(claimId instanceof String text) || !isId(text)) {
 								throw new IllegalArgumentException("claim DCQL con id inválido"); //$NON-NLS-1$
 							}
 							if (!claimIds.add(text)) {
@@ -70,8 +72,13 @@ public record DcqlQuery(String json) {
 						}
 						validateClaimPath(path);
 					}
+					validateClaimSets(credentialMap.get("claim_sets"), claimIds); //$NON-NLS-1$
+				}
+				else if (credentialMap.containsKey("claim_sets")) { //$NON-NLS-1$
+					throw new IllegalArgumentException("credential DCQL con claim_sets sin claims"); //$NON-NLS-1$
 				}
 			}
+			validateCredentialSets(parsed.get("credential_sets"), ids); //$NON-NLS-1$
 		}
 		catch (final ParseException e) {
 			throw new IllegalArgumentException("dcql_query debe ser un objeto JSON válido", e); //$NON-NLS-1$
@@ -125,9 +132,66 @@ public record DcqlQuery(String json) {
 		return text;
 	}
 
+	private static String requireId(final Map<?, ?> json, final String key) {
+		final String text = requireText(json, key);
+		if (!isId(text)) {
+			throw new IllegalArgumentException("credential DCQL con " + key + " inválido"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return text;
+	}
+
+	private static void validateClaimSets(final Object value, final Set<String> claimIds) {
+		if (value == null) {
+			return;
+		}
+		if (!(value instanceof List<?> sets) || sets.isEmpty()) {
+			throw new IllegalArgumentException("claim_sets DCQL inválido"); //$NON-NLS-1$
+		}
+		for (final Object option : sets) {
+			validateIdList(option, claimIds, "claim_sets DCQL referencia claim inexistente"); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateCredentialSets(final Object value, final Set<String> credentialIds) {
+		if (value == null) {
+			return;
+		}
+		if (!(value instanceof List<?> sets) || sets.isEmpty()) {
+			throw new IllegalArgumentException("credential_sets DCQL inválido"); //$NON-NLS-1$
+		}
+		for (final Object set : sets) {
+			if (!(set instanceof Map<?, ?> setMap)) {
+				throw new IllegalArgumentException("credential_sets DCQL debe contener objetos"); //$NON-NLS-1$
+			}
+			final Object options = setMap.get("options"); //$NON-NLS-1$
+			if (!(options instanceof List<?> optionList) || optionList.isEmpty()) {
+				throw new IllegalArgumentException("credential_sets DCQL sin options"); //$NON-NLS-1$
+			}
+			for (final Object option : optionList) {
+				validateIdList(option, credentialIds, "credential_sets DCQL referencia credential inexistente"); //$NON-NLS-1$
+			}
+		}
+	}
+
+	private static void validateIdList(final Object option, final Set<String> validIds,
+			final String error) {
+		if (!(option instanceof List<?> ids) || ids.isEmpty()) {
+			throw new IllegalArgumentException(error);
+		}
+		for (final Object id : ids) {
+			if (!(id instanceof String text) || !isId(text) || !validIds.contains(text)) {
+				throw new IllegalArgumentException(error);
+			}
+		}
+	}
+
 	private static boolean isNormalizedText(final String text) {
 		return !text.isBlank()
 				&& text.equals(text.strip())
 				&& text.chars().noneMatch(Character::isISOControl);
+	}
+
+	private static boolean isId(final String text) {
+		return isNormalizedText(text) && ID_PATTERN.matcher(text).matches();
 	}
 }
