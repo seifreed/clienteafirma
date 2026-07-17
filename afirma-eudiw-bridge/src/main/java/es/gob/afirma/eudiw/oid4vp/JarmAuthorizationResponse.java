@@ -51,8 +51,9 @@ public record JarmAuthorizationResponse(
 		requireExpected(expectedAudience, "audience"); //$NON-NLS-1$
 		requireExpected(expectedState, "state"); //$NON-NLS-1$
 		rejectBlankExpected(expectedIssuer, "issuer"); //$NON-NLS-1$
+		requireHttpsClaim(expectedAudience, "Audience JARM inválida"); //$NON-NLS-1$
 		if (expectedIssuer != null) {
-			requireHttpsIssuer(expectedIssuer);
+			requireHttpsClaim(expectedIssuer, "Issuer JARM inválido"); //$NON-NLS-1$
 		}
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
 		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
@@ -76,7 +77,7 @@ public record JarmAuthorizationResponse(
 		if (containsControlChars(issuer)) {
 			throw new JOSEException("Issuer JARM contiene caracteres de control"); //$NON-NLS-1$
 		}
-		requireHttpsIssuer(issuer);
+		requireHttpsClaim(issuer, "Issuer JARM inválido"); //$NON-NLS-1$
 		if (expectedIssuer != null && !expectedIssuer.equals(issuer)) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
@@ -90,6 +91,7 @@ public record JarmAuthorizationResponse(
 			if (containsControlChars(audience)) {
 				throw new JOSEException("Audience JARM contiene caracteres de control"); //$NON-NLS-1$
 			}
+			requireHttpsClaim(audience, "Audience JARM inválida"); //$NON-NLS-1$
 		}
 		if (!claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
@@ -267,20 +269,20 @@ public record JarmAuthorizationResponse(
 		return text.chars().anyMatch(Character::isISOControl);
 	}
 
-	private static void requireHttpsIssuer(final String value) throws JOSEException {
+	private static void requireHttpsClaim(final String value, final String error) throws JOSEException {
 		final URI uri;
 		try {
 			uri = URI.create(value);
 		}
 		catch (final IllegalArgumentException e) {
-			throw new JOSEException("Issuer JARM inválido", e); //$NON-NLS-1$
+			throw new JOSEException(error, e);
 		}
 		if (!"https".equalsIgnoreCase(uri.getScheme()) //$NON-NLS-1$
 				|| uri.getHost() == null || uri.getHost().isBlank()
 				|| uri.getRawUserInfo() != null
 				|| uri.getRawQuery() != null
 				|| uri.getRawFragment() != null) {
-			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
+			throw new JOSEException(error);
 		}
 	}
 
