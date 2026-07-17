@@ -104,6 +104,7 @@ public final class EudiwClient {
 				throw new IOException("OID4VP form body contiene clave no normalizada"); //$NON-NLS-1$
 			}
 			if (value.isBlank() || !value.equals(value.strip())
+					|| value.chars().anyMatch(Character::isWhitespace)
 					|| value.chars().anyMatch(Character::isISOControl)) {
 				throw new IOException("OID4VP form body contiene valor no normalizado"); //$NON-NLS-1$
 			}
