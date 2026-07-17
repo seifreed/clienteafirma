@@ -76,6 +76,9 @@ public final class SdJwtVerifier {
 			if (!ISSUER_TYPE.equals(vc.issuerSignedJwt().getHeader().getType())) {
 				throw new SdJwtVerificationException("Tipo Issuer JWT inválido"); //$NON-NLS-1$
 			}
+			if (hasCriticalHeaders(vc.issuerSignedJwt())) {
+				throw new SdJwtVerificationException("Issuer JWT contiene cabeceras críticas no soportadas"); //$NON-NLS-1$
+			}
 			if (!isSupportedJwsAlgorithm(vc.issuerSignedJwt().getHeader().getAlgorithm())) {
 				throw new SdJwtVerificationException("Algoritmo Issuer JWT no soportado"); //$NON-NLS-1$
 			}
@@ -292,6 +295,9 @@ public final class SdJwtVerifier {
 		if (kbJwt.getHeader().getJWKURL() != null || kbJwt.getHeader().getX509CertURL() != null) {
 			throw new SdJwtVerificationException("Key Binding JWT contiene referencias remotas no soportadas"); //$NON-NLS-1$
 		}
+		if (hasCriticalHeaders(kbJwt)) {
+			throw new SdJwtVerificationException("Key Binding JWT contiene cabeceras críticas no soportadas"); //$NON-NLS-1$
+		}
 		if (!isSupportedJwsAlgorithm(kbJwt.getHeader().getAlgorithm())) {
 			throw new SdJwtVerificationException("Algoritmo Key Binding JWT no soportado"); //$NON-NLS-1$
 		}
@@ -379,6 +385,10 @@ public final class SdJwtVerifier {
 
 	private static boolean isSupportedJwsAlgorithm(final JWSAlgorithm algorithm) {
 		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
+	}
+
+	private static boolean hasCriticalHeaders(final SignedJWT jwt) {
+		return jwt.getHeader().getCriticalParams() != null && !jwt.getHeader().getCriticalParams().isEmpty();
 	}
 
 	private static boolean containsControlChars(final String text) {

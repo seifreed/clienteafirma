@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -222,6 +223,20 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(symmetricIssuerVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT criticalIssuerJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("dc+sd-jwt")) //$NON-NLS-1$
+						.x509CertChain(validIssuerJwt.getHeader().getX509CertChain())
+						.criticalParams(Set.of("foo")) //$NON-NLS-1$
+						.customParam("foo", "bar") //$NON-NLS-1$ //$NON-NLS-2$
+						.build(),
+				validIssuerJwt.getJWTClaimsSet());
+		criticalIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final SdJwtVerifiableCredential criticalIssuerVc = SdJwtVerifiableCredential.parse(
+				criticalIssuerJwt.serialize() + "~" + disclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(criticalIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT remoteIssuerHeaderJwt = new SignedJWT(
 				new JWSHeader.Builder(JWSAlgorithm.RS256)
 						.type(new JOSEObjectType("dc+sd-jwt")) //$NON-NLS-1$
@@ -263,6 +278,19 @@ final class TestSdJwtVerifiableCredential {
 				presentation + remoteKbHeaderJwt.serialize());
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(remoteKbHeaderVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT criticalKbHeaderJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("kb+jwt")) //$NON-NLS-1$
+						.criticalParams(Set.of("foo")) //$NON-NLS-1$
+						.customParam("foo", "bar") //$NON-NLS-1$ //$NON-NLS-2$
+						.build(),
+				validKbJwt.getJWTClaimsSet());
+		criticalKbHeaderJwt.sign(new RSASSASigner(holderKp.getPrivate()));
+		final SdJwtVerifiableCredential criticalKbHeaderVc = SdJwtVerifiableCredential.parse(
+				presentation + criticalKbHeaderJwt.serialize());
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(criticalKbHeaderVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT noHolderJwkIssuerJwt = new SignedJWT(
 				validIssuerJwt.getHeader(),
