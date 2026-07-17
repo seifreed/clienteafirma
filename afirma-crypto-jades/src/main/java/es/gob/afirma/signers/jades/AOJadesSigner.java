@@ -678,6 +678,8 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	private static boolean isJadesHeader(final JWSHeader header) {
 		return (JWSAlgorithm.Family.RSA.contains(header.getAlgorithm())
 				|| JWSAlgorithm.Family.EC.contains(header.getAlgorithm()))
+				&& header.getJWKURL() == null
+				&& header.getX509CertURL() == null
 				&& header.getX509CertSHA256Thumbprint() != null
 				&& header.getX509CertChain() != null && !header.getX509CertChain().isEmpty()
 				&& thumbprintMatchesChain(header)

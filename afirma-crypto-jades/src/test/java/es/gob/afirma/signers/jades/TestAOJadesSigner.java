@@ -179,6 +179,23 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("isSign rechaza cabeceras JAdES con referencias remotas")
+	void isSignRejectsRemoteHeaderReferences() throws Exception {
+		final AOJadesSigner signer = new AOJadesSigner();
+		final byte[] jws = signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+				RSA_KEY.getPrivate(), RSA_CHAIN, new Properties());
+		final String compact = new String(jws, java.nio.charset.StandardCharsets.UTF_8);
+		final int firstDot = compact.indexOf('.');
+		final String headerJson = AOJadesSigner.decodeProtectedHeader(jws);
+		final String remoteHeaderJson = headerJson.replaceFirst("\\{", //$NON-NLS-1$
+				"{\"jku\":\"https://issuer.example.es/jwks\","); //$NON-NLS-1$
+		final String remoteCompact = Base64URL.encode(remoteHeaderJson)
+				+ compact.substring(firstDot);
+
+		assertTrue(!signer.isSign(remoteCompact.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+	}
+
+	@Test
 	@DisplayName("jsonSerialization=true emite JWS JSON flattened detached")
 	void signRsa256JsonSerialization() throws Exception {
 		final Properties params = new Properties();
