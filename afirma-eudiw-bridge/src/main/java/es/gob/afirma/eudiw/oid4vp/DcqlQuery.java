@@ -155,8 +155,10 @@ public record DcqlQuery(String json) {
 			if (!(values instanceof List<?> valueList) || valueList.isEmpty()) {
 				throw new IllegalArgumentException("trusted_authorities DCQL sin values"); //$NON-NLS-1$
 			}
+			final Set<String> seenValues = new HashSet<>();
 			for (final Object authorityValue : valueList) {
-				if (!(authorityValue instanceof String text) || !isNormalizedText(text)) {
+				if (!(authorityValue instanceof String text) || !isNormalizedText(text)
+						|| !seenValues.add(text)) {
 					throw new IllegalArgumentException("trusted_authorities DCQL con value inválido"); //$NON-NLS-1$
 				}
 			}
