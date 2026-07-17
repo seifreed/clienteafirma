@@ -141,10 +141,18 @@ final class TestAuthorizationRequest {
 		new AuthorizationRequestBuilder().dcqlQuery(
 				"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"path\":[\"family_name\"]}]}]}"); //$NON-NLS-1$
 		new AuthorizationRequestBuilder().dcqlQuery(
+				"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"path\":[\"age_over_18\"],\"values\":[true,18,\"García\"]}]}]}"); //$NON-NLS-1$
+		new AuthorizationRequestBuilder().dcqlQuery(
 				"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"id\":\"family_name\",\"path\":[\"family_name\"]}],\"claim_sets\":[[\"family_name\"]]}],\"credential_sets\":[{\"options\":[[\"pid\"]]}]}"); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"path\":[]}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"path\":[\"age\"],\"values\":[]}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"path\":[\"age\"],\"values\":[18.5]}]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"claims\":[{\"id\":\"family_name\",\"path\":[\"family_name\"]}],\"claim_sets\":[[\"birth_date\"]]}]}")); //$NON-NLS-1$

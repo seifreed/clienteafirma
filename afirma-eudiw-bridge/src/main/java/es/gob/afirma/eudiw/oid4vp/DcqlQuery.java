@@ -71,6 +71,7 @@ public record DcqlQuery(String json) {
 							throw new IllegalArgumentException("claim DCQL sin path"); //$NON-NLS-1$
 						}
 						validateClaimPath(path);
+						validateClaimValues(claimMap.get("values")); //$NON-NLS-1$
 					}
 					validateClaimSets(credentialMap.get("claim_sets"), claimIds); //$NON-NLS-1$
 				}
@@ -117,6 +118,20 @@ public record DcqlQuery(String json) {
 		for (final Object component : components) {
 			if (!(component instanceof String text) || !isNormalizedText(text)) {
 				throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
+			}
+		}
+	}
+
+	private static void validateClaimValues(final Object value) {
+		if (value == null) {
+			return;
+		}
+		if (!(value instanceof List<?> values) || values.isEmpty()) {
+			throw new IllegalArgumentException("claim DCQL con values inválido"); //$NON-NLS-1$
+		}
+		for (final Object item : values) {
+			if (!(item instanceof String || item instanceof Boolean || isInteger(item))) {
+				throw new IllegalArgumentException("claim DCQL con values inválido"); //$NON-NLS-1$
 			}
 		}
 	}
@@ -193,5 +208,10 @@ public record DcqlQuery(String json) {
 
 	private static boolean isId(final String text) {
 		return isNormalizedText(text) && ID_PATTERN.matcher(text).matches();
+	}
+
+	private static boolean isInteger(final Object value) {
+		return value instanceof Byte || value instanceof Short || value instanceof Integer
+				|| value instanceof Long || value instanceof java.math.BigInteger;
 	}
 }
