@@ -113,6 +113,9 @@ public record JarmAuthorizationResponse(
 		if (!state.equals(state.strip())) {
 			throw new JOSEException("State JARM no normalizado"); //$NON-NLS-1$
 		}
+		if (state.chars().anyMatch(Character::isWhitespace)) {
+			throw new JOSEException("State JARM contiene espacios"); //$NON-NLS-1$
+		}
 		if (containsControlChars(state)) {
 			throw new JOSEException("State JARM contiene caracteres de control"); //$NON-NLS-1$
 		}
@@ -325,6 +328,9 @@ public record JarmAuthorizationResponse(
 		}
 		if (value != null && !value.equals(value.strip())) {
 			throw new JOSEException("Valor esperado JARM no normalizado: " + claim); //$NON-NLS-1$
+		}
+		if (value != null && value.chars().anyMatch(Character::isWhitespace)) {
+			throw new JOSEException("Valor esperado JARM contiene espacios: " + claim); //$NON-NLS-1$
 		}
 		if (value != null && containsControlChars(value)) {
 			throw new JOSEException("Valor esperado JARM contiene caracteres de control: " + claim); //$NON-NLS-1$

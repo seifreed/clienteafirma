@@ -719,9 +719,20 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", " state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "sta te-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier\n.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "sta\nte-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT whitespaceStateJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("state", "sta te-1") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		whitespaceStateJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				whitespaceStateJwt.serialize(), verifier,
+				"https://verifier.example.es", "sta te-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", //$NON-NLS-1$ //$NON-NLS-2$
 				"https://otra-wallet.example.es")); //$NON-NLS-1$
