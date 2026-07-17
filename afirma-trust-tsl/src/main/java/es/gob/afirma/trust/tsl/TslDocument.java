@@ -47,6 +47,9 @@ public record TslDocument(
 				if (provider == null) {
 					throw new IllegalArgumentException("Proveedor TSL vacío"); //$NON-NLS-1$
 				}
+				if (!territory.equals(provider.countryCode())) {
+					throw new IllegalArgumentException("Proveedor TSL con país distinto del territorio"); //$NON-NLS-1$
+				}
 			}
 		}
 		providers = providers == null ? List.of() : List.copyOf(providers);
