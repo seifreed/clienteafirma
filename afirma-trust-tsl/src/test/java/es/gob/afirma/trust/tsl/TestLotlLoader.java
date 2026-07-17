@@ -323,6 +323,17 @@ final class TestLotlLoader {
 				() -> new TslVerifier().verify(alteredReference.getBytes(StandardCharsets.UTF_8), kp.getPublic()));
 	}
 
+	@Test
+	@DisplayName("TslVerifier rechaza XMLDSig con transforms no soportados")
+	void rejectsUnsupportedXmlSignatureTransforms() throws Exception {
+		final KeyPair kp = rsa();
+		final String signed = new String(sign(LOTL, kp), StandardCharsets.UTF_8);
+		final String alteredTransform = signed.replace(Transform.ENVELOPED, Transform.BASE64);
+
+		assertThrows(TslException.class,
+				() -> new TslVerifier().verify(alteredTransform.getBytes(StandardCharsets.UTF_8), kp.getPublic()));
+	}
+
 	private static KeyPair rsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
 		kpg.initialize(2048);

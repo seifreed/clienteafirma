@@ -10,6 +10,7 @@ import java.util.Base64;
 
 import javax.xml.XMLConstants;
 import javax.xml.crypto.dsig.Reference;
+import javax.xml.crypto.dsig.Transform;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMValidateContext;
@@ -147,6 +148,11 @@ public final class TslVerifier {
 		final Object reference = references.get(0);
 		if (!(reference instanceof Reference ref) || ref.getURI() != null && !ref.getURI().isEmpty()) {
 			throw new TslException("Firma TSL no referencia el documento completo"); //$NON-NLS-1$
+		}
+		final var transforms = ref.getTransforms();
+		if (transforms.size() != 1 || !(transforms.get(0) instanceof Transform transform)
+				|| !Transform.ENVELOPED.equals(transform.getAlgorithm())) {
+			throw new TslException("Firma TSL con transforms XMLDSig no soportados"); //$NON-NLS-1$
 		}
 	}
 }
