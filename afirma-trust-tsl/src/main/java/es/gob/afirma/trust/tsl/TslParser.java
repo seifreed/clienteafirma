@@ -51,7 +51,7 @@ public final class TslParser {
 				throw new TslException("La raíz XML no es TrustServiceStatusList"); //$NON-NLS-1$
 			}
 
-			final Element schemeInformation = firstElement(root, TSL_NS, "SchemeInformation"); //$NON-NLS-1$
+			final Element schemeInformation = singleElement(root, TSL_NS, "SchemeInformation"); //$NON-NLS-1$
 			if (schemeInformation == null) {
 				throw new TslException("TSL sin SchemeInformation"); //$NON-NLS-1$
 			}
@@ -111,8 +111,8 @@ public final class TslParser {
 
 		for (int i = 0; i < tspNodes.getLength(); i++) {
 			final Element tsp = (Element) tspNodes.item(i);
-			final String name = textOrEmpty(tsp, TSL_NS, "Name"); //$NON-NLS-1$
-			final String tradeName = textOrEmpty(tsp, TSL_NS, "TradeName"); //$NON-NLS-1$
+			final String name = singleTextOrEmpty(tsp, TSL_NS, "Name"); //$NON-NLS-1$
+			final String tradeName = singleTextOrEmpty(tsp, TSL_NS, "TradeName"); //$NON-NLS-1$
 			if (name.isEmpty()) {
 				throw new TslException("TSP sin nombre"); //$NON-NLS-1$
 			}
@@ -196,11 +196,6 @@ public final class TslParser {
 			throw new TslException(fieldName + " contiene caracteres de control"); //$NON-NLS-1$
 		}
 		return text;
-	}
-
-	private static Element firstElement(final Element parent, final String ns, final String localName) {
-		final NodeList nl = parent.getElementsByTagNameNS(ns, localName);
-		return nl.getLength() == 0 ? null : (Element) nl.item(0);
 	}
 
 	private static Element singleElement(final Element parent, final String ns,

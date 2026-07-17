@@ -239,8 +239,20 @@ final class TestTslParser {
 			  </TrustServiceProviderList>
 			</TrustServiceStatusList>
 			""".getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</SchemeInformation>", //$NON-NLS-1$
+						"</SchemeInformation><SchemeInformation><SchemeOperatorName><Name>Otro operador</Name></SchemeOperatorName><SchemeTerritory>FR</SchemeTerritory></SchemeInformation>") //$NON-NLS-1$
+				.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(
 				MINI_TSL.replace("<Name>FNMT-RCM</Name>", "").getBytes(StandardCharsets.UTF_8))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(TslException.class, () -> parser.parse(
+				MINI_TSL.replace("<Name>FNMT-RCM</Name>", //$NON-NLS-1$
+						"<Name>FNMT-RCM</Name><Name>Otro TSP</Name>") //$NON-NLS-1$
+						.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(
+				MINI_TSL.replace("<TradeName>FNMT-RCM</TradeName>", //$NON-NLS-1$
+						"<TradeName>FNMT-RCM</TradeName><TradeName>Otro TSP</TradeName>") //$NON-NLS-1$
+						.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(
 				MINI_TSL.replaceAll("(?s)<TSPService>.*?</TSPService>", "") //$NON-NLS-1$ //$NON-NLS-2$
 						.getBytes(StandardCharsets.UTF_8)));
