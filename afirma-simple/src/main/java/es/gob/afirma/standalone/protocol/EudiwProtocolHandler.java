@@ -356,6 +356,8 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			final String value = decodeQueryComponent(pair.substring(eq + 1));
 			if (key.isBlank() || value.isBlank()
 					|| !key.equals(key.strip()) || !value.equals(value.strip())
+					|| key.chars().anyMatch(Character::isWhitespace)
+					|| value.chars().anyMatch(Character::isWhitespace)
 					|| containsControlChars(key) || containsControlChars(value)
 					|| params.put(key, value) != null) {
 				throw new IllegalArgumentException("walletUri contiene query no normalizada"); //$NON-NLS-1$
