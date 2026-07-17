@@ -400,6 +400,21 @@ final class TestAOJadesSigner {
 	}
 
 	@Test
+	@DisplayName("sign rechaza x5c JAdES no enlazada")
+	void rejectsUnlinkedCertificateChain() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final Certificate[] unlinkedChain = new Certificate[] {
+				RSA_CHAIN[0],
+				selfSigned(kpg.generateKeyPair(), "CN=JAdES Unlinked, O=AEAD") }; //$NON-NLS-1$
+		final AOJadesSigner signer = new AOJadesSigner();
+
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), unlinkedChain, new Properties()));
+	}
+
+	@Test
 	@DisplayName("sign rechaza cadena JAdES con certificados no X.509")
 	void rejectsNonX509CertificateInChain() {
 		final AOJadesSigner signer = new AOJadesSigner();

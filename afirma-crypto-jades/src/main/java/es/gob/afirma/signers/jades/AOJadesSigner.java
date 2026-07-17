@@ -491,21 +491,34 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	private static List<com.nimbusds.jose.util.Base64> buildX5cChain(final Certificate[] certChain) throws AOException {
 		final List<com.nimbusds.jose.util.Base64> x5c = new ArrayList<>(certChain.length);
 		try {
+			X509Certificate previousCert = null;
 			for (final Certificate c : certChain) {
 				if (!(c instanceof X509Certificate)) {
 					throw new AOException("La cadena JAdES x5c debe contener solo certificados X.509", //$NON-NLS-1$
 							ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 				}
-				((X509Certificate) c).checkValidity();
+				final X509Certificate cert = (X509Certificate) c;
+				cert.checkValidity();
+				if (previousCert != null) {
+					if (!previousCert.getIssuerX500Principal().equals(cert.getSubjectX500Principal())) {
+						throw new AOException("La cadena JAdES x5c no esta enlazada", //$NON-NLS-1$
+								ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
+					}
+					previousCert.verify(cert.getPublicKey());
+				}
 				x5c.add(com.nimbusds.jose.util.Base64.encode(c.getEncoded()));
+				previousCert = cert;
 			}
+		}
+		catch (final AOException e) {
+			throw e;
 		}
 		catch (final java.security.cert.CertificateExpiredException
 				| java.security.cert.CertificateNotYetValidException e) {
 			throw new AOException("La cadena JAdES x5c contiene certificados no vigentes", e, //$NON-NLS-1$
 					ErrorCode.Functional.SIGNING_MALFORMED_SIGNATURE);
 		}
-		catch (final java.security.cert.CertificateEncodingException e) {
+		catch (final java.security.GeneralSecurityException e) {
 			throw new AOException("Error codificando cadena de certificados", e, new ErrorCode(ErrorCode.ERROR_FUNCTIONAL)); //$NON-NLS-1$
 		}
 		return x5c;
