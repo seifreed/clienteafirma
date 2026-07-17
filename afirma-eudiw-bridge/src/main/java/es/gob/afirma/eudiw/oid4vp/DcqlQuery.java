@@ -18,6 +18,14 @@ public record DcqlQuery(String json) {
 
 	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
 	private static final String SUPPORTED_TRUSTED_AUTHORITY_TYPE = "etsi_tl"; //$NON-NLS-1$
+	private static final Set<String> TOP_LEVEL_KEYS = Set.of("credentials", "credential_sets"); //$NON-NLS-1$ //$NON-NLS-2$
+	private static final Set<String> CREDENTIAL_KEYS = Set.of("id", "format", "multiple", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			"require_cryptographic_holder_binding", "meta", "trusted_authorities", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			"claims", "claim_sets"); //$NON-NLS-1$ //$NON-NLS-2$
+	private static final Set<String> CLAIM_KEYS = Set.of("id", "path", "values"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static final Set<String> META_KEYS = Set.of("vct_values"); //$NON-NLS-1$
+	private static final Set<String> TRUSTED_AUTHORITY_KEYS = Set.of("type", "values"); //$NON-NLS-1$ //$NON-NLS-2$
+	private static final Set<String> CREDENTIAL_SET_KEYS = Set.of("required", "options"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static final Pattern ID_PATTERN = Pattern.compile("[A-Za-z0-9_-]+"); //$NON-NLS-1$
 
 	public DcqlQuery {
@@ -31,6 +39,7 @@ public record DcqlQuery(String json) {
 		try {
 			final var parsed = JSONObjectUtils.parse(json);
 			validateJsonTree(parsed);
+			rejectUnsupportedKeys(parsed, TOP_LEVEL_KEYS, "dcql_query contiene campos no soportados"); //$NON-NLS-1$
 			final var credentials = JSONObjectUtils.getJSONArray(parsed, "credentials"); //$NON-NLS-1$
 			if (credentials == null || credentials.isEmpty()) {
 				throw new IllegalArgumentException("dcql_query debe declarar credentials"); //$NON-NLS-1$
@@ -41,6 +50,8 @@ public record DcqlQuery(String json) {
 					throw new IllegalArgumentException("credentials DCQL debe contener objetos"); //$NON-NLS-1$
 				}
 				validateObjectKeys(credentialMap);
+				rejectUnsupportedKeys(credentialMap, CREDENTIAL_KEYS,
+						"credential DCQL contiene campos no soportados"); //$NON-NLS-1$
 				if (!ids.add(requireId(credentialMap, "id"))) { //$NON-NLS-1$
 					throw new IllegalArgumentException("credential DCQL con id duplicado"); //$NON-NLS-1$
 				}
@@ -64,6 +75,8 @@ public record DcqlQuery(String json) {
 							throw new IllegalArgumentException("claims DCQL debe contener objetos"); //$NON-NLS-1$
 						}
 						validateObjectKeys(claimMap);
+						rejectUnsupportedKeys(claimMap, CLAIM_KEYS,
+								"claim DCQL contiene campos no soportados"); //$NON-NLS-1$
 						final Object claimId = claimMap.get("id"); //$NON-NLS-1$
 						if (claimId != null) {
 							if (!(claimId instanceof String text) || !isId(text)) {
@@ -119,6 +132,15 @@ public record DcqlQuery(String json) {
 		}
 	}
 
+	private static void rejectUnsupportedKeys(final Map<?, ?> json, final Set<String> supported,
+			final String error) {
+		for (final Object key : json.keySet()) {
+			if (!supported.contains(key)) {
+				throw new IllegalArgumentException(error);
+			}
+		}
+	}
+
 	private static void validateClaimPath(final Object path) {
 		if (!(path instanceof List<?> components) || components.isEmpty()) {
 			throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
@@ -137,11 +159,8 @@ public record DcqlQuery(String json) {
 		if (!(value instanceof Map<?, ?> meta) || meta.isEmpty()) {
 			throw new IllegalArgumentException("credential DCQL con meta inválido"); //$NON-NLS-1$
 		}
-		for (final Object key : meta.keySet()) {
-			if (!"vct_values".equals(key)) { //$NON-NLS-1$
-				throw new IllegalArgumentException("credential DCQL con meta no soportado"); //$NON-NLS-1$
-			}
-		}
+		validateObjectKeys(meta);
+		rejectUnsupportedKeys(meta, META_KEYS, "credential DCQL con meta no soportado"); //$NON-NLS-1$
 		final Object vctValues = meta.get("vct_values"); //$NON-NLS-1$
 		if (!(vctValues instanceof List<?> values) || values.isEmpty()) {
 			throw new IllegalArgumentException("credential DCQL con vct_values inválido"); //$NON-NLS-1$
@@ -173,6 +192,9 @@ public record DcqlQuery(String json) {
 			if (!(authority instanceof Map<?, ?> authorityMap)) {
 				throw new IllegalArgumentException("trusted_authorities DCQL debe contener objetos"); //$NON-NLS-1$
 			}
+			validateObjectKeys(authorityMap);
+			rejectUnsupportedKeys(authorityMap, TRUSTED_AUTHORITY_KEYS,
+					"trusted_authorities DCQL contiene campos no soportados"); //$NON-NLS-1$
 			final String type = requireText(authorityMap, "type"); //$NON-NLS-1$
 			if (!SUPPORTED_TRUSTED_AUTHORITY_TYPE.equals(type)) {
 				throw new IllegalArgumentException(
@@ -248,6 +270,9 @@ public record DcqlQuery(String json) {
 			if (!(set instanceof Map<?, ?> setMap)) {
 				throw new IllegalArgumentException("credential_sets DCQL debe contener objetos"); //$NON-NLS-1$
 			}
+			validateObjectKeys(setMap);
+			rejectUnsupportedKeys(setMap, CREDENTIAL_SET_KEYS,
+					"credential_sets DCQL contiene campos no soportados"); //$NON-NLS-1$
 			final Object options = setMap.get("options"); //$NON-NLS-1$
 			if (!(options instanceof List<?> optionList) || optionList.isEmpty()) {
 				throw new IllegalArgumentException("credential_sets DCQL sin options"); //$NON-NLS-1$
