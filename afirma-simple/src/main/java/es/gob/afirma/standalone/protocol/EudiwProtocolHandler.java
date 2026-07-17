@@ -266,6 +266,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		if (uri.getRawUserInfo() != null) {
 			throw new IllegalArgumentException("Parámetro " + key + " no admite userinfo"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		if (uri.getRawQuery() != null) {
+			throw new IllegalArgumentException("Parámetro " + key + " no admite query"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		if (uri.getRawFragment() != null) {
 			throw new IllegalArgumentException("Parámetro " + key + " no admite fragmento"); //$NON-NLS-1$ //$NON-NLS-2$
 		}

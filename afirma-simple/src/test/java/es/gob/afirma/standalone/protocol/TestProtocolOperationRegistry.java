@@ -253,6 +253,10 @@ final class TestProtocolOperationRegistry {
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es%3Fx%3D1" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
 						+ "&responseUri=http%3A%2F%2Fverifier.example.es%2Fresponse", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
@@ -283,6 +287,12 @@ final class TestProtocolOperationRegistry {
 						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
 						+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
 						+ "&walletEndpoint=https%3A%2F%2Fuser%40wallet.example%2Frequest", ctx)); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
+						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+						+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Fresponse" //$NON-NLS-1$
+						+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1" //$NON-NLS-1$
+						+ "&walletEndpoint=https%3A%2F%2Fwallet.example%2Frequest%3Fx%3D1", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process("afirma://eudiw-present" //$NON-NLS-1$
 						+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
