@@ -710,6 +710,16 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				macJarmJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
+		final SignedJWT remoteHeaderJarmJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("oauth-authz-resp+jwt")) //$NON-NLS-1$
+						.jwkURL(URI.create("https://wallet.example.es/jwks")) //$NON-NLS-1$
+						.build(),
+				jwt.getJWTClaimsSet());
+		remoteHeaderJarmJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				remoteHeaderJarmJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
 		final SignedJWT noExpirationJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder()

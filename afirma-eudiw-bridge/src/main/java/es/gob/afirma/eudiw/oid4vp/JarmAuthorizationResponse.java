@@ -59,6 +59,9 @@ public record JarmAuthorizationResponse(
 		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
 			throw new JOSEException("Algoritmo JARM no soportado"); //$NON-NLS-1$
 		}
+		if (jwt.getHeader().getJWKURL() != null || jwt.getHeader().getX509CertURL() != null) {
+			throw new JOSEException("JARM contiene referencias remotas no soportadas"); //$NON-NLS-1$
+		}
 		if (!jwt.verify(verifier)) {
 			throw new JOSEException("Firma JARM inválida"); //$NON-NLS-1$
 		}
