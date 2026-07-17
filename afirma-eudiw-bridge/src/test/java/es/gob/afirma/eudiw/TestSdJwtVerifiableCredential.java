@@ -325,6 +325,24 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlCnfKeyVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT whitespaceCnfKeyIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of( //$NON-NLS-1$
+								"jwk", holderJwk.toPublicJWK().toJSONObject(), //$NON-NLS-1$
+								"jw k", "x")) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		whitespaceCnfKeyIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String whitespaceCnfKeyPresentation = whitespaceCnfKeyIssuerJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceCnfKeyKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(whitespaceCnfKeyPresentation));
+		final SdJwtVerifiableCredential whitespaceCnfKeyVc = SdJwtVerifiableCredential.parse(
+				whitespaceCnfKeyPresentation + whitespaceCnfKeyKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceCnfKeyVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT extraCnfKeyIssuerJwt = new SignedJWT(
 				validIssuerJwt.getHeader(),
 				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
@@ -360,6 +378,24 @@ final class TestSdJwtVerifiableCredential {
 				controlJwkKeyPresentation + controlJwkKeyKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlJwkKeyVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final Map<String, Object> whitespaceJwk = new LinkedHashMap<>(holderJwk.toPublicJWK().toJSONObject());
+		whitespaceJwk.put("ignored key", "x"); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT whitespaceJwkKeyIssuerJwt = new SignedJWT(
+				validIssuerJwt.getHeader(),
+				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
+						.claim("cnf", Map.of("jwk", whitespaceJwk)) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		whitespaceJwkKeyIssuerJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String whitespaceJwkKeyPresentation = whitespaceJwkKeyIssuerJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceJwkKeyKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(whitespaceJwkKeyPresentation));
+		final SdJwtVerifiableCredential whitespaceJwkKeyVc = SdJwtVerifiableCredential.parse(
+				whitespaceJwkKeyPresentation + whitespaceJwkKeyKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceJwkKeyVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Map<String, Object> remoteJwk = new LinkedHashMap<>(holderJwk.toPublicJWK().toJSONObject());
 		remoteJwk.put("x5u", "https://issuer.example.es/holder.cer"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -690,6 +726,19 @@ final class TestSdJwtVerifiableCredential {
 				controlValuePresentation + controlValueKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlValueVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceKeyValueDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("[\"salt\",\"address\",{\"street name\":\"Alcalá\"}]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		final String whitespaceKeyValueIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, disclosureHash(whitespaceKeyValueDisclosure));
+		final String whitespaceKeyValuePresentation = whitespaceKeyValueIssuerJwt + "~" + whitespaceKeyValueDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceKeyValueKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(whitespaceKeyValuePresentation));
+		final SdJwtVerifiableCredential whitespaceKeyValueVc = SdJwtVerifiableCredential.parse(
+				whitespaceKeyValuePresentation + whitespaceKeyValueKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceKeyValueVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String controlSdIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
 				holderJwk, List.of(disclosureHash.substring(0, 8) + "\n" + disclosureHash.substring(8))); //$NON-NLS-1$

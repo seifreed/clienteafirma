@@ -275,7 +275,9 @@ public final class SdJwtVerifier {
 		if (value instanceof Map<?, ?> map) {
 			for (final Map.Entry<?, ?> entry : map.entrySet()) {
 				if (!(entry.getKey() instanceof String key)
-						|| key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+						|| key.isBlank() || !key.equals(key.strip())
+						|| key.chars().anyMatch(Character::isWhitespace)
+						|| containsControlChars(key)) {
 					throw new SdJwtVerificationException("Disclosure SD-JWT contiene claves no normalizadas"); //$NON-NLS-1$
 				}
 				validateDisclosureValue(entry.getValue());
@@ -448,7 +450,9 @@ public final class SdJwtVerifier {
 			if (!(entry.getKey() instanceof String key)) {
 				throw new SdJwtVerificationException("cnf contiene claves no textuales"); //$NON-NLS-1$
 			}
-			if (key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+			if (key.isBlank() || !key.equals(key.strip())
+					|| key.chars().anyMatch(Character::isWhitespace)
+					|| containsControlChars(key)) {
 				throw new SdJwtVerificationException("cnf contiene claves no normalizadas"); //$NON-NLS-1$
 			}
 			cnfJson.put(key, entry.getValue());
@@ -476,7 +480,9 @@ public final class SdJwtVerifier {
 		if (value instanceof Map<?, ?> map) {
 			for (final Map.Entry<?, ?> entry : map.entrySet()) {
 				if (!(entry.getKey() instanceof String key)
-						|| key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+						|| key.isBlank() || !key.equals(key.strip())
+						|| key.chars().anyMatch(Character::isWhitespace)
+						|| containsControlChars(key)) {
 					throw new SdJwtVerificationException("cnf.jwk contiene claves no normalizadas"); //$NON-NLS-1$
 				}
 				if ("jku".equals(key) || "x5u".equals(key)) { //$NON-NLS-1$ //$NON-NLS-2$
