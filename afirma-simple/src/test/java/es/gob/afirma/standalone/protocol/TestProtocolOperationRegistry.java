@@ -168,6 +168,8 @@ final class TestProtocolOperationRegistry {
 		assertThrows(IllegalArgumentException.class, () -> handler.process(url + "%23frag", ctx)); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> handler.process(url.replace("client%3Dautofirma", "request%3Dold"), ctx)); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IllegalArgumentException.class,
+				() -> handler.process(url.replace("client%3Dautofirma", "client%3D%250A"), ctx)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test

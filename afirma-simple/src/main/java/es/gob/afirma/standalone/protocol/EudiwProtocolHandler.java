@@ -151,9 +151,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (walletDeepLink.getRawFragment() != null) {
 				throw new IllegalArgumentException("walletUri no admite fragmento"); //$NON-NLS-1$
 			}
-			if (hasQueryParam(walletDeepLink, "request")) { //$NON-NLS-1$
-				throw new IllegalArgumentException("walletUri no admite request preexistente"); //$NON-NLS-1$
-			}
+			validateWalletDeepLinkQuery(walletDeepLink);
 			return appendQueryParam(walletDeepLink, "request", openid4vpUri).toString(); //$NON-NLS-1$
 		}
 		if (walletEndpoint != null && !walletEndpoint.isBlank()) {
@@ -301,19 +299,29 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 		return second != null && !second.isBlank() ? second : null;
 	}
 
-	private static boolean hasQueryParam(final URI uri, final String key) {
+	private static void validateWalletDeepLinkQuery(final URI uri) {
 		final String query = uri.getRawQuery();
 		if (query == null || query.isEmpty()) {
-			return false;
+			return;
 		}
+		final Map<String, String> params = new LinkedHashMap<>();
 		for (final String pair : query.split("&", -1)) { //$NON-NLS-1$
 			final int eq = pair.indexOf('=');
-			final String rawKey = eq < 0 ? pair : pair.substring(0, eq);
-			if (key.equals(decodeQueryComponent(rawKey))) {
-				return true;
+			if (eq <= 0 || eq == pair.length() - 1) {
+				throw new IllegalArgumentException("walletUri contiene query no normalizada"); //$NON-NLS-1$
+			}
+			final String key = decodeQueryComponent(pair.substring(0, eq));
+			final String value = decodeQueryComponent(pair.substring(eq + 1));
+			if (key.isBlank() || value.isBlank()
+					|| !key.equals(key.strip()) || !value.equals(value.strip())
+					|| containsControlChars(key) || containsControlChars(value)
+					|| params.put(key, value) != null) {
+				throw new IllegalArgumentException("walletUri contiene query no normalizada"); //$NON-NLS-1$
+			}
+			if ("request".equals(key)) { //$NON-NLS-1$
+				throw new IllegalArgumentException("walletUri no admite request preexistente"); //$NON-NLS-1$
 			}
 		}
-		return false;
 	}
 
 	private static URI appendQueryParam(final URI uri, final String key, final String value) {
