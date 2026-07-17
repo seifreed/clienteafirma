@@ -233,6 +233,10 @@ public final class ProtocolInvocationLauncher {
 		return protocolVersion;
     }
 
+	private static boolean startsWithIgnoreCase(final String text, final String prefix) {
+		return text.regionMatches(true, 0, prefix, 0, prefix.length());
+	}
+
 	/**
 	 * Lanza la aplicaci&oacute;n y realiza las acciones indicadas en la URL.
 	 *
@@ -268,7 +272,8 @@ public final class ProtocolInvocationLauncher {
             ProtocolInvocationLauncherErrorManager.showError(protocolVersion, error);
 			return ProtocolInvocationLauncherErrorManager.getErrorMessage(protocolVersion, error);
         }
-        if (!urlString.startsWith("afirma://") && !urlString.startsWith("getresult?")) { //$NON-NLS-1$ //$NON-NLS-2$
+        if (!startsWithIgnoreCase(urlString, "afirma://") //$NON-NLS-1$
+				&& !startsWithIgnoreCase(urlString, "getresult?")) { //$NON-NLS-1$
             LOGGER.severe("La URL de invocacion no comienza por 'afirma://'"); //$NON-NLS-1$
             final ErrorCode error = SimpleErrorCode.Request.UNSUPPORTED_REQUEST_SCHEME;
             ProtocolInvocationLauncherErrorManager.showError(protocolVersion, error);

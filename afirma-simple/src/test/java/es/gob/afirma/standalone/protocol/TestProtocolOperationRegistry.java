@@ -72,7 +72,7 @@ final class TestProtocolOperationRegistry {
 	@Test
 	@DisplayName("ProtocolInvocationLauncher enruta eudiw-present por el registry")
 	void launcherDispatchesEudiwThroughRegistry() {
-		final String url = "afirma://eudiw-present"
+		final String url = "AFIRMA://EUDIW-PRESENT"
 				+ "?verifier=https%3A%2F%2Fverifier.example.es"
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
 				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2F1";
@@ -112,7 +112,6 @@ final class TestProtocolOperationRegistry {
 		final String url = "afirma://eudiw-present"
 				+ "?verifier=https%3A%2F%2Fverifier.example.es"
 				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse"
-				+ "&presentationDefinitionUri=https%3A%2F%2Fverifier.example.es%2Fpd%2Flegacy"
 				+ "&dcql_query=" + dcql;
 		final LaunchContext ctx = new LaunchContext(null, false,
 				Collections.emptyMap(), 1);
