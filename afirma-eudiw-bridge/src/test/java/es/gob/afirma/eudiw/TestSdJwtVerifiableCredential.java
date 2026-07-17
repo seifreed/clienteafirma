@@ -169,6 +169,9 @@ final class TestSdJwtVerifiableCredential {
 						"https://verifier.example.es", " nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
+						"https://verifier.example.es", "non ce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", "non\nce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
@@ -452,6 +455,13 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlNonceKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceNonceKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "non ce-1", presentationHash(presentation)); //$NON-NLS-1$ //$NON-NLS-2$
+		final SdJwtVerifiableCredential whitespaceNonceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + whitespaceNonceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceNonceKbVc, trust,
+						"https://verifier.example.es", "non ce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noAudienceKbJwt = signedKeyBindingJwt(holderKp,
 				List.of(), "nonce-1", presentationHash(presentation)); //$NON-NLS-1$
 		final SdJwtVerifiableCredential noAudienceKbVc = SdJwtVerifiableCredential.parse(

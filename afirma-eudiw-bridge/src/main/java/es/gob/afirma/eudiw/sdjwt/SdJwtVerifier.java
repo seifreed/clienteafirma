@@ -69,6 +69,9 @@ public final class SdJwtVerifier {
 		if (!nonce.equals(nonce.strip())) {
 			throw new SdJwtVerificationException("Nonce SD-JWT no normalizado"); //$NON-NLS-1$
 		}
+		if (nonce.chars().anyMatch(Character::isWhitespace)) {
+			throw new SdJwtVerificationException("Nonce SD-JWT contiene espacios"); //$NON-NLS-1$
+		}
 		if (containsControlChars(nonce)) {
 			throw new SdJwtVerificationException("Nonce SD-JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
@@ -359,6 +362,9 @@ public final class SdJwtVerifier {
 		}
 		if (!claimNonce.equals(claimNonce.strip())) {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (claimNonce.chars().anyMatch(Character::isWhitespace)) {
+			throw new SdJwtVerificationException("Nonce Key Binding JWT contiene espacios"); //$NON-NLS-1$
 		}
 		if (containsControlChars(claimNonce)) {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT contiene caracteres de control"); //$NON-NLS-1$
