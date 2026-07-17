@@ -2,6 +2,7 @@
 
 package es.gob.afirma.eudiw.oid4vp;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
@@ -166,6 +167,7 @@ public record DcqlQuery(String json) {
 						|| !seenValues.add(text)) {
 					throw new IllegalArgumentException("trusted_authorities DCQL con value inválido"); //$NON-NLS-1$
 				}
+				requireHttpsUri(text, "trusted_authorities DCQL con value inválido"); //$NON-NLS-1$
 			}
 		}
 	}
@@ -260,6 +262,23 @@ public record DcqlQuery(String json) {
 
 	private static boolean isId(final String text) {
 		return isNormalizedText(text) && ID_PATTERN.matcher(text).matches();
+	}
+
+	private static void requireHttpsUri(final String value, final String error) {
+		final URI uri;
+		try {
+			uri = URI.create(value);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new IllegalArgumentException(error, e);
+		}
+		if (!"https".equalsIgnoreCase(uri.getScheme()) //$NON-NLS-1$
+				|| uri.getHost() == null || uri.getHost().isBlank()
+				|| uri.getRawUserInfo() != null
+				|| uri.getRawQuery() != null
+				|| uri.getRawFragment() != null) {
+			throw new IllegalArgumentException(error);
+		}
 	}
 
 	private static boolean isInteger(final Object value) {

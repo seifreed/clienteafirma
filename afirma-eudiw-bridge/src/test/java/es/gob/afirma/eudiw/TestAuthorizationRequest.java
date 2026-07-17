@@ -168,6 +168,15 @@ final class TestAuthorizationRequest {
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"trusted_authorities\":[{\"type\":\"openid_federation\",\"values\":[\"https://issuer.example.es\"]}]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"trusted_authorities\":[{\"type\":\"etsi_tl\",\"values\":[\"http://ec.europa.eu/tools/lotl/eu-lotl.xml\"]}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"trusted_authorities\":[{\"type\":\"etsi_tl\",\"values\":[\"https://ec.europa.eu/tools/lotl/eu-lotl.xml?x=1\"]}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
+						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"trusted_authorities\":[{\"type\":\"etsi_tl\",\"values\":[\"https://user@ec.europa.eu/tools/lotl/eu-lotl.xml\"]}]}]}")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new AuthorizationRequestBuilder().dcqlQuery(
 						"{\"credentials\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"trusted_authorities\":[{\"type\":\"etsi_tl\",\"values\":[\"https://ec.europa.eu/tools/lotl/eu-lotl.xml\",\"https://ec.europa.eu/tools/lotl/eu-lotl.xml\"]}]}]}")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,
 				() -> new AuthorizationRequestBuilder().dcqlQuery(
