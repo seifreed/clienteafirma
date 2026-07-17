@@ -441,6 +441,22 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlKidVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final RSAKey whitespaceKidHolderJwk = new RSAKey.Builder(
+				(java.security.interfaces.RSAPublicKey) holderKp.getPublic())
+				.algorithm(JWSAlgorithm.RS256)
+				.keyID("holder 1") //$NON-NLS-1$
+				.build();
+		final String whitespaceKidIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, whitespaceKidHolderJwk,
+				disclosureHash);
+		final String whitespaceKidPresentation = whitespaceKidIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceKidKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(whitespaceKidPresentation));
+		final SdJwtVerifiableCredential whitespaceKidVc = SdJwtVerifiableCredential.parse(
+				whitespaceKidPresentation + whitespaceKidKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceKidVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String blankNonceKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", " ", presentationHash(presentation)); //$NON-NLS-1$ //$NON-NLS-2$
 		final SdJwtVerifiableCredential blankNonceKbVc = SdJwtVerifiableCredential.parse(

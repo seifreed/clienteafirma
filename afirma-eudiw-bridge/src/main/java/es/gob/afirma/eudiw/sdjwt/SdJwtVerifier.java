@@ -478,7 +478,9 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("cnf.jwk no debe contener clave privada"); //$NON-NLS-1$
 		}
 		final String keyId = jwk.getKeyID();
-		if (keyId != null && (keyId.isBlank() || !keyId.equals(keyId.strip()) || containsControlChars(keyId))) {
+		if (keyId != null && (keyId.isBlank() || !keyId.equals(keyId.strip())
+				|| keyId.chars().anyMatch(Character::isWhitespace)
+				|| containsControlChars(keyId))) {
 			throw new SdJwtVerificationException("cnf.jwk contiene kid no normalizado"); //$NON-NLS-1$
 		}
 		return jwk;
