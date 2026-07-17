@@ -255,7 +255,8 @@ public record JarmAuthorizationResponse(
 	}
 
 	private static boolean isArrayIndex(final String text) {
-		return !text.isEmpty() && text.chars().allMatch(Character::isDigit);
+		return !text.isEmpty() && (text.length() == 1 || text.charAt(0) != '0')
+				&& text.chars().allMatch(Character::isDigit);
 	}
 
 	private static String requireNormalizedString(final Map<String, Object> map, final String name) throws JOSEException {
