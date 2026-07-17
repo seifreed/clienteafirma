@@ -195,7 +195,7 @@ public record JarmAuthorizationResponse(
 
 	private static void validateJsonValue(final Object value) throws JOSEException {
 		if (value instanceof String text
-				&& (!text.equals(text.strip()) || containsControlChars(text))) {
+				&& (text.isBlank() || !text.equals(text.strip()) || containsControlChars(text))) {
 			throw new JOSEException("JARM contiene valores JSON textuales no normalizados"); //$NON-NLS-1$
 		}
 		if (value instanceof Map<?, ?> map) {

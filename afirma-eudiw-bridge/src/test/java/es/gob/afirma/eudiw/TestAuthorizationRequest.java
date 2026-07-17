@@ -386,6 +386,15 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				controlArrayVpTokenJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT blankArrayVpTokenJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("vp_token", List.of("")) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		blankArrayVpTokenJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				blankArrayVpTokenJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT unnormalizedTextVpTokenJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
