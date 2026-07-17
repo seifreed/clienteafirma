@@ -170,6 +170,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 					&& !"openid4vp".equalsIgnoreCase(walletDeepLink.getScheme())) { //$NON-NLS-1$
 				throw new IllegalArgumentException("walletUri usa un esquema no soportado"); //$NON-NLS-1$
 			}
+			if (walletDeepLink.getHost() == null || walletDeepLink.getHost().isBlank()) {
+				throw new IllegalArgumentException("walletUri debe declarar host"); //$NON-NLS-1$
+			}
 			if (walletDeepLink.getRawUserInfo() != null) {
 				throw new IllegalArgumentException("walletUri no admite userinfo"); //$NON-NLS-1$
 			}
