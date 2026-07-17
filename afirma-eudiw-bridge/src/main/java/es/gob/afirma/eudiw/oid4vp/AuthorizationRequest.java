@@ -75,6 +75,9 @@ public record AuthorizationRequest(
 		if (!nonce.equals(nonce.strip())) {
 			throw new IllegalArgumentException("OID4VP nonce no normalizado"); //$NON-NLS-1$
 		}
+		if (nonce.chars().anyMatch(Character::isWhitespace)) {
+			throw new IllegalArgumentException("OID4VP nonce contiene espacios"); //$NON-NLS-1$
+		}
 		if (containsControlChars(nonce)) {
 			throw new IllegalArgumentException("OID4VP nonce contiene caracteres de control"); //$NON-NLS-1$
 		}

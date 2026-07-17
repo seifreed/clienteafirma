@@ -72,6 +72,12 @@ final class TestAuthorizationRequest {
 				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/1?x=1")) //$NON-NLS-1$
 				.nonce("nonce") //$NON-NLS-1$
 				.build());
+		assertThrows(IllegalArgumentException.class, () -> new AuthorizationRequestBuilder()
+				.clientId("https://verifier.example.es") //$NON-NLS-1$
+				.responseUri(URI.create("https://verifier.example.es/oid4vp/response")) //$NON-NLS-1$
+				.presentationDefinitionUri(URI.create("https://verifier.example.es/oid4vp/pd/1")) //$NON-NLS-1$
+				.nonce("non ce") //$NON-NLS-1$
+				.build());
 	}
 
 	@Test
