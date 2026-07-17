@@ -30,6 +30,10 @@ public record JarmAuthorizationResponse(
 	private static final JOSEObjectType RESPONSE_TYPE =
 			new JOSEObjectType("oauth-authz-resp+jwt"); //$NON-NLS-1$
 	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
+	private static final Set<String> PRESENTATION_SUBMISSION_KEYS =
+			Set.of("id", "definition_id", "descriptor_map"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static final Set<String> DESCRIPTOR_KEYS =
+			Set.of("id", "format", "path"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	/**
 	 * Verifica firma, audience y state de una respuesta JARM.
@@ -232,6 +236,8 @@ public record JarmAuthorizationResponse(
 
 	private static void validatePresentationSubmission(final Map<String, Object> submission) throws JOSEException {
 		final Map<String, Object> typedSubmission = stringKeyMap(submission);
+		rejectUnsupportedKeys(typedSubmission, PRESENTATION_SUBMISSION_KEYS,
+				"presentation_submission JARM contiene campos no soportados"); //$NON-NLS-1$
 		requireNormalizedString(typedSubmission, "id"); //$NON-NLS-1$
 		requireNormalizedString(typedSubmission, "definition_id"); //$NON-NLS-1$
 		final Object descriptorMap = typedSubmission.get("descriptor_map"); //$NON-NLS-1$
@@ -244,6 +250,8 @@ public record JarmAuthorizationResponse(
 				throw new JOSEException("presentation_submission JARM con descriptor_map inválido"); //$NON-NLS-1$
 			}
 			final Map<String, Object> typedDescriptor = stringKeyMap(descriptorEntry);
+			rejectUnsupportedKeys(typedDescriptor, DESCRIPTOR_KEYS,
+					"presentation_submission JARM contiene descriptor_map no soportado"); //$NON-NLS-1$
 			if (!descriptorIds.add(requireNormalizedString(typedDescriptor, "id"))) { //$NON-NLS-1$
 				throw new JOSEException("presentation_submission JARM con descriptor_map duplicado"); //$NON-NLS-1$
 			}
@@ -256,6 +264,15 @@ public record JarmAuthorizationResponse(
 				if (!SUPPORTED_FORMAT.equals(format)) {
 					throw new JOSEException("presentation_submission JARM con format no soportado: " + format); //$NON-NLS-1$
 				}
+			}
+		}
+	}
+
+	private static void rejectUnsupportedKeys(final Map<String, Object> json,
+			final Set<String> supported, final String error) throws JOSEException {
+		for (final String key : json.keySet()) {
+			if (!supported.contains(key)) {
+				throw new JOSEException(error);
 			}
 		}
 	}

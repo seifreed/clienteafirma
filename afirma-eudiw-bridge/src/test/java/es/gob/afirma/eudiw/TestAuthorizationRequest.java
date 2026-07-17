@@ -636,6 +636,16 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				controlRootKeySubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT unsupportedRootKeySubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", //$NON-NLS-1$
+								"{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"unknown\":\"x\",\"descriptor_map\":[{\"id\":\"pid\",\"path\":\"$\"}]}") //$NON-NLS-1$
+						.build());
+		unsupportedRootKeySubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				unsupportedRootKeySubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT missingDefinitionSubmissionJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
@@ -671,6 +681,15 @@ final class TestAuthorizationRequest {
 		unsupportedDescriptorSubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				unsupportedDescriptorSubmissionJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT unsupportedDescriptorKeySubmissionJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("presentation_submission", "{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"path\":\"$\",\"unknown\":\"x\"}]}") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		unsupportedDescriptorKeySubmissionJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				unsupportedDescriptorKeySubmissionJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT duplicatedDescriptorSubmissionJwt = new SignedJWT(
 				jarmHeader(),
