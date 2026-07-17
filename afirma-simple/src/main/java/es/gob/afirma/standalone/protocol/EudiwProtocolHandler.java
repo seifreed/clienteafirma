@@ -66,6 +66,16 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			"walletUri", //$NON-NLS-1$
 			"walletEndpoint", //$NON-NLS-1$
 			"state"); //$NON-NLS-1$
+	private static final Set<String> RESERVED_WALLET_QUERY_PARAMETERS = Set.of(
+			"request", //$NON-NLS-1$
+			"request_uri", //$NON-NLS-1$
+			"client_id", //$NON-NLS-1$
+			"response_uri", //$NON-NLS-1$
+			"response_mode", //$NON-NLS-1$
+			"presentation_definition_uri", //$NON-NLS-1$
+			"dcql_query", //$NON-NLS-1$
+			"nonce", //$NON-NLS-1$
+			"state"); //$NON-NLS-1$
 
 	@Override
 	public boolean handles(final String url) {
@@ -347,8 +357,8 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 					|| params.put(key, value) != null) {
 				throw new IllegalArgumentException("walletUri contiene query no normalizada"); //$NON-NLS-1$
 			}
-			if ("request".equals(key)) { //$NON-NLS-1$
-				throw new IllegalArgumentException("walletUri no admite request preexistente"); //$NON-NLS-1$
+			if (RESERVED_WALLET_QUERY_PARAMETERS.contains(key)) {
+				throw new IllegalArgumentException("walletUri no admite parametros OID4VP preexistentes"); //$NON-NLS-1$
 			}
 		}
 	}
