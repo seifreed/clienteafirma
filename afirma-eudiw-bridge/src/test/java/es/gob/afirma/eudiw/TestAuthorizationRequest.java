@@ -277,6 +277,14 @@ final class TestAuthorizationRequest {
 				jar.getJWTClaimsSet());
 		macJar.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(macJar, jarVerifier));
+		final SignedJWT remoteHeaderJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$
+						.jwkURL(URI.create("https://wallet.example.es/jwks")) //$NON-NLS-1$
+						.build(),
+				jar.getJWTClaimsSet());
+		remoteHeaderJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(remoteHeaderJar, jarVerifier));
 		final SignedJWT mismatchedJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())

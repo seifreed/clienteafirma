@@ -157,6 +157,10 @@ public record AuthorizationRequest(
 			if (!isSupportedJarAlgorithm(requestObject.getHeader().getAlgorithm())) {
 				throw new IllegalArgumentException("Request Object JAR con algoritmo no soportado"); //$NON-NLS-1$
 			}
+			if (requestObject.getHeader().getJWKURL() != null
+					|| requestObject.getHeader().getX509CertURL() != null) {
+				throw new IllegalArgumentException("Request Object JAR contiene referencias remotas no soportadas"); //$NON-NLS-1$
+			}
 			if (!requestObject.verify(verifier)) {
 				throw new IllegalArgumentException("Firma Request Object JAR inválida"); //$NON-NLS-1$
 			}
