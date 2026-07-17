@@ -237,8 +237,9 @@ public record DcqlQuery(String json) {
 		if (!(option instanceof List<?> ids) || ids.isEmpty()) {
 			throw new IllegalArgumentException(error);
 		}
+		final Set<String> seen = new HashSet<>();
 		for (final Object id : ids) {
-			if (!(id instanceof String text) || !isId(text) || !validIds.contains(text)) {
+			if (!(id instanceof String text) || !isId(text) || !validIds.contains(text) || !seen.add(text)) {
 				throw new IllegalArgumentException(error);
 			}
 		}
