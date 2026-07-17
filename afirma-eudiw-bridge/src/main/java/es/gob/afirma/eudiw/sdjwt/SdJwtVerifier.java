@@ -289,6 +289,9 @@ public final class SdJwtVerifier {
 			final String audience, final String nonce) throws Exception {
 		final SignedJWT issuerJwt = vc.issuerSignedJwt();
 		final JWK holderKey = holderKey(issuerJwt);
+		if (kbJwt.getHeader().getJWKURL() != null || kbJwt.getHeader().getX509CertURL() != null) {
+			throw new SdJwtVerificationException("Key Binding JWT contiene referencias remotas no soportadas"); //$NON-NLS-1$
+		}
 		if (!isSupportedJwsAlgorithm(kbJwt.getHeader().getAlgorithm())) {
 			throw new SdJwtVerificationException("Algoritmo Key Binding JWT no soportado"); //$NON-NLS-1$
 		}

@@ -252,6 +252,18 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(symmetricKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT remoteKbHeaderJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("kb+jwt")) //$NON-NLS-1$
+						.jwkURL(URI.create("https://wallet.example.es/jwks")) //$NON-NLS-1$
+						.build(),
+				validKbJwt.getJWTClaimsSet());
+		remoteKbHeaderJwt.sign(new RSASSASigner(holderKp.getPrivate()));
+		final SdJwtVerifiableCredential remoteKbHeaderVc = SdJwtVerifiableCredential.parse(
+				presentation + remoteKbHeaderJwt.serialize());
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(remoteKbHeaderVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT noHolderJwkIssuerJwt = new SignedJWT(
 				validIssuerJwt.getHeader(),
 				new JWTClaimsSet.Builder(validIssuerJwt.getJWTClaimsSet())
