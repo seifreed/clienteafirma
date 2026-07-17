@@ -59,6 +59,9 @@ public record JarmAuthorizationResponse(
 		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
 			throw new JOSEException("Algoritmo JARM no soportado"); //$NON-NLS-1$
 		}
+		if (jwt.getHeader().getCriticalParams() != null && !jwt.getHeader().getCriticalParams().isEmpty()) {
+			throw new JOSEException("JARM contiene cabeceras críticas no soportadas"); //$NON-NLS-1$
+		}
 		if (jwt.getHeader().getJWKURL() != null || jwt.getHeader().getX509CertURL() != null) {
 			throw new JOSEException("JARM contiene referencias remotas no soportadas"); //$NON-NLS-1$
 		}

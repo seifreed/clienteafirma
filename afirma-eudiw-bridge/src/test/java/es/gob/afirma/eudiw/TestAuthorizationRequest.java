@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -277,6 +278,15 @@ final class TestAuthorizationRequest {
 				jar.getJWTClaimsSet());
 		macJar.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(macJar, jarVerifier));
+		final SignedJWT criticalHeaderJar = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$
+						.criticalParams(Set.of("foo")) //$NON-NLS-1$
+						.customParam("foo", "bar") //$NON-NLS-1$ //$NON-NLS-2$
+						.build(),
+				jar.getJWTClaimsSet());
+		criticalHeaderJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(criticalHeaderJar, jarVerifier));
 		final SignedJWT remoteHeaderJar = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
 						.type(new JOSEObjectType("oauth-authz-req+jwt")) //$NON-NLS-1$
@@ -709,6 +719,17 @@ final class TestAuthorizationRequest {
 		macJarmJwt.sign(new MACSigner("01234567890123456789012345678901")); //$NON-NLS-1$
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				macJarmJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		final SignedJWT criticalHeaderJarmJwt = new SignedJWT(
+				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("oauth-authz-resp+jwt")) //$NON-NLS-1$
+						.criticalParams(Set.of("foo")) //$NON-NLS-1$
+						.customParam("foo", "bar") //$NON-NLS-1$ //$NON-NLS-2$
+						.build(),
+				jwt.getJWTClaimsSet());
+		criticalHeaderJarmJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				criticalHeaderJarmJwt.serialize(), verifier, "https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT remoteHeaderJarmJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256)
