@@ -247,6 +247,7 @@ public final class SdJwtVerifier {
 			if (!seenClaimNames.add(claimName)) {
 				throw new SdJwtVerificationException("Claim SD-JWT duplicado: " + claimName); //$NON-NLS-1$
 			}
+			validateDisclosureValue(disclosureJson.get(2));
 			final String digest = Base64.getUrlEncoder().withoutPadding().encodeToString(
 					sha256.digest(disclosure.getBytes(StandardCharsets.US_ASCII)));
 			if (!expected.contains(digest)) {
@@ -257,6 +258,27 @@ public final class SdJwtVerifier {
 		}
 		if (!presentedDigests.containsAll(expected)) {
 			throw new SdJwtVerificationException("Faltan disclosures SD-JWT esperadas"); //$NON-NLS-1$
+		}
+	}
+
+	private static void validateDisclosureValue(final Object value) throws SdJwtVerificationException {
+		if (value instanceof String text
+				&& (text.isBlank() || !text.equals(text.strip()) || containsControlChars(text))) {
+			throw new SdJwtVerificationException("Valor disclosure SD-JWT no normalizado"); //$NON-NLS-1$
+		}
+		if (value instanceof Map<?, ?> map) {
+			for (final Map.Entry<?, ?> entry : map.entrySet()) {
+				if (!(entry.getKey() instanceof String key)
+						|| key.isBlank() || !key.equals(key.strip()) || containsControlChars(key)) {
+					throw new SdJwtVerificationException("Disclosure SD-JWT contiene claves no normalizadas"); //$NON-NLS-1$
+				}
+				validateDisclosureValue(entry.getValue());
+			}
+		}
+		if (value instanceof List<?> list) {
+			for (final Object item : list) {
+				validateDisclosureValue(item);
+			}
 		}
 	}
 
