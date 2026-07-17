@@ -201,6 +201,18 @@ final class TestTslParser {
 			return es;
 		});
 		assertEquals(1, nextUpdateLoads.get(), "NextUpdate caducado debe forzar recarga"); //$NON-NLS-1$
+		final AtomicInteger clockRollbackLoads = new AtomicInteger();
+		final MutableClock rollbackClock = new MutableClock(Instant.parse("2026-01-02T00:00:00Z")); //$NON-NLS-1$
+		final TrustListService clockRollback = new TrustListService(
+				rollbackClock,
+				Duration.ofHours(24));
+		clockRollback.ingest(es);
+		rollbackClock.now = Instant.parse("2026-01-01T00:00:00Z"); //$NON-NLS-1$
+		clockRollback.getOrRefresh("ES", () -> { //$NON-NLS-1$
+			clockRollbackLoads.incrementAndGet();
+			return es;
+		});
+		assertEquals(1, clockRollbackLoads.get(), "loadedAt futuro debe forzar recarga"); //$NON-NLS-1$
 		final TrustListService rejectsExpiredLoad = new TrustListService(
 				Clock.fixed(Instant.parse("2026-01-02T00:00:00Z"), ZoneOffset.UTC),
 				Duration.ZERO);

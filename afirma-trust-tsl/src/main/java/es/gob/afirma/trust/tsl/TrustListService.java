@@ -155,6 +155,9 @@ public final class TrustListService {
 			return true;
 		}
 		final Instant now = Instant.now(this.clock);
+		if (timestamp.isAfter(now)) {
+			return true;
+		}
 		if (!now.isBefore(timestamp.plus(this.refreshInterval))) {
 			return true;
 		}
