@@ -190,6 +190,13 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(blankHashVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String whitespaceHashKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", "YW Jj"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		final SdJwtVerifiableCredential whitespaceHashVc = SdJwtVerifiableCredential.parse(
+				presentation + whitespaceHashKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(whitespaceHashVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String shortHashKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", "YWJj"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		final SdJwtVerifiableCredential shortHashVc = SdJwtVerifiableCredential.parse(

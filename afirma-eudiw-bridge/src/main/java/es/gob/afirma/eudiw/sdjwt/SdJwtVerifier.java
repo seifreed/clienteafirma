@@ -375,7 +375,9 @@ public final class SdJwtVerifier {
 		final String expectedHash = sdHash(vc);
 		final String claimHash = claims.getStringClaim("sd_hash"); //$NON-NLS-1$
 		if (claimHash == null || claimHash.isBlank() || claimHash.indexOf('=') >= 0
-				|| !claimHash.equals(claimHash.strip()) || containsControlChars(claimHash)) {
+				|| !claimHash.equals(claimHash.strip())
+				|| claimHash.chars().anyMatch(Character::isWhitespace)
+				|| containsControlChars(claimHash)) {
 			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
 		}
 		try {
