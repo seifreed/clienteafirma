@@ -733,6 +733,15 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				queryAudienceJwt.serialize(), verifier,
 				"https://verifier.example.es?x=1", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT duplicatedAudienceJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.audience(List.of("https://verifier.example.es", "https://verifier.example.es")) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		duplicatedAudienceJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				duplicatedAudienceJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT noStateJwt = new SignedJWT(
 				jarmHeader(),

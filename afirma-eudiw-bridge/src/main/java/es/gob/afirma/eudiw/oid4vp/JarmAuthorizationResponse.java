@@ -84,6 +84,7 @@ public record JarmAuthorizationResponse(
 		if (claims.getAudience().isEmpty()) {
 			throw new JOSEException("Audience JARM ausente"); //$NON-NLS-1$
 		}
+		final Set<String> audiences = new HashSet<>();
 		for (final String audience : claims.getAudience()) {
 			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())) {
 				throw new JOSEException("Audience JARM no normalizada"); //$NON-NLS-1$
@@ -92,6 +93,9 @@ public record JarmAuthorizationResponse(
 				throw new JOSEException("Audience JARM contiene caracteres de control"); //$NON-NLS-1$
 			}
 			requireHttpsClaim(audience, "Audience JARM inválida"); //$NON-NLS-1$
+			if (!audiences.add(audience)) {
+				throw new JOSEException("Audience JARM duplicada"); //$NON-NLS-1$
+			}
 		}
 		if (!claims.getAudience().contains(expectedAudience)) {
 			throw new JOSEException("Audience JARM inválida"); //$NON-NLS-1$
