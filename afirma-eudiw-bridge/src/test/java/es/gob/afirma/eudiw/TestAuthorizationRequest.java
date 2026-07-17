@@ -295,6 +295,13 @@ final class TestAuthorizationRequest {
 						.build());
 		controlAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(controlAudienceJar, jarVerifier));
+		final SignedJWT queryAudienceJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.audience("openid4vp://wallet?x=1") //$NON-NLS-1$
+						.build());
+		queryAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(queryAudienceJar, jarVerifier));
 		final SignedJWT noAudienceJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
@@ -338,6 +345,10 @@ final class TestAuthorizationRequest {
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, " wallet")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "wal\nlet")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "wallet")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "openid4vp://wallet?x=1")); //$NON-NLS-1$
 		assertThrows(NullPointerException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, null));
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(

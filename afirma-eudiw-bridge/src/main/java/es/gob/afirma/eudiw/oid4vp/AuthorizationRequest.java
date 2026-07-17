@@ -217,6 +217,7 @@ public record AuthorizationRequest(
 					|| containsControlChars(audience)) {
 				throw new IllegalArgumentException("Request Object JAR con audience no normalizada"); //$NON-NLS-1$
 			}
+			validateAudienceUri(audience, "Request Object JAR con audience inválida"); //$NON-NLS-1$
 		}
 	}
 
@@ -253,6 +254,7 @@ public record AuthorizationRequest(
 		if (containsControlChars(audience)) {
 			throw new IllegalArgumentException("OID4VP JAR audience contiene caracteres de control"); //$NON-NLS-1$
 		}
+		validateAudienceUri(audience, "OID4VP JAR audience inválida"); //$NON-NLS-1$
 		final Date now = new Date();
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.issuer(this.clientId)
@@ -269,6 +271,22 @@ public record AuthorizationRequest(
 
 	private static boolean isSupportedJarAlgorithm(final JWSAlgorithm algorithm) {
 		return JWSAlgorithm.Family.RSA.contains(algorithm) || JWSAlgorithm.Family.EC.contains(algorithm);
+	}
+
+	private static void validateAudienceUri(final String audience, final String error) {
+		final URI uri;
+		try {
+			uri = URI.create(audience);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new IllegalArgumentException(error, e);
+		}
+		if (uri.getScheme() == null || uri.getScheme().isBlank()
+				|| uri.getRawUserInfo() != null
+				|| uri.getRawQuery() != null
+				|| uri.getRawFragment() != null) {
+			throw new IllegalArgumentException(error);
+		}
 	}
 
 	private Map<String, String> params() {
