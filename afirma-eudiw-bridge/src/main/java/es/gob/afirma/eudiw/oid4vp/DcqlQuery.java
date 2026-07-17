@@ -16,6 +16,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 public record DcqlQuery(String json) {
 
 	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
+	private static final String SUPPORTED_TRUSTED_AUTHORITY_TYPE = "etsi_tl"; //$NON-NLS-1$
 	private static final Pattern ID_PATTERN = Pattern.compile("[A-Za-z0-9_-]+"); //$NON-NLS-1$
 
 	public DcqlQuery {
@@ -150,7 +151,11 @@ public record DcqlQuery(String json) {
 			if (!(authority instanceof Map<?, ?> authorityMap)) {
 				throw new IllegalArgumentException("trusted_authorities DCQL debe contener objetos"); //$NON-NLS-1$
 			}
-			requireText(authorityMap, "type"); //$NON-NLS-1$
+			final String type = requireText(authorityMap, "type"); //$NON-NLS-1$
+			if (!SUPPORTED_TRUSTED_AUTHORITY_TYPE.equals(type)) {
+				throw new IllegalArgumentException(
+						"trusted_authorities DCQL con type no soportado: " + type); //$NON-NLS-1$
+			}
 			final Object values = authorityMap.get("values"); //$NON-NLS-1$
 			if (!(values instanceof List<?> valueList) || valueList.isEmpty()) {
 				throw new IllegalArgumentException("trusted_authorities DCQL sin values"); //$NON-NLS-1$
