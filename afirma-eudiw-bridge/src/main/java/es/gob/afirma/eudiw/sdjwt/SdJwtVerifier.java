@@ -326,7 +326,20 @@ public final class SdJwtVerifier {
 			throw new SdJwtVerificationException("Nonce Key Binding JWT inválido"); //$NON-NLS-1$
 		}
 		final String expectedHash = sdHash(vc);
-		if (!expectedHash.equals(claims.getStringClaim("sd_hash"))) { //$NON-NLS-1$
+		final String claimHash = claims.getStringClaim("sd_hash"); //$NON-NLS-1$
+		if (claimHash == null || claimHash.isBlank() || claimHash.indexOf('=') >= 0
+				|| !claimHash.equals(claimHash.strip()) || containsControlChars(claimHash)) {
+			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
+		}
+		try {
+			if (Base64.getUrlDecoder().decode(claimHash).length != 32) {
+				throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
+			}
+		}
+		catch (final IllegalArgumentException e) {
+			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido", e); //$NON-NLS-1$
+		}
+		if (!expectedHash.equals(claimHash)) {
 			throw new SdJwtVerificationException("sd_hash Key Binding JWT inválido"); //$NON-NLS-1$
 		}
 	}
