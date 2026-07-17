@@ -291,6 +291,18 @@ final class TestLotlLoader {
 				() -> new TslVerifier().verify(duplicateSelfContainedSignature.getBytes(StandardCharsets.UTF_8)));
 	}
 
+	@Test
+	@DisplayName("TslVerifier rechaza XMLDSig que no referencia el documento completo")
+	void rejectsNonRootXmlSignatureReference() throws Exception {
+		final KeyPair kp = rsa();
+		final String signed = new String(sign(LOTL, kp), StandardCharsets.UTF_8);
+		assertTrue(signed.contains("URI=\"\"")); //$NON-NLS-1$
+		final String alteredReference = signed.replace("URI=\"\"", "URI=\"#scheme\""); //$NON-NLS-1$ //$NON-NLS-2$
+
+		assertThrows(TslException.class,
+				() -> new TslVerifier().verify(alteredReference.getBytes(StandardCharsets.UTF_8), kp.getPublic()));
+	}
+
 	private static KeyPair rsa() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
 		kpg.initialize(2048);

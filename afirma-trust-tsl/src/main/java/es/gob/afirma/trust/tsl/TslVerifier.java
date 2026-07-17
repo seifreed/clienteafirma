@@ -9,6 +9,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import javax.xml.XMLConstants;
+import javax.xml.crypto.dsig.Reference;
 import javax.xml.crypto.dsig.XMLSignature;
 import javax.xml.crypto.dsig.XMLSignatureFactory;
 import javax.xml.crypto.dsig.dom.DOMValidateContext;
@@ -134,6 +135,18 @@ public final class TslVerifier {
 		valContext.setProperty("org.jcp.xml.dsig.secureValidation", Boolean.TRUE); //$NON-NLS-1$
 		final XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM"); //$NON-NLS-1$
 		final XMLSignature signature = factory.unmarshalXMLSignature(valContext);
+		validateSignatureShape(signature);
 		return signature.validate(valContext);
+	}
+
+	private static void validateSignatureShape(final XMLSignature signature) throws TslException {
+		final var references = signature.getSignedInfo().getReferences();
+		if (references.size() != 1) {
+			throw new TslException("Firma TSL con referencias XMLDSig no soportadas"); //$NON-NLS-1$
+		}
+		final Object reference = references.get(0);
+		if (!(reference instanceof Reference ref) || ref.getURI() != null && !ref.getURI().isEmpty()) {
+			throw new TslException("Firma TSL no referencia el documento completo"); //$NON-NLS-1$
+		}
 	}
 }
