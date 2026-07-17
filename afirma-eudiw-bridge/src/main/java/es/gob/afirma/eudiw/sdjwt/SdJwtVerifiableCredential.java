@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jwt.SignedJWT;
 
 /**
@@ -132,11 +133,16 @@ public final class SdJwtVerifiableCredential {
 					"Formato SD-JWT inválido: disclosure no es base64url", index); //$NON-NLS-1$
 		}
 		try {
-			Base64.getUrlDecoder().decode(segment);
+			JSONArrayUtils.parse(new String(Base64.getUrlDecoder().decode(segment),
+					java.nio.charset.StandardCharsets.UTF_8));
 		}
 		catch (final IllegalArgumentException e) {
 			throw new ParseException(
 					"Formato SD-JWT inválido: disclosure no es base64url", index); //$NON-NLS-1$
+		}
+		catch (final ParseException e) {
+			throw new ParseException(
+					"Formato SD-JWT inválido: disclosure no es array JSON válido", index); //$NON-NLS-1$
 		}
 	}
 }

@@ -98,6 +98,10 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc.def~")); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~abc=~")); //$NON-NLS-1$
 		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(makeUnsignedJwt() + "~not-base64url!!~")); //$NON-NLS-1$
+		final String nonArrayDisclosure = Base64.getUrlEncoder().withoutPadding()
+				.encodeToString("{}".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(
+				makeUnsignedJwt() + "~" + nonArrayDisclosure + "~")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(NullPointerException.class, () -> SdJwtVerifiableCredential.parse(null));
 	}
 
@@ -506,11 +510,8 @@ final class TestSdJwtVerifiableCredential {
 		final String nonArrayPresentation = nonArrayIssuerJwt + "~" + nonArrayDisclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
 		final String nonArrayKbJwt = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(nonArrayPresentation)); //$NON-NLS-1$ //$NON-NLS-2$
-		final SdJwtVerifiableCredential nonArrayVc = SdJwtVerifiableCredential.parse(
-				nonArrayPresentation + nonArrayKbJwt);
-		assertThrows(SdJwtVerificationException.class,
-				() -> SdJwtVerifier.verify(nonArrayVc, trust,
-						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(ParseException.class, () -> SdJwtVerifiableCredential.parse(
+				nonArrayPresentation + nonArrayKbJwt));
 
 		final String shortDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("[\"salt\",\"family_name\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
