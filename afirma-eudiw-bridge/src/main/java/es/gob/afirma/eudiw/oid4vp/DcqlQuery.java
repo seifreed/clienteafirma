@@ -46,6 +46,10 @@ public record DcqlQuery(String json) {
 				if (!SUPPORTED_FORMAT.equals(format)) {
 					throw new IllegalArgumentException("credential DCQL con format no soportado: " + format); //$NON-NLS-1$
 				}
+				validateOptionalBoolean(credentialMap.get("multiple"), "multiple"); //$NON-NLS-1$ //$NON-NLS-2$
+				validateOptionalBoolean(credentialMap.get("require_cryptographic_holder_binding"), //$NON-NLS-1$
+						"require_cryptographic_holder_binding"); //$NON-NLS-1$
+				validateTrustedAuthorities(credentialMap.get("trusted_authorities")); //$NON-NLS-1$
 				final Object claims = credentialMap.get("claims"); //$NON-NLS-1$
 				if (claims != null && (!(claims instanceof List<?> claimList) || claimList.isEmpty())) {
 					throw new IllegalArgumentException("credential DCQL con claims inválido"); //$NON-NLS-1$
@@ -122,6 +126,36 @@ public record DcqlQuery(String json) {
 		}
 	}
 
+	private static void validateOptionalBoolean(final Object value, final String key) {
+		if (value != null && !(value instanceof Boolean)) {
+			throw new IllegalArgumentException("credential DCQL con " + key + " inválido"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+
+	private static void validateTrustedAuthorities(final Object value) {
+		if (value == null) {
+			return;
+		}
+		if (!(value instanceof List<?> authorities) || authorities.isEmpty()) {
+			throw new IllegalArgumentException("trusted_authorities DCQL inválido"); //$NON-NLS-1$
+		}
+		for (final Object authority : authorities) {
+			if (!(authority instanceof Map<?, ?> authorityMap)) {
+				throw new IllegalArgumentException("trusted_authorities DCQL debe contener objetos"); //$NON-NLS-1$
+			}
+			requireText(authorityMap, "type"); //$NON-NLS-1$
+			final Object values = authorityMap.get("values"); //$NON-NLS-1$
+			if (!(values instanceof List<?> valueList) || valueList.isEmpty()) {
+				throw new IllegalArgumentException("trusted_authorities DCQL sin values"); //$NON-NLS-1$
+			}
+			for (final Object authorityValue : valueList) {
+				if (!(authorityValue instanceof String text) || !isNormalizedText(text)) {
+					throw new IllegalArgumentException("trusted_authorities DCQL con value inválido"); //$NON-NLS-1$
+				}
+			}
+		}
+	}
+
 	private static void validateClaimValues(final Object value) {
 		if (value == null) {
 			return;
@@ -181,6 +215,9 @@ public record DcqlQuery(String json) {
 			final Object options = setMap.get("options"); //$NON-NLS-1$
 			if (!(options instanceof List<?> optionList) || optionList.isEmpty()) {
 				throw new IllegalArgumentException("credential_sets DCQL sin options"); //$NON-NLS-1$
+			}
+			if (setMap.containsKey("required") && !(setMap.get("required") instanceof Boolean)) { //$NON-NLS-1$ //$NON-NLS-2$
+				throw new IllegalArgumentException("credential_sets DCQL con required inválido"); //$NON-NLS-1$
 			}
 			for (final Object option : optionList) {
 				validateIdList(option, credentialIds, "credential_sets DCQL referencia credential inexistente"); //$NON-NLS-1$
