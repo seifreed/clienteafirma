@@ -66,11 +66,7 @@ public record AuthorizationRequest(
 		if (containsControlChars(clientId)) {
 			throw new IllegalArgumentException("OID4VP client_id contiene caracteres de control"); //$NON-NLS-1$
 		}
-		final URI clientUri = URI.create(clientId);
-		requireHttpsWithHost(clientUri, "client_id"); //$NON-NLS-1$
-		if (clientUri.getRawQuery() != null) {
-			throw new IllegalArgumentException("OID4VP client_id no admite query"); //$NON-NLS-1$
-		}
+		validateClientId(clientId);
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
@@ -113,6 +109,14 @@ public record AuthorizationRequest(
 
 	private static boolean containsControlChars(final String text) {
 		return text.chars().anyMatch(Character::isISOControl);
+	}
+
+	private static void validateClientId(final String clientId) {
+		final URI clientUri = URI.create(clientId);
+		requireHttpsWithHost(clientUri, "client_id"); //$NON-NLS-1$
+		if (clientUri.getRawQuery() != null) {
+			throw new IllegalArgumentException("OID4VP client_id no admite query"); //$NON-NLS-1$
+		}
 	}
 
 	private static void requireHttpsWithHost(final URI uri, final String field) {
@@ -159,6 +163,7 @@ public record AuthorizationRequest(
 					|| containsControlChars(issuer)) {
 				throw new IllegalArgumentException("Request Object JAR con issuer no normalizado"); //$NON-NLS-1$
 			}
+			validateClientId(issuer);
 			if (!this.clientId.equals(issuer)) {
 				throw new IllegalArgumentException("Request Object JAR con issuer distinto del client_id"); //$NON-NLS-1$
 			}
