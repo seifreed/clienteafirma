@@ -47,6 +47,8 @@ final class TestEudiwClient {
 		assertThrows(IOException.class,
 				() -> client.postFormUrlencoded(URI.create("https://wallet.example/oid4vp"), "request=x&re%71uest=y")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IOException.class,
+				() -> client.postFormUrlencoded(URI.create("https://wallet.example/oid4vp"), "re+quest=x")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(IOException.class,
 				() -> client.postFormUrlencoded(URI.create("https://wallet.example/oid4vp"), "re%0Aquest=x")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(IOException.class,
 				() -> client.postFormUrlencoded(URI.create("https://wallet.example/oid4vp"), "re%ZZquest=x")); //$NON-NLS-1$ //$NON-NLS-2$

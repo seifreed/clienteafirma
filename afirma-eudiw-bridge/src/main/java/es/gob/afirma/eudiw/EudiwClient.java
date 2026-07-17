@@ -99,6 +99,7 @@ public final class EudiwClient {
 			final String key = decodeFormComponent(pair.substring(0, equals));
 			final String value = decodeFormComponent(pair.substring(equals + 1));
 			if (key.isBlank() || !key.equals(key.strip())
+					|| key.chars().anyMatch(Character::isWhitespace)
 					|| key.chars().anyMatch(Character::isISOControl)) {
 				throw new IOException("OID4VP form body contiene clave no normalizada"); //$NON-NLS-1$
 			}
