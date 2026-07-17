@@ -61,6 +61,9 @@ public final class EudiwClient {
 		if (endpoint.getRawFragment() != null) {
 			throw new IOException("OID4VP endpoint no admite fragmento"); //$NON-NLS-1$
 		}
+		if (endpoint.getRawQuery() != null) {
+			throw new IOException("OID4VP endpoint no admite query"); //$NON-NLS-1$
+		}
 		if (formBody.isBlank()) {
 			throw new IOException("OID4VP form body vacío"); //$NON-NLS-1$
 		}
