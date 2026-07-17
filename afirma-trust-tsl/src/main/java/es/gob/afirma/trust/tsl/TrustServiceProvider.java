@@ -90,6 +90,12 @@ public record TrustServiceProvider(
 			if (!status.equals(status.strip())) {
 				throw new IllegalArgumentException("Estado de servicio TSL no normalizado"); //$NON-NLS-1$
 			}
+			if (typeIdentifier.chars().anyMatch(Character::isWhitespace)) {
+				throw new IllegalArgumentException("Tipo de servicio TSL contiene espacios"); //$NON-NLS-1$
+			}
+			if (status.chars().anyMatch(Character::isWhitespace)) {
+				throw new IllegalArgumentException("Estado de servicio TSL contiene espacios"); //$NON-NLS-1$
+			}
 			if (containsControlChars(typeIdentifier)) {
 				throw new IllegalArgumentException("Tipo de servicio TSL contiene caracteres de control"); //$NON-NLS-1$
 			}
