@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import es.gob.afirma.eudiw.EudiwClient;
@@ -55,6 +56,16 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 	public static final String OPERATION = "eudiw-present"; //$NON-NLS-1$
 
 	private static final String SCHEME_PREFIX = "afirma://" + OPERATION; //$NON-NLS-1$
+	private static final Set<String> SUPPORTED_PARAMETERS = Set.of(
+			"verifier", //$NON-NLS-1$
+			"responseUri", //$NON-NLS-1$
+			"responseMode", //$NON-NLS-1$
+			"dcqlQuery", //$NON-NLS-1$
+			"dcql_query", //$NON-NLS-1$
+			"presentationDefinitionUri", //$NON-NLS-1$
+			"walletUri", //$NON-NLS-1$
+			"walletEndpoint", //$NON-NLS-1$
+			"state"); //$NON-NLS-1$
 
 	@Override
 	public boolean handles(final String url) {
@@ -81,6 +92,7 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			throw new IllegalArgumentException("URL eudiw-present malformada: " + e.getMessage(), e); //$NON-NLS-1$
 		}
 		final Map<String, String> params = parseParameters(uri);
+		rejectUnsupportedParameters(params);
 
 		final String verifier = require(params, "verifier"); //$NON-NLS-1$
 		requireHttpsUri(verifier, "verifier"); //$NON-NLS-1$
@@ -264,6 +276,14 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 					"Parámetro requerido ausente en eudiw-present: " + key); //$NON-NLS-1$
 		}
 		return v;
+	}
+
+	private static void rejectUnsupportedParameters(final Map<String, String> params) {
+		for (final String key : params.keySet()) {
+			if (!SUPPORTED_PARAMETERS.contains(key)) {
+				throw new IllegalArgumentException("Parámetro no soportado en eudiw-present: " + key); //$NON-NLS-1$
+			}
+		}
 	}
 
 	private static void requireHttpsUri(final String value, final String key) {
