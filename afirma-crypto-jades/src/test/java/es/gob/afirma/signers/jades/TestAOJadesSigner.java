@@ -239,6 +239,10 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> signer.sign("payload".getBytes(), //$NON-NLS-1$
 						"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params)); //$NON-NLS-1$
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MAM\nCAQE="); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> signer.sign("payload".getBytes(), //$NON-NLS-1$
+						"SHA256withRSA", RSA_KEY.getPrivate(), RSA_CHAIN, params)); //$NON-NLS-1$
 	}
 
 	@Test
