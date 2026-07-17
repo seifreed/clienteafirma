@@ -412,6 +412,8 @@ final class TestAuthorizationRequest {
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "javascript:alert(1)")); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
+				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "openid4vp:wallet")); //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, "openid4vp://wallet?x=1")); //$NON-NLS-1$
 		assertThrows(NullPointerException.class, () -> req.toSignedRequestObject(
 				new RSASSASigner(kp.getPrivate()), JWSAlgorithm.RS256, null, null));

@@ -296,6 +296,7 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException(error, e);
 		}
 		if (!isSupportedAudienceScheme(uri.getScheme())
+				|| uri.getHost() == null || uri.getHost().isBlank()
 				|| uri.getRawUserInfo() != null
 				|| uri.getRawQuery() != null
 				|| uri.getRawFragment() != null) {
