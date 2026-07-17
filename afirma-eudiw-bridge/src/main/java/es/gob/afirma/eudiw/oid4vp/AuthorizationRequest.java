@@ -66,7 +66,11 @@ public record AuthorizationRequest(
 		if (containsControlChars(clientId)) {
 			throw new IllegalArgumentException("OID4VP client_id contiene caracteres de control"); //$NON-NLS-1$
 		}
-		requireHttpsWithHost(URI.create(clientId), "client_id"); //$NON-NLS-1$
+		final URI clientUri = URI.create(clientId);
+		requireHttpsWithHost(clientUri, "client_id"); //$NON-NLS-1$
+		if (clientUri.getRawQuery() != null) {
+			throw new IllegalArgumentException("OID4VP client_id no admite query"); //$NON-NLS-1$
+		}
 		if (nonce.isBlank()) {
 			throw new IllegalArgumentException("OID4VP nonce vacío"); //$NON-NLS-1$
 		}
