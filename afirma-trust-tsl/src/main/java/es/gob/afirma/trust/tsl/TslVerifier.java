@@ -93,6 +93,9 @@ public final class TslVerifier {
 		try {
 			return validate(parseXml(xml), trustedKey);
 		}
+		catch (final TslException e) {
+			throw e;
+		}
 		catch (final Exception e) {
 			throw new TslException("Error verificando firma TSL: " + e.getMessage(), e); //$NON-NLS-1$
 		}

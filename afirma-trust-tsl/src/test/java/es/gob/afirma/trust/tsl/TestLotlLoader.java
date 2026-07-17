@@ -147,7 +147,9 @@ final class TestLotlLoader {
 		final LotlLoader loader = new LotlLoader(
 				() -> signed, kp.getPublic(), null);
 		assertThrows(TslException.class, loader::load);
-		assertThrows(TslException.class, () -> new TslVerifier().verify(signed, kp.getPublic()));
+		final TslException e = assertThrows(TslException.class,
+				() -> new TslVerifier().verify(signed, kp.getPublic()));
+		assertEquals("La raíz XML no es TrustServiceStatusList", e.getMessage()); //$NON-NLS-1$
 	}
 
 	@Test
