@@ -49,6 +49,7 @@ public record DcqlQuery(String json) {
 				validateOptionalBoolean(credentialMap.get("multiple"), "multiple"); //$NON-NLS-1$ //$NON-NLS-2$
 				validateOptionalBoolean(credentialMap.get("require_cryptographic_holder_binding"), //$NON-NLS-1$
 						"require_cryptographic_holder_binding"); //$NON-NLS-1$
+				validateMeta(credentialMap.get("meta")); //$NON-NLS-1$
 				validateTrustedAuthorities(credentialMap.get("trusted_authorities")); //$NON-NLS-1$
 				final Object claims = credentialMap.get("claims"); //$NON-NLS-1$
 				if (claims != null && (!(claims instanceof List<?> claimList) || claimList.isEmpty())) {
@@ -123,6 +124,12 @@ public record DcqlQuery(String json) {
 			if (!(component instanceof String text) || !isNormalizedText(text)) {
 				throw new IllegalArgumentException("claim DCQL con path inválido"); //$NON-NLS-1$
 			}
+		}
+	}
+
+	private static void validateMeta(final Object value) {
+		if (value != null && !(value instanceof Map<?, ?>)) {
+			throw new IllegalArgumentException("credential DCQL con meta inválido"); //$NON-NLS-1$
 		}
 	}
 
