@@ -141,6 +141,10 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			if (walletDeepLink.getScheme() == null || walletDeepLink.getScheme().isBlank()) {
 				throw new IllegalArgumentException("walletUri debe declarar esquema"); //$NON-NLS-1$
 			}
+			if (!"eudiw".equalsIgnoreCase(walletDeepLink.getScheme()) //$NON-NLS-1$
+					&& !"openid4vp".equalsIgnoreCase(walletDeepLink.getScheme())) { //$NON-NLS-1$
+				throw new IllegalArgumentException("walletUri usa un esquema no soportado"); //$NON-NLS-1$
+			}
 			if (walletDeepLink.getRawUserInfo() != null) {
 				throw new IllegalArgumentException("walletUri no admite userinfo"); //$NON-NLS-1$
 			}

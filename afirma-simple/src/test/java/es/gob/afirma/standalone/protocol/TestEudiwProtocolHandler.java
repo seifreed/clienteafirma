@@ -96,4 +96,16 @@ final class TestEudiwProtocolHandler {
 		assertThrows(IllegalArgumentException.class,
 				() -> new EudiwProtocolHandler().process(url, new LaunchContext(null, false, Map.of(), 0)));
 	}
+
+	@Test
+	@DisplayName("process rechaza walletUri con esquema no soportado")
+	void rejectsUnsupportedWalletUriScheme() {
+		final String url = "afirma://eudiw-present" //$NON-NLS-1$
+				+ "?verifier=https%3A%2F%2Fverifier.example.es" //$NON-NLS-1$
+				+ "&responseUri=https%3A%2F%2Fverifier.example.es%2Foid4vp%2Fresponse" //$NON-NLS-1$
+				+ "&dcqlQuery=%7B%22credentials%22%3A%5B%7B%22id%22%3A%22pid%22%2C%22format%22%3A%22dc%2Bsd-jwt%22%7D%5D%7D" //$NON-NLS-1$
+				+ "&walletUri=javascript%3Aalert%281%29"; //$NON-NLS-1$
+		assertThrows(IllegalArgumentException.class,
+				() -> new EudiwProtocolHandler().process(url, new LaunchContext(null, false, Map.of(), 0)));
+	}
 }
