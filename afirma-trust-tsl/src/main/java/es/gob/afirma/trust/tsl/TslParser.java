@@ -56,11 +56,11 @@ public final class TslParser {
 				throw new TslException("TSL sin SchemeInformation"); //$NON-NLS-1$
 			}
 
-			final Element schemeOperatorName = firstElement(schemeInformation,
+			final Element schemeOperatorName = singleElement(schemeInformation,
 					TSL_NS, "SchemeOperatorName"); //$NON-NLS-1$
 			final String schemeOperator = schemeOperatorName == null ? "" : //$NON-NLS-1$
-					textOrEmpty(schemeOperatorName, TSL_NS, "Name"); //$NON-NLS-1$
-			final String territory = textOrEmpty(schemeInformation,
+					singleTextOrEmpty(schemeOperatorName, TSL_NS, "Name"); //$NON-NLS-1$
+			final String territory = singleTextOrEmpty(schemeInformation,
 					TSL_NS, "SchemeTerritory"); //$NON-NLS-1$
 			if (schemeOperator.isEmpty()) {
 				throw new TslException("TSL sin SchemeOperatorName"); //$NON-NLS-1$
@@ -200,6 +200,15 @@ public final class TslParser {
 
 	private static Element firstElement(final Element parent, final String ns, final String localName) {
 		final NodeList nl = parent.getElementsByTagNameNS(ns, localName);
+		return nl.getLength() == 0 ? null : (Element) nl.item(0);
+	}
+
+	private static Element singleElement(final Element parent, final String ns,
+			final String localName) throws TslException {
+		final NodeList nl = parent.getElementsByTagNameNS(ns, localName);
+		if (nl.getLength() > 1) {
+			throw new TslException(localName + " duplicado"); //$NON-NLS-1$
+		}
 		return nl.getLength() == 0 ? null : (Element) nl.item(0);
 	}
 }

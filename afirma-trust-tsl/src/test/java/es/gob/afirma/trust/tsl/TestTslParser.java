@@ -253,6 +253,16 @@ final class TestTslParser {
 				.replace("<SchemeTerritory>ES</SchemeTerritory>", "<SchemeTerritory> ES</SchemeTerritory>") //$NON-NLS-1$ //$NON-NLS-2$
 				.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</SchemeTerritory>", "</SchemeTerritory><SchemeTerritory>FR</SchemeTerritory>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</SchemeOperatorName>", //$NON-NLS-1$
+						"</SchemeOperatorName><SchemeOperatorName><Name>Otro operador</Name></SchemeOperatorName>") //$NON-NLS-1$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</SchemeOperatorName>", "<Name>Otro operador</Name></SchemeOperatorName>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
 				.replace("<Name>FNMT-RCM</Name>", "<Name> FNMT-RCM</Name>") //$NON-NLS-1$ //$NON-NLS-2$
 				.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
