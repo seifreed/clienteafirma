@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,7 +114,11 @@ public final class TrustListService {
 		catch (final Exception e) {
 			return Optional.empty();
 		}
-		for (final TslDocument tsl : this.byTerritory.values()) {
+		for (final Map.Entry<String, TslDocument> entry : this.byTerritory.entrySet()) {
+			final TslDocument tsl = entry.getValue();
+			if (isExpired(entry.getKey(), tsl)) {
+				continue;
+			}
 			for (final TrustServiceProvider tsp : tsl.providers()) {
 				for (final TrustServiceProvider.TrustService svc : tsp.services()) {
 					if (!svc.isGranted() || !SERVICE_TYPE_CA_QC.equals(svc.typeIdentifier())) {

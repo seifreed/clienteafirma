@@ -299,6 +299,31 @@ final class TestTslParser {
 	}
 
 	@Test
+	@DisplayName("findIssuer ignora TSLs caducadas en memoria")
+	void findIssuerIgnoresExpiredTslDocuments() throws Exception {
+		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
+		kpg.initialize(2048);
+		final KeyPair caKp = kpg.generateKeyPair();
+		final X509Certificate caCert = selfSigned(caKp, "CN=CA Test, O=AEAD"); //$NON-NLS-1$
+		final X509Certificate leaf = issuedBy(caKp, caCert, kpg.generateKeyPair(),
+				"CN=Suscriptor, O=Prueba"); //$NON-NLS-1$
+		final TrustServiceProvider tsp = new TrustServiceProvider(
+				"FNMT-RCM", "FNMT-RCM", "ES", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				List.of(new TrustServiceProvider.TrustService(
+						"http://uri.etsi.org/TrstSvc/Svctype/CA/QC", //$NON-NLS-1$
+						"http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted", //$NON-NLS-1$
+						List.of(caCert))));
+		final MutableClock clock = new MutableClock(Instant.parse("2026-01-01T00:00:00Z")); //$NON-NLS-1$
+		final TrustListService svc = new TrustListService(clock, Duration.ofHours(24));
+		svc.ingest(new TslDocument("Operator", "ES", //$NON-NLS-1$ //$NON-NLS-2$
+				Instant.parse("2026-01-01T12:00:00Z"), List.of(tsp), false)); //$NON-NLS-1$
+		assertTrue(svc.findIssuer(leaf).isPresent());
+
+		clock.now = Instant.parse("2026-01-01T12:00:00Z"); //$NON-NLS-1$
+		assertTrue(svc.findIssuer(leaf).isEmpty());
+	}
+
+	@Test
 	@DisplayName("findIssuer rechaza un issuer con el mismo DN pero distinta clave")
 	void findIssuerRejectsSameSubjectDifferentKey() throws Exception {
 		final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); //$NON-NLS-1$
