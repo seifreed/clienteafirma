@@ -587,6 +587,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 			if (!(component instanceof Map<?, ?> componentJson)) {
 				return false;
 			}
+			if (componentJson.size() != 1 || !componentJson.containsKey("tstTokens")) { //$NON-NLS-1$
+				return false;
+			}
 			if (!isValidTimestampTokens(componentJson.get("tstTokens"))) { //$NON-NLS-1$
 				return false;
 			}
@@ -601,6 +604,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 		for (final Object token : tokens) {
 			if (!(token instanceof Map<?, ?> tokenJson)
 					|| !(tokenJson.get("val") instanceof String tokenBase64) || tokenBase64.isBlank()) { //$NON-NLS-1$
+				return false;
+			}
+			if (tokenJson.size() != 1) {
 				return false;
 			}
 			if (!tokenBase64.equals(tokenBase64.strip())

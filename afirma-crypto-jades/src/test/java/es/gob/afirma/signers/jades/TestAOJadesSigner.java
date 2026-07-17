@@ -446,6 +446,16 @@ final class TestAOJadesSigner {
 			assertEquals(1, requests.get(), "Debe solicitar un sello a la TSA local");
 			assertArrayEquals(expectedImprint, tst.getTimeStampInfo().getMessageImprintDigest(),
 					"El token RFC3161 debe sellar la firma JWS");
+			assertTrue(signer.isSign(jws));
+			json.put("header", Map.of("etsiU", List.of(Map.of( //$NON-NLS-1$ //$NON-NLS-2$
+					"tstTokens", List.of(Map.of("val", tokenBase64)), //$NON-NLS-1$ //$NON-NLS-2$
+					"extra", "x")))); //$NON-NLS-1$ //$NON-NLS-2$
+			assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+					.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+			json.put("header", Map.of("etsiU", List.of(Map.of("tstTokens", //$NON-NLS-1$ //$NON-NLS-2$
+					List.of(Map.of("val", tokenBase64, "extra", "x")))))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+					.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 		}
 		finally {
 			server.stop(0);
