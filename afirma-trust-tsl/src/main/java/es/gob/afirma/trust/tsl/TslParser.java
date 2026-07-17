@@ -124,8 +124,8 @@ public final class TslParser {
 			}
 			for (int j = 0; j < serviceNodes.getLength(); j++) {
 				final Element svc = (Element) serviceNodes.item(j);
-				final String type = textOrEmpty(svc, TSL_NS, "ServiceTypeIdentifier"); //$NON-NLS-1$
-				final String status = textOrEmpty(svc, TSL_NS, "ServiceStatus"); //$NON-NLS-1$
+				final String type = singleTextOrEmpty(svc, TSL_NS, "ServiceTypeIdentifier"); //$NON-NLS-1$
+				final String status = singleTextOrEmpty(svc, TSL_NS, "ServiceStatus"); //$NON-NLS-1$
 				final List<X509Certificate> certs = new ArrayList<>();
 				final NodeList x509b64 = svc.getElementsByTagNameNS(DSIG_NS, "X509Certificate"); //$NON-NLS-1$
 				for (int k = 0; k < x509b64.getLength(); k++) {
@@ -147,6 +147,15 @@ public final class TslParser {
 					services));
 		}
 		return result;
+	}
+
+	private static String singleTextOrEmpty(final Element parent, final String ns,
+			final String localName) throws TslException {
+		final NodeList nl = parent.getElementsByTagNameNS(ns, localName);
+		if (nl.getLength() > 1) {
+			throw new TslException(localName + " duplicado"); //$NON-NLS-1$
+		}
+		return textOrEmpty(parent, ns, localName);
 	}
 
 	private static Document parseXml(final byte[] xml)

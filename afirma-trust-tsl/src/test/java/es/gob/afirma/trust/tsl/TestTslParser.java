@@ -260,6 +260,12 @@ final class TestTslParser {
 						"<ServiceStatus> http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>") //$NON-NLS-1$
 				.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</ServiceStatus>", "</ServiceStatus><ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</ServiceStatus>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("</ServiceTypeIdentifier>", "</ServiceTypeIdentifier><ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/QTST</ServiceTypeIdentifier>") //$NON-NLS-1$ //$NON-NLS-2$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
 				.replace("<dateTime>2026-12-31T23:59:59Z</dateTime>", //$NON-NLS-1$
 						"<dateTime> 2026-12-31T23:59:59Z</dateTime>") //$NON-NLS-1$
 				.getBytes(StandardCharsets.UTF_8)));
