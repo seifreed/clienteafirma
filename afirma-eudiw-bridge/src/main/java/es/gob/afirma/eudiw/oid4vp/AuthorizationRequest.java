@@ -287,12 +287,16 @@ public record AuthorizationRequest(
 		catch (final IllegalArgumentException e) {
 			throw new IllegalArgumentException(error, e);
 		}
-		if (uri.getScheme() == null || uri.getScheme().isBlank()
+		if (!isSupportedAudienceScheme(uri.getScheme())
 				|| uri.getRawUserInfo() != null
 				|| uri.getRawQuery() != null
 				|| uri.getRawFragment() != null) {
 			throw new IllegalArgumentException(error);
 		}
+	}
+
+	private static boolean isSupportedAudienceScheme(final String scheme) {
+		return "openid4vp".equalsIgnoreCase(scheme) || "eudiw".equalsIgnoreCase(scheme); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private Map<String, String> params() {
