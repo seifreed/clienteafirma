@@ -174,10 +174,7 @@ public final class SdJwtVerifier {
 	private static void verifyDisclosures(final SdJwtVerifiableCredential vc)
 			throws Exception {
 		final JWTClaimsSet claims = vc.issuerSignedJwt().getJWTClaimsSet();
-		final String alg = claims.getStringClaim("_sd_alg"); //$NON-NLS-1$
-		if (alg != null && !"sha-256".equalsIgnoreCase(alg)) { //$NON-NLS-1$
-			throw new SdJwtVerificationException("Algoritmo _sd no soportado: " + alg); //$NON-NLS-1$
-		}
+		validateSdAlgorithm(claims.getStringClaim("_sd_alg")); //$NON-NLS-1$
 		final List<String> expected = claims.getStringListClaim("_sd"); //$NON-NLS-1$
 		if (expected == null) {
 			throw new SdJwtVerificationException("Issuer JWT sin claim _sd"); //$NON-NLS-1$
@@ -354,10 +351,7 @@ public final class SdJwtVerifier {
 
 	private static String sdHash(final SdJwtVerifiableCredential vc) throws Exception {
 		final JWTClaimsSet claims = vc.issuerSignedJwt().getJWTClaimsSet();
-		final String alg = claims.getStringClaim("_sd_alg"); //$NON-NLS-1$
-		if (alg != null && !"sha-256".equalsIgnoreCase(alg)) { //$NON-NLS-1$
-			throw new SdJwtVerificationException("Algoritmo _sd no soportado: " + alg); //$NON-NLS-1$
-		}
+		validateSdAlgorithm(claims.getStringClaim("_sd_alg")); //$NON-NLS-1$
 		final StringBuilder encoded = new StringBuilder(vc.issuerSignedJwt().serialize()).append('~');
 		for (final String disclosure : vc.disclosures()) {
 			encoded.append(disclosure).append('~');
@@ -365,6 +359,18 @@ public final class SdJwtVerifier {
 		return Base64.getUrlEncoder().withoutPadding().encodeToString(
 				MessageDigest.getInstance("SHA-256").digest( //$NON-NLS-1$
 						encoded.toString().getBytes(StandardCharsets.US_ASCII)));
+	}
+
+	private static void validateSdAlgorithm(final String alg) throws SdJwtVerificationException {
+		if (alg == null) {
+			return;
+		}
+		if (alg.isBlank() || !alg.equals(alg.strip()) || containsControlChars(alg)) {
+			throw new SdJwtVerificationException("Algoritmo _sd no normalizado"); //$NON-NLS-1$
+		}
+		if (!"sha-256".equalsIgnoreCase(alg)) { //$NON-NLS-1$
+			throw new SdJwtVerificationException("Algoritmo _sd no soportado: " + alg); //$NON-NLS-1$
+		}
 	}
 
 	private static JWK holderKey(final SignedJWT issuerJwt)

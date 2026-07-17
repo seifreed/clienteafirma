@@ -563,6 +563,18 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlSdVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String unnormalizedSdAlgIssuerJwt = signedIssuerJwt(issuerKp, issuerCert,
+				holderJwk, List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert), true, "https://issuer.example.es", " sha-256"); //$NON-NLS-1$ //$NON-NLS-2$
+		final String unnormalizedSdAlgPresentation = unnormalizedSdAlgIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String unnormalizedSdAlgKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(unnormalizedSdAlgPresentation));
+		final SdJwtVerifiableCredential unnormalizedSdAlgVc = SdJwtVerifiableCredential.parse(
+				unnormalizedSdAlgPresentation + unnormalizedSdAlgKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(unnormalizedSdAlgVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final String unnormalizedSaltDisclosure = Base64.getUrlEncoder().withoutPadding()
 				.encodeToString("[\" salt\",\"family_name\",\"García\"]".getBytes(java.nio.charset.StandardCharsets.UTF_8)); //$NON-NLS-1$
@@ -824,9 +836,20 @@ final class TestSdJwtVerifiableCredential {
 			final boolean publicHolderJwk, final Date issueTime,
 			final List<X509Certificate> x5cChain, final boolean typed,
 			final String issuer) throws Exception {
+		return signedIssuerJwt(issuerKp, issuerCert, holderJwk, sdHashes,
+				expirationTime, publicHolderJwk, issueTime, x5cChain, typed,
+				issuer, "sha-256"); //$NON-NLS-1$
+	}
+
+	private static String signedIssuerJwt(final KeyPair issuerKp,
+			final X509Certificate issuerCert, final RSAKey holderJwk,
+			final List<String> sdHashes, final Date expirationTime,
+			final boolean publicHolderJwk, final Date issueTime,
+			final List<X509Certificate> x5cChain, final boolean typed,
+			final String issuer, final String sdAlg) throws Exception {
 		final JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
 				.subject("pid-1") //$NON-NLS-1$
-				.claim("_sd_alg", "sha-256") //$NON-NLS-1$ //$NON-NLS-2$
+				.claim("_sd_alg", sdAlg) //$NON-NLS-1$
 				.claim("_sd", sdHashes) //$NON-NLS-1$
 				.claim("cnf", Map.of("jwk", (publicHolderJwk //$NON-NLS-1$ //$NON-NLS-2$
 						? holderJwk.toPublicJWK() : holderJwk).toJSONObject()));
