@@ -309,6 +309,13 @@ final class TestAuthorizationRequest {
 						.build());
 		noAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(noAudienceJar, jarVerifier));
+		final SignedJWT duplicateAudienceJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.audience(List.of("openid4vp://wallet", "openid4vp://wallet")) //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		duplicateAudienceJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(duplicateAudienceJar, jarVerifier));
 		final SignedJWT noExpirationJar = new SignedJWT(
 				jarHeader(),
 				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())

@@ -8,9 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
@@ -212,12 +214,16 @@ public record AuthorizationRequest(
 		if (claims.getAudience().isEmpty()) {
 			throw new IllegalArgumentException("Request Object JAR sin audience"); //$NON-NLS-1$
 		}
+		final Set<String> audiences = new HashSet<>();
 		for (final String audience : claims.getAudience()) {
 			if (audience == null || audience.isBlank() || !audience.equals(audience.strip())
 					|| containsControlChars(audience)) {
 				throw new IllegalArgumentException("Request Object JAR con audience no normalizada"); //$NON-NLS-1$
 			}
 			validateAudienceUri(audience, "Request Object JAR con audience inválida"); //$NON-NLS-1$
+			if (!audiences.add(audience)) {
+				throw new IllegalArgumentException("Request Object JAR con audience duplicada"); //$NON-NLS-1$
+			}
 		}
 	}
 
