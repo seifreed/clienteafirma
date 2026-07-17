@@ -100,6 +100,9 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			throw new IllegalArgumentException("dcqlQuery y dcql_query no pueden combinarse"); //$NON-NLS-1$
 		}
 		rejectBlankIfPresent(pdUri, "presentationDefinitionUri"); //$NON-NLS-1$
+		if (dcqlQuery != null && pdUri != null) {
+			throw new IllegalArgumentException("dcqlQuery y presentationDefinitionUri no pueden combinarse"); //$NON-NLS-1$
+		}
 		rejectBlankIfPresent(walletUri, "walletUri"); //$NON-NLS-1$
 		rejectBlankIfPresent(walletEndpoint, "walletEndpoint"); //$NON-NLS-1$
 		if (walletUri != null && walletEndpoint != null) {
