@@ -158,6 +158,8 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust, "https://verifier\n.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(vc, trust, "http://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(vc, trust,
 						"https://verifier.example.es", " ")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
@@ -342,6 +344,14 @@ final class TestSdJwtVerifiableCredential {
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlAudienceKbVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String queryAudienceKbJwt = signedKeyBindingJwt(holderKp,
+				List.of("https://verifier.example.es?x=1"), "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(presentation));
+		final SdJwtVerifiableCredential queryAudienceKbVc = SdJwtVerifiableCredential.parse(
+				presentation + queryAudienceKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(queryAudienceKbVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final String noExpirationKb = signedKeyBindingJwt(holderKp,
 				"https://verifier.example.es", "nonce-1", presentationHash(presentation), //$NON-NLS-1$ //$NON-NLS-2$
 				true, null, null);
@@ -455,6 +465,18 @@ final class TestSdJwtVerifiableCredential {
 				controlIssuerPresentation + controlIssuerKbJwt);
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(controlIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final String httpIssuerJwt = signedIssuerJwt(issuerKp, issuerCert, holderJwk,
+				List.of(disclosureHash), Date.from(Instant.now().plus(Duration.ofDays(1))),
+				true, null, List.of(issuerCert), true, "http://issuer.example.es"); //$NON-NLS-1$
+		final String httpIssuerPresentation = httpIssuerJwt + "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String httpIssuerKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(httpIssuerPresentation));
+		final SdJwtVerifiableCredential httpIssuerVc = SdJwtVerifiableCredential.parse(
+				httpIssuerPresentation + httpIssuerKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(httpIssuerVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final Instant expiredCertTime = Instant.now().minus(Duration.ofDays(2));
 		final X509Certificate expiredIssuerCert = issuedBy(caKp, caCert, issuerKp,

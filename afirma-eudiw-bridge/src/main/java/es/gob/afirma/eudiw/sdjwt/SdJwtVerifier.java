@@ -3,6 +3,7 @@
 package es.gob.afirma.eudiw.sdjwt;
 
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.cert.CertificateFactory;
@@ -61,6 +62,7 @@ public final class SdJwtVerifier {
 		if (containsControlChars(audience)) {
 			throw new SdJwtVerificationException("Audience SD-JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
+		requireHttpsClaim(audience, "Audience SD-JWT inválida"); //$NON-NLS-1$
 		if (nonce == null || nonce.isBlank()) {
 			throw new SdJwtVerificationException("Nonce SD-JWT vacío"); //$NON-NLS-1$
 		}
@@ -112,6 +114,7 @@ public final class SdJwtVerifier {
 		if (containsControlChars(issuer)) {
 			throw new SdJwtVerificationException("Issuer JWT contiene caracteres de control"); //$NON-NLS-1$
 		}
+		requireHttpsClaim(issuer, "Issuer JWT inválido"); //$NON-NLS-1$
 		final Date now = new Date();
 		final Date issueTime = claims.getIssueTime();
 		if (issueTime != null && issueTime.after(now)) {
@@ -305,6 +308,7 @@ public final class SdJwtVerifier {
 			if (containsControlChars(claimAudience)) {
 				throw new SdJwtVerificationException("Audience Key Binding JWT contiene caracteres de control"); //$NON-NLS-1$
 			}
+			requireHttpsClaim(claimAudience, "Audience Key Binding JWT inválida"); //$NON-NLS-1$
 		}
 		if (!claims.getAudience().contains(audience)) {
 			throw new SdJwtVerificationException("Audience Key Binding JWT inválida"); //$NON-NLS-1$
@@ -347,6 +351,24 @@ public final class SdJwtVerifier {
 
 	private static boolean containsControlChars(final String text) {
 		return text.chars().anyMatch(Character::isISOControl);
+	}
+
+	private static void requireHttpsClaim(final String value, final String error)
+			throws SdJwtVerificationException {
+		final URI uri;
+		try {
+			uri = URI.create(value);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new SdJwtVerificationException(error, e);
+		}
+		if (!"https".equalsIgnoreCase(uri.getScheme()) //$NON-NLS-1$
+				|| uri.getHost() == null || uri.getHost().isBlank()
+				|| uri.getRawUserInfo() != null
+				|| uri.getRawQuery() != null
+				|| uri.getRawFragment() != null) {
+			throw new SdJwtVerificationException(error);
+		}
 	}
 
 	private static String sdHash(final SdJwtVerifiableCredential vc) throws Exception {
