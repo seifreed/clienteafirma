@@ -390,7 +390,7 @@ public final class SdJwtVerifier {
 		if (alg.isBlank() || !alg.equals(alg.strip()) || containsControlChars(alg)) {
 			throw new SdJwtVerificationException("Algoritmo _sd no normalizado"); //$NON-NLS-1$
 		}
-		if (!"sha-256".equalsIgnoreCase(alg)) { //$NON-NLS-1$
+		if (!"sha-256".equals(alg)) { //$NON-NLS-1$
 			throw new SdJwtVerificationException("Algoritmo _sd no soportado: " + alg); //$NON-NLS-1$
 		}
 	}
