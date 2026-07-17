@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.cert.CertificateFactory;
@@ -220,6 +221,24 @@ final class TestSdJwtVerifiableCredential {
 				symmetricIssuerJwt.serialize() + "~" + disclosure + "~" + kbJwt); //$NON-NLS-1$ //$NON-NLS-2$
 		assertThrows(SdJwtVerificationException.class,
 				() -> SdJwtVerifier.verify(symmetricIssuerVc, trust,
+						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT remoteIssuerHeaderJwt = new SignedJWT(
+				new JWSHeader.Builder(JWSAlgorithm.RS256)
+						.type(new JOSEObjectType("dc+sd-jwt")) //$NON-NLS-1$
+						.x509CertChain(validIssuerJwt.getHeader().getX509CertChain())
+						.jwkURL(URI.create("https://issuer.example.es/jwks")) //$NON-NLS-1$
+						.build(),
+				validIssuerJwt.getJWTClaimsSet());
+		remoteIssuerHeaderJwt.sign(new RSASSASigner(issuerKp.getPrivate()));
+		final String remoteIssuerHeaderPresentation = remoteIssuerHeaderJwt.serialize()
+				+ "~" + disclosure + "~"; //$NON-NLS-1$ //$NON-NLS-2$
+		final String remoteIssuerHeaderKbJwt = signedKeyBindingJwt(holderKp,
+				"https://verifier.example.es", "nonce-1", //$NON-NLS-1$ //$NON-NLS-2$
+				presentationHash(remoteIssuerHeaderPresentation));
+		final SdJwtVerifiableCredential remoteIssuerHeaderVc = SdJwtVerifiableCredential.parse(
+				remoteIssuerHeaderPresentation + remoteIssuerHeaderKbJwt);
+		assertThrows(SdJwtVerificationException.class,
+				() -> SdJwtVerifier.verify(remoteIssuerHeaderVc, trust,
 						"https://verifier.example.es", "nonce-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT validKbJwt = SignedJWT.parse(kbJwt);
 		final SignedJWT symmetricKbJwt = new SignedJWT(

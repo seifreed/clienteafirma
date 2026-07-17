@@ -135,6 +135,9 @@ public final class SdJwtVerifier {
 
 	private static X509Certificate issuerCertificate(final SignedJWT jwt)
 			throws Exception {
+		if (jwt.getHeader().getJWKURL() != null || jwt.getHeader().getX509CertURL() != null) {
+			throw new SdJwtVerificationException("Issuer JWT contiene referencias remotas no soportadas"); //$NON-NLS-1$
+		}
 		final List<com.nimbusds.jose.util.Base64> chain = jwt.getHeader().getX509CertChain();
 		if (chain == null || chain.isEmpty()) {
 			throw new SdJwtVerificationException("Issuer JWT sin cadena x5c"); //$NON-NLS-1$
