@@ -2,6 +2,7 @@
 
 package es.gob.afirma.eudiw.oid4vp;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
@@ -50,6 +51,9 @@ public record JarmAuthorizationResponse(
 		requireExpected(expectedAudience, "audience"); //$NON-NLS-1$
 		requireExpected(expectedState, "state"); //$NON-NLS-1$
 		rejectBlankExpected(expectedIssuer, "issuer"); //$NON-NLS-1$
+		if (expectedIssuer != null) {
+			requireHttpsIssuer(expectedIssuer);
+		}
 		final SignedJWT jwt = SignedJWT.parse(responseJwt);
 		if (!isSupportedJarmAlgorithm(jwt.getHeader().getAlgorithm())) {
 			throw new JOSEException("Algoritmo JARM no soportado"); //$NON-NLS-1$
@@ -72,6 +76,7 @@ public record JarmAuthorizationResponse(
 		if (containsControlChars(issuer)) {
 			throw new JOSEException("Issuer JARM contiene caracteres de control"); //$NON-NLS-1$
 		}
+		requireHttpsIssuer(issuer);
 		if (expectedIssuer != null && !expectedIssuer.equals(issuer)) {
 			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
 		}
@@ -260,6 +265,23 @@ public record JarmAuthorizationResponse(
 
 	private static boolean containsControlChars(final String text) {
 		return text.chars().anyMatch(Character::isISOControl);
+	}
+
+	private static void requireHttpsIssuer(final String value) throws JOSEException {
+		final URI uri;
+		try {
+			uri = URI.create(value);
+		}
+		catch (final IllegalArgumentException e) {
+			throw new JOSEException("Issuer JARM inválido", e); //$NON-NLS-1$
+		}
+		if (!"https".equalsIgnoreCase(uri.getScheme()) //$NON-NLS-1$
+				|| uri.getHost() == null || uri.getHost().isBlank()
+				|| uri.getRawUserInfo() != null
+				|| uri.getRawQuery() != null
+				|| uri.getRawFragment() != null) {
+			throw new JOSEException("Issuer JARM inválido"); //$NON-NLS-1$
+		}
 	}
 
 	private static void verifyValidity(final JWTClaimsSet claims) throws JOSEException {

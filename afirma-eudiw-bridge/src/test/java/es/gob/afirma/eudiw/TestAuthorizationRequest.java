@@ -569,6 +569,9 @@ final class TestAuthorizationRequest {
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", //$NON-NLS-1$ //$NON-NLS-2$
 				"https://wallet\n.example.es")); //$NON-NLS-1$
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				jwt.serialize(), verifier, "https://verifier.example.es", "state-1", //$NON-NLS-1$ //$NON-NLS-2$
+				"http://wallet.example.es")); //$NON-NLS-1$
 
 		final SignedJWT untypedJwt = new SignedJWT(
 				new com.nimbusds.jose.JWSHeader.Builder(JWSAlgorithm.RS256).build(),
@@ -694,6 +697,15 @@ final class TestAuthorizationRequest {
 		controlIssuerJwt.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
 				controlIssuerJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1", null)); //$NON-NLS-1$ //$NON-NLS-2$
+		final SignedJWT httpIssuerJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.issuer("http://wallet.example.es") //$NON-NLS-1$
+						.build());
+		httpIssuerJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				httpIssuerJwt.serialize(), verifier,
 				"https://verifier.example.es", "state-1", null)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		final SignedJWT unnormalizedAudienceJwt = new SignedJWT(
