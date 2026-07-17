@@ -149,6 +149,8 @@ final class TestLotlLoader {
 	@Test
 	@DisplayName("LotlLoader rechaza URI LOTL insegura")
 	void rejectsUnsafeLotlUri() {
+		assertThrows(NullPointerException.class,
+				() -> new LotlLoader.HttpTslXmlSource(null));
 		assertThrows(IllegalArgumentException.class,
 				() -> new LotlLoader.HttpTslXmlSource(URI.create("http://ec.europa.eu/lotl.xml"))); //$NON-NLS-1$
 		assertThrows(IllegalArgumentException.class,

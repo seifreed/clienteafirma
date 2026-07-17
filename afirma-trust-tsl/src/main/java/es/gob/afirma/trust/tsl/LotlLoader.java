@@ -157,6 +157,7 @@ public final class LotlLoader implements TrustListService.TslLoader {
 				.build();
 
 		HttpTslXmlSource(final URI uri) {
+			Objects.requireNonNull(uri, "uri"); //$NON-NLS-1$
 			if (!"https".equalsIgnoreCase(uri.getScheme())) { //$NON-NLS-1$
 				throw new IllegalArgumentException("La LOTL debe descargarse por HTTPS"); //$NON-NLS-1$
 			}
