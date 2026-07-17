@@ -87,6 +87,9 @@ public record AuthorizationRequest(
 		if (state != null && !state.equals(state.strip())) {
 			throw new IllegalArgumentException("OID4VP state no normalizado"); //$NON-NLS-1$
 		}
+		if (state != null && state.chars().anyMatch(Character::isWhitespace)) {
+			throw new IllegalArgumentException("OID4VP state contiene espacios"); //$NON-NLS-1$
+		}
 		if (state != null && containsControlChars(state)) {
 			throw new IllegalArgumentException("OID4VP state contiene caracteres de control"); //$NON-NLS-1$
 		}
