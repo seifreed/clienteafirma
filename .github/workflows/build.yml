@@ -14,7 +14,6 @@ name: Build
 
 permissions:
   contents: read
-  security-events: write
 
 # Cancel superseded runs on the same PR / branch.
 concurrency:
@@ -102,6 +101,9 @@ jobs:
   security:
     name: Security gate (ubuntu-24.04)
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
