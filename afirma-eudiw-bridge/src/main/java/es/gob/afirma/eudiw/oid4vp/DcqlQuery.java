@@ -112,7 +112,8 @@ public record DcqlQuery(String json) {
 
 	private static void validateObjectKeys(final Map<?, ?> json) {
 		for (final Object key : json.keySet()) {
-			if (!(key instanceof String text) || !isNormalizedText(text)) {
+			if (!(key instanceof String text) || !isNormalizedText(text)
+					|| text.chars().anyMatch(Character::isWhitespace)) {
 				throw new IllegalArgumentException("dcql_query contiene claves no normalizadas"); //$NON-NLS-1$
 			}
 		}
