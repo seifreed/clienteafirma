@@ -708,6 +708,10 @@ final class TestAOJadesSigner {
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 		json.put("header", Map.of("etsiU", List.of(Map.of("tstTokens", //$NON-NLS-1$ //$NON-NLS-2$
+				List.of(Map.of("val", "MA MCAQE=")))))); //$NON-NLS-1$ //$NON-NLS-2$
+		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+		json.put("header", Map.of("etsiU", List.of(Map.of("tstTokens", //$NON-NLS-1$ //$NON-NLS-2$
 				List.of(Map.of("val", java.util.Base64.getEncoder().encodeToString(new byte[] { 1, 2, 3 }))))))); //$NON-NLS-1$
 		assertTrue(!signer.isSign(JSONObjectUtils.toJSONString(json)
 				.getBytes(java.nio.charset.StandardCharsets.UTF_8)));

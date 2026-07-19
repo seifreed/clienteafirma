@@ -663,6 +663,7 @@ public final class AOJadesSigner implements AOSimpleSigner {
 				return false;
 			}
 			if (!tokenBase64.equals(tokenBase64.strip())
+					|| tokenBase64.chars().anyMatch(Character::isWhitespace)
 					|| tokenBase64.chars().anyMatch(Character::isISOControl)) {
 				return false;
 			}
