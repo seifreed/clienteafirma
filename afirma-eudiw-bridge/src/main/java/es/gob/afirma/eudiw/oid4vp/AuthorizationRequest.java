@@ -54,6 +54,8 @@ public record AuthorizationRequest(
 	private static final Duration REQUEST_OBJECT_VALIDITY = Duration.ofMinutes(5);
 	private static final JOSEObjectType REQUEST_OBJECT_TYPE =
 			new JOSEObjectType("oauth-authz-req+jwt"); //$NON-NLS-1$
+	private static final Set<String> STANDARD_REQUEST_OBJECT_CLAIMS =
+			Set.of("iss", "aud", "iat", "exp", "nbf"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
 	public AuthorizationRequest {
 		Objects.requireNonNull(clientId, "clientId");
@@ -175,6 +177,7 @@ public record AuthorizationRequest(
 				throw new IllegalArgumentException("Firma Request Object JAR inválida"); //$NON-NLS-1$
 			}
 			final JWTClaimsSet claims = requestObject.getJWTClaimsSet();
+			validateRequestObjectClaims(claims, params().keySet());
 			validateRequestObjectTime(claims);
 			validateRequestObjectAudience(claims);
 			final String issuer = claims.getIssuer();
@@ -203,6 +206,15 @@ public record AuthorizationRequest(
 			throw new IllegalArgumentException("Request Object JAR sin firma", e); //$NON-NLS-1$
 		}
 		return toUri(params);
+	}
+
+	private static void validateRequestObjectClaims(final JWTClaimsSet claims,
+			final Set<String> requestParamClaims) {
+		final Set<String> supportedClaims = new HashSet<>(STANDARD_REQUEST_OBJECT_CLAIMS);
+		supportedClaims.addAll(requestParamClaims);
+		if (!supportedClaims.containsAll(claims.getClaims().keySet())) {
+			throw new IllegalArgumentException("Request Object JAR contiene claims no soportados"); //$NON-NLS-1$
+		}
 	}
 
 	private static void validateRequestObjectTime(final JWTClaimsSet claims) {

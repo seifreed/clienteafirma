@@ -336,6 +336,13 @@ final class TestAuthorizationRequest {
 						.build());
 		mismatchedJar.sign(new RSASSASigner(kp.getPrivate()));
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(mismatchedJar, jarVerifier));
+		final SignedJWT extraClaimJar = new SignedJWT(
+				jarHeader(),
+				new JWTClaimsSet.Builder(jar.getJWTClaimsSet())
+						.claim("scope", "openid") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		extraClaimJar.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(extraClaimJar, jarVerifier));
 		final KeyPair otherKp = kpg.generateKeyPair();
 		assertThrows(IllegalArgumentException.class, () -> req.toUriWithRequestObject(jar, new RSASSAVerifier(
 				(java.security.interfaces.RSAPublicKey) otherKp.getPublic())));
