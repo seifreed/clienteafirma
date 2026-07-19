@@ -622,6 +622,7 @@ final class TestAOJadesSigner {
 			assertTrue(!signer.isSign("{\"protected\":\"eyJhbGciOiJSUzI1NiJ9\",\"signature\":\"YWJj\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{\"protected\":\"eyJhbGciOiJSUzI1NiJ9\",\"signature\":\"not-base64url!!\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{\"protected-text\":\"x\",\"signature-text\":\"y\"}".getBytes())); //$NON-NLS-1$
+			assertTrue(!signer.isSign("{\"protected\":\"eyJhbGciOiJSUzI1NiJ9\",\"signature\":\"YWJj\",\"unknown\":\"x\"}".getBytes())); //$NON-NLS-1$
 			assertTrue(!signer.isSign("{not-json".getBytes())); //$NON-NLS-1$
 		});
 		final Properties attached = new Properties();

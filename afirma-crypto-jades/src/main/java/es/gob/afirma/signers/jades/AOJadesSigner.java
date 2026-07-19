@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.nimbusds.jose.JOSEException;
@@ -87,6 +88,8 @@ import es.gob.afirma.signers.tsp.pkcs7.TsaParams;
 public final class AOJadesSigner implements AOSimpleSigner {
 
 	private static final Logger LOGGER = Logger.getLogger(AOJadesSigner.class.getName());
+	private static final Set<String> JSON_SERIALIZATION_KEYS =
+			Set.of("payload", "protected", "header", "signature", "signatures"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
 	/** Tipo MIME del payload firmado, propagado a la cabecera protegida {@code cty}. */
 	public static final String EXTRA_PARAM_CONTENT_TYPE = "contentType";
@@ -583,6 +586,9 @@ public final class AOJadesSigner implements AOSimpleSigner {
 	}
 
 	private static boolean isValidJsonSerialization(final Map<String, Object> json) {
+		if (!JSON_SERIALIZATION_KEYS.containsAll(json.keySet())) {
+			return false;
+		}
 		final Object payload = json.get("payload"); //$NON-NLS-1$
 		if (payload != null && (!(payload instanceof String payloadText)
 				|| payloadText.isBlank() || !isBase64Url(payloadText))) {
