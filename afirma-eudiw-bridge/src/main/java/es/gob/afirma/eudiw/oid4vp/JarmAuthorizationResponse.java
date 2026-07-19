@@ -30,6 +30,9 @@ public record JarmAuthorizationResponse(
 	private static final JOSEObjectType RESPONSE_TYPE =
 			new JOSEObjectType("oauth-authz-resp+jwt"); //$NON-NLS-1$
 	private static final String SUPPORTED_FORMAT = "dc+sd-jwt"; //$NON-NLS-1$
+	private static final Set<String> RESPONSE_CLAIMS = Set.of(
+			"iss", "aud", "iat", "exp", "nbf", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+			"state", "vp_token", "presentation_submission"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final Set<String> PRESENTATION_SUBMISSION_KEYS =
 			Set.of("id", "definition_id", "descriptor_map"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	private static final Set<String> DESCRIPTOR_KEYS =
@@ -76,6 +79,9 @@ public record JarmAuthorizationResponse(
 			throw new JOSEException("Tipo JARM inválido"); //$NON-NLS-1$
 		}
 		final JWTClaimsSet claims = jwt.getJWTClaimsSet();
+		if (!RESPONSE_CLAIMS.containsAll(claims.getClaims().keySet())) {
+			throw new JOSEException("Respuesta JARM contiene claims no soportados"); //$NON-NLS-1$
+		}
 		verifyValidity(claims);
 		final String issuer = claims.getIssuer();
 		if (issuer == null || issuer.isBlank()) {

@@ -506,6 +506,15 @@ final class TestAuthorizationRequest {
 		assertEquals(
 				"{\"id\":\"ps-1\",\"definition_id\":\"pd-1\",\"descriptor_map\":[{\"id\":\"pid\",\"format\":\"dc+sd-jwt\",\"path\":\"$\"}]}", //$NON-NLS-1$
 				response.presentationSubmission());
+		final SignedJWT extraClaimJwt = new SignedJWT(
+				jarmHeader(),
+				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
+						.claim("scope", "openid") //$NON-NLS-1$ //$NON-NLS-2$
+						.build());
+		extraClaimJwt.sign(new RSASSASigner(kp.getPrivate()));
+		assertThrows(JOSEException.class, () -> JarmAuthorizationResponse.verify(
+				extraClaimJwt.serialize(), verifier,
+				"https://verifier.example.es", "state-1")); //$NON-NLS-1$ //$NON-NLS-2$
 		final SignedJWT objectVpTokenJwt = new SignedJWT(
 				jarmHeader(),
 				new JWTClaimsSet.Builder(jwt.getJWTClaimsSet())
