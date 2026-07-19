@@ -354,15 +354,16 @@ public final class EudiwProtocolHandler implements ProtocolOperationHandler {
 			}
 			final String key = decodeQueryComponent(pair.substring(0, eq));
 			final String value = decodeQueryComponent(pair.substring(eq + 1));
+			final String normalizedKey = key.toLowerCase(Locale.ROOT);
 			if (key.isBlank() || value.isBlank()
 					|| !key.equals(key.strip()) || !value.equals(value.strip())
 					|| key.chars().anyMatch(Character::isWhitespace)
 					|| value.chars().anyMatch(Character::isWhitespace)
 					|| containsControlChars(key) || containsControlChars(value)
-					|| params.put(key, value) != null) {
+					|| params.put(normalizedKey, value) != null) {
 				throw new IllegalArgumentException("walletUri contiene query no normalizada"); //$NON-NLS-1$
 			}
-			if (RESERVED_WALLET_QUERY_PARAMETERS.contains(key)) {
+			if (RESERVED_WALLET_QUERY_PARAMETERS.contains(normalizedKey)) {
 				throw new IllegalArgumentException("walletUri no admite parametros OID4VP preexistentes"); //$NON-NLS-1$
 			}
 		}
