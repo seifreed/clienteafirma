@@ -319,6 +319,16 @@ final class TestTslParser {
 				.replace("</ServiceTypeIdentifier>", "</ServiceTypeIdentifier><ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/QTST</ServiceTypeIdentifier>") //$NON-NLS-1$ //$NON-NLS-2$
 				.getBytes(StandardCharsets.UTF_8)));
 		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
+				.replace("<ServiceInformation>\n" //$NON-NLS-1$
+						+ "            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>\n" //$NON-NLS-1$
+						+ "            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>\n" //$NON-NLS-1$
+						+ "          </ServiceInformation>", //$NON-NLS-1$
+						"<ServiceInformation></ServiceInformation><ServiceHistory><ServiceHistoryInstance>" //$NON-NLS-1$
+						+ "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>" //$NON-NLS-1$
+						+ "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>" //$NON-NLS-1$
+						+ "</ServiceHistoryInstance></ServiceHistory>") //$NON-NLS-1$
+				.getBytes(StandardCharsets.UTF_8)));
+		assertThrows(TslException.class, () -> parser.parse(MINI_TSL
 				.replace("<dateTime>2026-12-31T23:59:59Z</dateTime>", //$NON-NLS-1$
 						"<dateTime> 2026-12-31T23:59:59Z</dateTime>") //$NON-NLS-1$
 				.getBytes(StandardCharsets.UTF_8)));

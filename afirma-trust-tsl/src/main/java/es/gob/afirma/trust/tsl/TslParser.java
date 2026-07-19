@@ -127,8 +127,12 @@ public final class TslParser {
 			}
 			for (int j = 0; j < serviceNodes.getLength(); j++) {
 				final Element svc = (Element) serviceNodes.item(j);
-				final String type = singleTextOrEmpty(svc, TSL_NS, "ServiceTypeIdentifier"); //$NON-NLS-1$
-				final String status = singleTextOrEmpty(svc, TSL_NS, "ServiceStatus"); //$NON-NLS-1$
+				final Element serviceInformation = singleElement(svc, TSL_NS, "ServiceInformation"); //$NON-NLS-1$
+				if (serviceInformation == null) {
+					throw new TslException("TSPService sin ServiceInformation"); //$NON-NLS-1$
+				}
+				final String type = singleTextOrEmpty(serviceInformation, TSL_NS, "ServiceTypeIdentifier"); //$NON-NLS-1$
+				final String status = singleTextOrEmpty(serviceInformation, TSL_NS, "ServiceStatus"); //$NON-NLS-1$
 				final List<X509Certificate> certs = new ArrayList<>();
 				final NodeList x509b64 = svc.getElementsByTagNameNS(DSIG_NS, "X509Certificate"); //$NON-NLS-1$
 				for (int k = 0; k < x509b64.getLength(); k++) {
