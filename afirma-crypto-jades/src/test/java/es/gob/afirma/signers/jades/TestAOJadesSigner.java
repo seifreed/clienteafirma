@@ -329,6 +329,10 @@ final class TestAOJadesSigner {
 		assertThrows(es.gob.afirma.core.AOException.class,
 				() -> new AOJadesSigner().sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
 						RSA_KEY.getPrivate(), RSA_CHAIN, params));
+		params.setProperty(AOJadesSigner.EXTRA_PARAM_TIMESTAMP_TOKEN_BASE64, "MA MCAQE="); //$NON-NLS-1$
+		assertThrows(es.gob.afirma.core.AOException.class,
+				() -> new AOJadesSigner().sign("payload".getBytes(), "SHA256withRSA", //$NON-NLS-1$ //$NON-NLS-2$
+						RSA_KEY.getPrivate(), RSA_CHAIN, params));
 	}
 
 	@Test
